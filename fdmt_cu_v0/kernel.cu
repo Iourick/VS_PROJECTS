@@ -9,7 +9,6 @@
 
 #include <stdlib.h> // Supports dynamic memory management.
 
-
 #include <array>
 #include <iostream>
 #include <string>
@@ -26,6 +25,7 @@
 #include "npy.hpp"
 #include <algorithm> 
 #include "kernel.cuh"
+#include <chrono>
 
 
 
@@ -156,17 +156,21 @@ int main(int argc, char** argv)
 	// !6
 
 	// 7. calculations	
-	clock_t start = clock();	
+	//clock_t start = clock();	
+	auto start = std::chrono::high_resolution_clock::now();
 
 	fncFdmt_cu_v0(piarrImage, ivctImShape[0], ivctImShape[1]
 		, vctfmin_max[0], vctfmin_max[1], ivctDataType_maxDT[1], piarrImOut);
-	clock_t end = clock();
+	/*clock_t end = clock();	
+	double duration = double(end - start) / CLOCKS_PER_SEC;	
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;*/
+	auto end = std::chrono::high_resolution_clock::now();
 
-	// Вычисляем разницу времени в секундах
-	double duration = double(end - start) / CLOCKS_PER_SEC;
+    // Вычисляем разницу времени
+    auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 
-	// Выводим время выполнения в секундах
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;
+    // Выводим время выполнения в микросекундах
+    std::cout << "Time taken by function: " << duration.count() << " milliseconds" << std::endl;
 	// !7
 
 
@@ -231,21 +235,35 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int iImgrows, const int iImgcols
 	int* d_piarrOut_1 = 0;
 	int* d_piarrImgInp = 0;
 	// !1
+
 		
 	// 2. allocate memory to device arrays
-	cudaMallocManaged(&d_piarrOut_0, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
-	cudaMallocManaged(&d_piarrOut_1, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
-	cudaMallocManaged(&d_piarrImgInp, iImgrows  * iImgcols * sizeof(int));
+	clock_t start = clock();
+	cudaMalloc(&d_piarrOut_0, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
+	cudaMalloc(&d_piarrOut_1, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
+	cudaMalloc(&d_piarrImgInp, iImgrows  * iImgcols * sizeof(int));
 	// !2
+	clock_t end = clock();
+	double duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by cudaMalloc: " << duration << " seconds" << std::endl;
+
 
 	// 3  Initialize the device arrays with zeros
+	start = clock();
 	cudaMemset(d_piarrOut_0, 0, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
 	cudaMemset(d_piarrOut_1, 0, iImgrows * (ideltaT + 1) * iImgcols * sizeof(int));
 	// !3
-	
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by cudaMemset: " << duration << " seconds" << std::endl;
+
 	// 4.copy input data from host to device
+	start = clock();
 	cudaMemcpy(d_piarrImgInp, piarrImgInp, iImgrows * iImgcols * sizeof(int)
 		, cudaMemcpyHostToDevice);
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by cudaMemcpy: " << duration << " seconds" << std::endl;
 	// !4
 
 	// 5. call initialization func
@@ -262,23 +280,27 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int iImgrows, const int iImgcols
 	// 7!
 
 	// 8. allocate memory to device  auxiliary arrays
+	start = clock();
 	float* d_arr_val0 = 0;
-	cudaMallocManaged(&d_arr_val0, iImgrows / 2 * sizeof(float));
+	cudaMalloc(&d_arr_val0, iImgrows / 2 * sizeof(float));
 
 	float* d_arr_val1 = 0;
-	cudaMallocManaged(&d_arr_val1, iImgrows / 2 * sizeof(float));
+	cudaMalloc(&d_arr_val1, iImgrows / 2 * sizeof(float));
 
 	int* d_arr_deltaTLocal = 0;
-	cudaMallocManaged(&d_arr_deltaTLocal, iImgrows / 2 * sizeof(int));
+	cudaMalloc(&d_arr_deltaTLocal, iImgrows / 2 * sizeof(int));
 
 	int* d_arr_dT_MI = 0;
-	cudaMallocManaged(&d_arr_dT_MI, iImgrows / 2 * (ideltaT + 1) * sizeof(int));
+	cudaMalloc(&d_arr_dT_MI, iImgrows / 2 * (ideltaT + 1) * sizeof(int));
 
 	int* d_arr_dT_ML = 0;
 	cudaMallocManaged(&d_arr_dT_ML, iImgrows / 2 * (ideltaT + 1) * sizeof(int));
 
 	int* d_arr_dT_RI = 0;
-	cudaMallocManaged(&d_arr_dT_RI, iImgrows / 2 * (ideltaT + 1) * sizeof(int));
+	cudaMalloc(&d_arr_dT_RI, iImgrows / 2 * (ideltaT + 1) * sizeof(int));
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by allocate memory: " << duration << " seconds" << std::endl;
 	// !8
 
 	for (int iit = 1; iit < (I_F + 1); ++iit)
@@ -298,7 +320,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int iImgrows, const int iImgcols
 
 	}
 
-		
+	start = clock();
 	cudaFree(d_arr_val0);
 	cudaFree(d_arr_val1);
 	cudaFree(d_arr_deltaTLocal);
@@ -310,6 +332,10 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int iImgrows, const int iImgcols
 	cudaFree(d_piarrOut_0);
 	cudaFree(d_piarrOut_1);
 	cudaFree(d_piarrImgInp);
+
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by cudaFree: " << duration << " seconds" << std::endl;
 
 }
 //--------------------------------------------------------------------------------------
