@@ -31,7 +31,13 @@ void kernel_shift(int* d_piarrInp, const int IDim0, const int IDim1
 
 __global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n);
 
+__global__ void sumArrays_(int* d_result, const int* d_arr1, int n);
+
 void fncCalcDimensionsOfOutputArrays(std::vector<int>* pivctOutDim0, std::vector<int>* pivctOutDim1
 	, std::vector<int>* pivctOutDim2, const int IDim0, const int IDim1
 	, const int IDim2, const int IMaxDT, const float VAlFmin
 	, const float VAlFmax);
+void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut);

@@ -86,35 +86,35 @@ void saveImage(const char* filename) {
 
 int main(int argc, char** argv)
 {
-	const std::vector<int> data1 {1, 2, 3, 4, 5, 6};
-	std::array<long unsigned, 2> leshape11 {2, 3};
-	std::array<long unsigned, 1> leshape12 {6};
+	//const std::vector<int> data1 {1, 2, 3, 4, 5, 6};
+	//std::array<long unsigned, 2> leshape11 {2, 3};
+	//std::array<long unsigned, 1> leshape12 {6};
 
-	const double data2[]{ 7 };
-	std::array<long unsigned, 3> leshape21 {1, 1, 1};
-	std::array<long unsigned, 0> leshape22 {};
+	//const double data2[]{ 7 };
+	//std::array<long unsigned, 3> leshape21 {1, 1, 1};
+	//std::array<long unsigned, 0> leshape22 {};
 
-	const std::array<double, 0> data3;
-	std::array<long unsigned, 2> leshape31 {4, 0};
+	//const std::array<double, 0> data3;
+	//std::array<long unsigned, 2> leshape31 {4, 0};
 
-	npy::SaveArrayAsNumpy("out11.npy", false, leshape11.size(), leshape11.data(), data1);
-	npy::SaveArrayAsNumpy("out12.npy", false, leshape12.size(), leshape12.data(), data1);
+	//npy::SaveArrayAsNumpy("out11.npy", false, leshape11.size(), leshape11.data(), data1);
+	//npy::SaveArrayAsNumpy("out12.npy", false, leshape12.size(), leshape12.data(), data1);
 
-	npy::SaveArrayAsNumpy("out21.npy", false, leshape21.size(), leshape21.data(), data2);
-	npy::SaveArrayAsNumpy("out22.npy", false, leshape22.size(), leshape22.data(), data2);
+	//npy::SaveArrayAsNumpy("out21.npy", false, leshape21.size(), leshape21.data(), data2);
+	//npy::SaveArrayAsNumpy("out22.npy", false, leshape22.size(), leshape22.data(), data2);
 
-	npy::SaveArrayAsNumpy("out31.npy", false, leshape31.size(), leshape31.data(), data3.data());
+	//npy::SaveArrayAsNumpy("out31.npy", false, leshape31.size(), leshape31.data(), data3.data());
 
-	std::vector<unsigned long> sh {};
-	std::vector<int> vctD;
-	bool bf = false;
-	npy::LoadArrayFromNumpy("out12.npy", sh, bf, vctD);
+	//std::vector<unsigned long> sh {};
+	//std::vector<int> vctD;
+	//bool bf = false;
+	//npy::LoadArrayFromNumpy("out12.npy", sh, bf, vctD);
 
-	int n = 5;  // Specify the length of the array
-	int iarr[] = { 1, 2, 3, 4, 9 };  // Your one-dimensional integer array
+	//int n = 5;  // Specify the length of the array
+	//int iarr[] = { 1, 2, 3, 4, 9 };  // Your one-dimensional integer array
 
-	// Create a std::vector from the integer array
-	std::vector<int> v(iarr, iarr + n);
+	//// Create a std::vector from the integer array
+	//std::vector<int> v(iarr, iarr + n);
 	//-------------------------------------------
 
 	bool fortran_order = false;
@@ -322,7 +322,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	fnc_init(d_piarrImgInp, IImgrows, IImgcols, ideltaT, d_piarrOut_0);
 
 	// output in .npy:
-	/*int* parrinit = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
+	int* parrinit = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
 	cudaMemcpy(parrinit, d_piarrOut_0, IImgrows * IImgcols * (1 + ideltaT) * sizeof(int)
 		, cudaMemcpyDeviceToHost);
 	std::vector<int> v(parrinit, parrinit + IImgrows * IImgcols * (1 + ideltaT));
@@ -330,7 +330,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	std::array<long unsigned, 1> leshape12 {IImgrows* IImgcols* (1 + ideltaT)};
 	
 	npy::SaveArrayAsNumpy("init_arr.npy", false, leshape12.size(), leshape12.data(), v);
-	free(parrinit);*/
+	free(parrinit);
 	//! 5
 	
 	
@@ -369,16 +369,37 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	int iInp1 = ideltaT + 1;
 	
 	int iOut0 = 0, iOut1 = 0, iOut2 = 0;
+
+	// output in .npy:
+	int* parrinit2 = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
+	cudaMemcpy(parrinit2, d_piarrOut_0, IImgrows* IImgcols* (1 + ideltaT) * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+	std::vector<int> v2(parrinit2, parrinit2 + IImgrows * IImgcols * (1 + ideltaT));
+
+	std::array<long unsigned, 1> leshape122 {IImgrows* IImgcols* (1 + ideltaT)};
+
+	npy::SaveArrayAsNumpy("init_arr2.npy", false, leshape122.size(), leshape122.data(), v2);
+	free(parrinit2);
 	for (int iit = 1; iit < (I_F + 1); ++iit)
 	{		
 		fncFdmtIteration(d_p0, val_dF,iInp0, iInp1
 			, IImgcols,  IMaxDT,  VAlFmin
-			,  VAlFmax, iit,  d_arr_val0
-			,  d_arr_val1,  d_arr_deltaTLocal
+			, VAlFmax, iit,  d_arr_val0
+			, d_arr_val1,  d_arr_deltaTLocal
 			, d_arr_dT_MI, d_arr_dT_ML, d_arr_dT_RI
 			, d_p1, iOut0, iOut1);
-		
+		if (iit == 8)
+		{
+			int* parrinit0 = (int*)malloc(iOut0 * iOut1 * IImgcols * sizeof(int));
+			cudaMemcpy(parrinit0, d_piarrOut_1, iOut0 * iOut1 * IImgcols * sizeof(int)
+				, cudaMemcpyDeviceToHost);
+			std::vector<int> v0(parrinit0, parrinit0 + iOut0 * iOut1 * IImgcols);
 
+			std::array<long unsigned, 1> leshape120 {iOut0* iOut1* IImgcols};
+
+			npy::SaveArrayAsNumpy("arr_InterimOut.npy", false, leshape120.size(), leshape120.data(), v0);
+			free(parrinit0);
+		}
 		// exchange order of pointers
 		int* d_pt = d_p0;
 		d_p0 = d_p1;
@@ -441,12 +462,22 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	, int* d_iarr_dT_MI,  int* d_iarr_dT_ML,  int* d_iarr_dT_RI
 	, int* d_piarrOut, int & iOutPutDim0, int& iOutPutDim1)
 {
-	
+	// output in .npy:
+	int* parrinit3 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+	cudaMemcpy(parrinit3, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+	std::vector<int> v3(parrinit3, parrinit3 + IDim0 * IDim1 * IDim2);
+
+	std::array<long unsigned, 1> leshape122 {IDim0* IDim1* IDim2};
+
+	npy::SaveArrayAsNumpy("init_arr3.npy", false, leshape122.size(), leshape122.data(), v3);
+	free(parrinit3);
 	float valDeltaF = pow(2., ITerNum) * val_dF;
 	float temp0 = 1. / (VAlFmin * VAlFmin) -
 		1. / ((VAlFmin + valDeltaF) * (VAlFmin + valDeltaF));
-	const float VAlTemp1 = 1. / (VAlFmin * VAlFmin) -
-		1. / (VAlFmax * VAlFmax);
+
+	const float VAlTemp1 = 1. / (VAlFmin * VAlFmin) - 1. / (VAlFmax * VAlFmax);
+
 	int ideltaT = (int)(ceil(((float)IMaxDT - 1.0) * temp0 / VAlTemp1));
 	iOutPutDim1 = ideltaT + 1;
 	iOutPutDim0 = IDim0 / 2;
@@ -470,10 +501,97 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	// 10. calculating first 3 auxillary 1 dim arrays
 	int threadsPerBlock = 1024;
 	int numberOfBlocks = (iOutPutDim0 + threadsPerBlock - 1) / threadsPerBlock;
-	create_auxillary_1d_arrays << <numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
+	int F_Jumps = iOutPutDim0;
+	float* arr_val0 = new float[F_Jumps];
+	float* arr_val1 = new float[F_Jumps];
+	int* iarr_deltaTLocal = new int[F_Jumps];
+	for (int i_F = 0; i_F < F_Jumps; ++i_F)
+	{
+		
+		float valf_start = VAlC2 * i_F + VAlFmin;
+		float valf_end = VAlC2 * ( 1. + i_F) + VAlFmin;
+		
+		float valf_middle = (valf_end - valf_start)/2. + valf_start - val_correction;
+		float valf_middle_larger = (valf_end - valf_start) / 2. + valf_start + val_correction;
+		float temp0 = 1. / (valf_start * valf_start) - 1. / (valf_end * valf_end);
+
+		arr_val0[i_F] = -(1. / (valf_middle * valf_middle) - 1. / (valf_start * valf_start)) / temp0;
+
+		arr_val1[i_F] = -(1. / (valf_middle_larger * valf_middle_larger)
+			- 1. / (valf_start * valf_start)) / temp0;
+
+		iarr_deltaTLocal[i_F] = (int)(ceil((((float)(IMaxDT)) - 1.) * temp0 / VAlTemp1));
+		int iii = 0;
+	}
+	cudaMemcpy(d_arr_val0, arr_val0, iOutPutDim0 * sizeof(float)
+		, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_arr_val1, arr_val1, iOutPutDim0 * sizeof(float)
+		, cudaMemcpyHostToDevice);
+	cudaMemcpy(d_iarr_deltaTLocal, iarr_deltaTLocal, iOutPutDim0 * sizeof(int)
+		, cudaMemcpyHostToDevice);
+	/*# calc 3 massives of parametres
+		temp1 = (1. / f_min * *2 - 1. / f_max * *2)
+		for i_F in range(F_jumps) :
+			f_start = (f_max - f_min) / float(F_jumps) * (i_F)+f_min
+			f_end = (f_max - f_min) / float(F_jumps) * (i_F + 1) + f_min
+			f_middle = (f_end - f_start) / 2. + f_start - correction
+			# it turned out in the end, that putting the correction + dF to f_middle_larger(or -dF / 2 to f_middle, and +dF / 2 to f_middle larger)
+			# is less sensitive than doing nothing when dedispersing a coherently dispersed pulse.
+			# The confusing part is that the hitting efficiency is better with the corrections(!? !).
+			f_middle_larger = (f_end - f_start) / 2 + f_start + correction
+			temp0 = (1. / f_start * *2 - 1. / (f_end) * *2)
+			arr_val0[i_F] = -(1. / f_middle * *2 - 1. / f_start * *2) / temp0
+			arr_val1[i_F] = -(1. / f_middle_larger * *2 - 1. / f_start * *2) / temp0
+			arr_deltaTLocal[i_F] = int(np.ceil((maxDT - 1) * temp0 / temp1))*/
+	/*create_auxillary_1d_arrays << <numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, IMaxDT, VAlTemp1, VAlC2, VAlFmin, val_correction
 		, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
+	if (4 == ITerNum)
+	{
+		// output in .npy:
+		float* parr0 = (float*)malloc(iOutPutDim0 * sizeof(float));
+		cudaMemcpy(parr0, d_arr_val0, iOutPutDim0 * sizeof(float)
+			, cudaMemcpyDeviceToHost);
+		std::vector<float> v1d0(parr0, parr0 + iOutPutDim0);
+
+		std::array<long unsigned, 1> leshape000 {iOutPutDim0};
+
+		npy::SaveArrayAsNumpy("parr0.npy", false, leshape000.size(), leshape000.data(), v1d0);
+
+
+
+		cudaMemcpy(parr0, d_arr_val1, iOutPutDim0 * sizeof(float)
+			, cudaMemcpyDeviceToHost);
+		std::vector<float> v1d1(parr0, parr0 + iOutPutDim0);
+		npy::SaveArrayAsNumpy("parr1.npy", false, leshape000.size(), leshape000.data(), v1d1);
+		free(parr0);
+
+		int* iarr_deltaTLocal = (int*)malloc(iOutPutDim0 * sizeof(int));
+		cudaMemcpy(iarr_deltaTLocal, d_iarr_deltaTLocal, iOutPutDim0 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v00(iarr_deltaTLocal, iarr_deltaTLocal + iOutPutDim0);
+
+
+
+		npy::SaveArrayAsNumpy("iarr_deltaTLocal.npy", false, leshape000.size(), leshape000.data(), v00);
+		free(iarr_deltaTLocal);
+	}
+
+
+	
+
+
+	// output in .npy:
+	int* parrinit4 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+	cudaMemcpy(parrinit4, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+	std::vector<int> v4(parrinit4, parrinit4 + IDim0 * IDim1 * IDim2);
+
+	std::array<long unsigned, 1> leshape124 {IDim0* IDim1* IDim2};
+
+	npy::SaveArrayAsNumpy("init_arr4.npy", false, leshape124.size(), leshape124.data(), v4);
+	free(parrinit4);
 	/*int* parrinit0 = (int*)malloc(iOutPutDim0  * sizeof(int));
 	cudaMemcpy(parrinit0, d_iarr_deltaTLocal, iOutPutDim0  * sizeof(int)
 		, cudaMemcpyDeviceToHost);
@@ -497,45 +615,57 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 		, d_iarr_dT_MI, d_iarr_dT_ML
 		, d_iarr_dT_RI);
 	cudaDeviceSynchronize();
-
 	// output in .npy:
-	int* parrinit = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
-	cudaMemcpy(parrinit, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+	int* parrinit5 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+	cudaMemcpy(parrinit5, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
 		, cudaMemcpyDeviceToHost);
-	std::vector<int> v(parrinit, parrinit + iOutPutDim0 * iOutPutDim1);
+	std::vector<int> v5(parrinit5, parrinit5 + IDim0 * IDim1 * IDim2);
 
-	std::array<long unsigned, 1> leshape12 {iOutPutDim0* iOutPutDim1};
+	std::array<long unsigned, 1> leshape125 {IDim0* IDim1* IDim2};
 
-	npy::SaveArrayAsNumpy("iarr_dT_MI.npy", false, leshape12.size(), leshape12.data(), v);
-	free(parrinit);
-	//
-	int* parrinit1 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
-	cudaMemcpy(parrinit1, d_iarr_dT_ML, iOutPutDim0 * iOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-	std::vector<int> v1(parrinit1, parrinit1 + iOutPutDim0 * iOutPutDim1);
+	npy::SaveArrayAsNumpy("init_arr5.npy", false, leshape125.size(), leshape125.data(), v5);
+	free(parrinit5);
+	if (ITerNum == 3)
+	{
+		// output in .npy:
+		int* parrinit = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
+		cudaMemcpy(parrinit, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v(parrinit, parrinit + iOutPutDim0 * iOutPutDim1);
 
-	npy::SaveArrayAsNumpy("iarr_dT_ML.npy", false, leshape12.size(), leshape12.data(), v1);
-	free(parrinit1);
-	//
-	int* parrinit2 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
-	cudaMemcpy(parrinit2, d_iarr_dT_RI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-	std::vector<int> v2(parrinit2, parrinit2 + iOutPutDim0 * iOutPutDim1);
+		std::array<long unsigned, 1> leshape12 {iOutPutDim0* iOutPutDim1};
 
-	npy::SaveArrayAsNumpy("iarr_dT_RI.npy", false, leshape12.size(), leshape12.data(), v2);
-	free(parrinit2);
+		npy::SaveArrayAsNumpy("iarr_dT_MI.npy", false, leshape12.size(), leshape12.data(), v);
+		free(parrinit);
+		//
+		int* parrinit1 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
+		cudaMemcpy(parrinit1, d_iarr_dT_ML, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v1(parrinit1, parrinit1 + iOutPutDim0 * iOutPutDim1);
+
+		npy::SaveArrayAsNumpy("iarr_dT_ML.npy", false, leshape12.size(), leshape12.data(), v1);
+		free(parrinit1);
+		//
+		int* parrinit2 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
+		cudaMemcpy(parrinit2, d_iarr_dT_RI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v2(parrinit2, parrinit2 + iOutPutDim0 * iOutPutDim1);
+
+		npy::SaveArrayAsNumpy("iarr_dT_RI.npy", false, leshape12.size(), leshape12.data(), v2);
+		free(parrinit2);
 
 
-	int* parrinit3 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
-	cudaMemcpy(parrinit3, d_piarrInp, iOutPutDim0 * iOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-	std::vector<int> v3(parrinit3, parrinit3 + IDim0 * IDim1 * IDim2);
+		// output in .npy:
+		int* parrinit6 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+		cudaMemcpy(parrinit6, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v6(parrinit5, parrinit6 + IDim0 * IDim1 * IDim2);
 
-	std::array<long unsigned, 1> leshape102 {IDim0* IDim1* IDim2};
+		std::array<long unsigned, 1> leshape126 {IDim0* IDim1* IDim2};
 
-	npy::SaveArrayAsNumpy("piarrInp.npy", false, leshape102.size(), leshape102.data(), v3);
-	free(parrinit3);
-
+		npy::SaveArrayAsNumpy("init_arr6.npy", false, leshape126.size(), leshape126.data(), v3);
+		free(parrinit6);
+	}
 
 	// !11
 
@@ -545,11 +675,16 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	kernel_shift << <numberOfBlocks, threadsPerBlock >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
+	/*shift_and_sum (d_piarrInp
+		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
+		, iOutPutDim0, iOutPutDim1, d_piarrOut);*/
 	cudaDeviceSynchronize();
 
 	
 
 }
+
+//-----------------------------------------------------------------------------------------------------------------------
 __global__
 void kernel_shift(int* d_piarrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
@@ -588,7 +723,7 @@ void kernel_shift(int* d_piarrInp, const int IDim0, const int IDim1
 		int numRow = d_iarr_dT_RI[ind];
 		int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + idx - d_iarr_dT_ML[ind];
 		//atomicAdd(&d_piarrOut[i], d_piarrInp[ind]);
-		d_piarrOut[i] += d_piarrInp[ind];
+		d_piarrOut[i] += d_piarrInp[indInpMtrx];
 	}
 }
 //def kernel_5_1(d_input, arr_deltaTLocal, arr_dT_MI, arr_dT_ML, arr_dT_RI, d_Output) :
@@ -607,6 +742,100 @@ void kernel_shift(int* d_piarrInp, const int IDim0, const int IDim1
 //d_Output[i_F][i_dT][idx] = d_input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx] 
 // + d_input[2 * i_F + 1][arr_dT_RI[i_F, i_dT]][idx - arr_dT_ML[i_F, i_dT]]
 //--------------------------------------------------------------------------------------
+//-----------------------------------------------------------------------------------------------------------------------
+
+void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut)
+{
+	int iarr_deltaTLocal[1000] = { 0 };
+	cudaMemcpy(iarr_deltaTLocal, d_iarr_deltaTLocal, IOutPutDim0 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+
+	int* iarr_dT_ML = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
+	cudaMemcpy(iarr_dT_ML, d_iarr_dT_ML, IOutPutDim0 * IOutPutDim1 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+
+	int* iarr_dT_MI = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
+	cudaMemcpy(iarr_dT_MI, d_iarr_dT_MI, IOutPutDim0 * IOutPutDim1 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+
+	int* iarr_dT_RI = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
+	cudaMemcpy(iarr_dT_RI, d_iarr_dT_RI, IOutPutDim0 * IOutPutDim1 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+
+
+	for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
+	{
+		
+		for (int i_dT = 0; i_dT < ( 1 +iarr_deltaTLocal[i_F]); ++i_dT)
+		{
+			int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
+			// number of element of beginning of the input 2 * i_F matrix's row with number 
+			// dT_middle_index[i_F][i_dT]
+			int numRowInputMtrxBegin0 = 2 * i_F * IDim1 * IDim2 + IDim2 * (iarr_dT_MI[i_F * IOutPutDim1 + i_dT]);
+			cudaMemcpy(&d_piarrOut[numRowOutputMtrxBegin0], &d_piarrInp[numRowInputMtrxBegin0], IDim2 * sizeof(int)
+				, cudaMemcpyDeviceToDevice);
+
+			// number of beginning element of summated rows
+			int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
+			// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
+			int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
+
+			// number of the row of the submatrix of input matrix with number 2 * i_F + 1
+			int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
+			// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
+			int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix ;
+			int threadsPerBlock = 1024;
+			int numberOfBlocks = (IDim2 - numElemInRow + threadsPerBlock - 1) / threadsPerBlock;
+			sumArrays_ << <numberOfBlocks, threadsPerBlock >> > (&d_piarrOut[numRowOutputMtrxBegin1], &d_piarrInp[numRowInputMtrxBegin1], IDim2 - numElemInRow);
+			cudaDeviceSynchronize();
+		}
+	}
+	free(iarr_dT_RI);
+	free(iarr_dT_ML);
+	free(iarr_dT_MI);
+}
+//for i_F in range(F_jumps) :
+//
+//	f_start = (f_max - f_min) / float(F_jumps) * (i_F)+f_min
+//	f_end = (f_max - f_min) / float(F_jumps) * (i_F + 1) + f_min
+//	f_middle = (f_end - f_start) / 2. + f_start - correction
+//	# it turned out in the end, that putting the correction + dF to f_middle_larger(or -dF / 2 to f_middle, and +dF / 2 to f_middle larger)
+//	# is less sensitive than doing nothing when dedispersing a coherently dispersed pulse.
+//	# The confusing part is that the hitting efficiency is better with the corrections(!? !).
+//	f_middle_larger = (f_end - f_start) / 2 + f_start + correction
+//	temp0 = (1. / f_start * *2 - 1. / (f_end) * *2)
+//
+//	val0 = -(1. / f_middle * *2 - 1. / f_start * *2) / temp0
+//	val1 = -(1. / f_middle_larger * *2 - 1. / f_start * *2) / temp0
+//	deltaTLocal = int(np.ceil((maxDT - 1) * temp0 / temp1))
+//
+//	for i_dT in range(deltaTLocal + 1) :
+//		dT_middle_index = round(i_dT * val0)
+//
+//
+//		dT_middle_larger = round(i_dT * val1)
+//
+//
+//		dT_rest_index = i_dT - dT_middle_larger
+//
+//
+//		i_T_min0 = 0
+//
+//		i_T_max0 = dT_middle_larger
+//		#Output[i_F, i_dT + ShiftOutput, i_T_min0:i_T_max0] = Input[2 * i_F, dT_middle_index, i_T_min0:i_T_max0]
+//		Output[i_F, i_dT, :dT_middle_larger] = Input[2 * i_F, dT_middle_index, :dT_middle_larger]
+//
+//		i_T_min = dT_middle_larger
+//		i_T_max = T
+//
+//
+//		#Output[i_F, i_dT + ShiftOutput, i_T_min:i_T_max] = Input[2 * i_F, dT_middle_index, i_T_min:i_T_max] + Input[2 * i_F + 1, dT_rest_index, i_T_min - dT_middle_larger:i_T_max - dT_middle_larger]
+//		Output[i_F, i_dT, dT_middle_larger:] = Input[2 * i_F, dT_middle_index, dT_middle_larger:]
+//      + Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
+
 __global__
 void create_auxillary_1d_arrays(const int IFjumps, const int IMaxDT, const float VAlTemp1
 	, const float VAlc2, const float VAlf_min, const float VAlcorrection
@@ -651,13 +880,16 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 		return;
 	}
 
-	d_iarr_dT_middle_index[i] = round(i_dT * d_arr_val0[i_F]);
-	int ivalt = round(i_dT * d_arr_val1[i_F]);
+	d_iarr_dT_middle_index[i] = round(((float)i_dT) * d_arr_val0[i_F]);
+	int ivalt = round(((float)i_dT) * d_arr_val1[i_F]);
 	d_iarr_dT_middle_larger[i] = ivalt;
 	d_iarr_dT_rest_index[i] = i_dT - ivalt;
 	
 
 }
+//arr_dT_middle_index[cuda.blockIdx.x, cuda.threadIdx.x] = round(cuda.threadIdx.x * arr_val0[cuda.blockIdx.x])
+//arr_dT_middle_larger[cuda.blockIdx.x, cuda.threadIdx.x] = round(cuda.threadIdx.x * arr_val1[cuda.blockIdx.x])
+//arr_dT_rest_index[cuda.blockIdx.x, cuda.threadIdx.x] = cuda.threadIdx.x - arr_dT_middle_larger[cuda.blockIdx.x, cuda.threadIdx.x]
 //--------------------------------------------------------------------------------------
 void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaT, int* d_piarrOut)
@@ -696,8 +928,18 @@ __global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, i
 		d_result[tid] = d_arr1[tid] + d_arr2[tid];
 	}
 }
+//-----------------------------------------------------------------------------
+//CUDA kernel for element-wise summation
+__global__ void sumArrays_(int* d_result, const int* d_arr1, int n)
+{
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n)
+	{
+		d_result[tid] += d_arr1[tid] ;
+	}
+}
 
-
+//-------------------------------------------------------------------------------------------------------------------------------
 void fncCalcDimensionsOfOutputArrays(std::vector<int>* pivctOutDim0, std::vector<int>* pivctOutDim1
 , std::vector<int>* pivctOutDim2,  const int IDim0, const int IDim1
 , const int IDim2,  const int IMaxDT, const float VAlFmin
