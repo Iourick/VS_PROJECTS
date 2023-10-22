@@ -1,80 +1,58 @@
 #include "FdmtFuncs.h"
 #include <math.h>
 #include <stdio.h>
-#include <array>
-#include <iostream>
-#include <string>
-
-#include <vector>
-#include <cstdlib> // For random value generation
-#include <ctime>   // For seeding the random number generator
-
+#include <iostream>/
+#include "npy.hpp"
 #include <algorithm> 
 #include <stdlib.h>
 
-#include <chrono>
-
-
-
 using namespace std;
 //-------------------------------------------------------------------------
-void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
+void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	, const float VAlFmin, const  float VAlFmax, const int IMaxDT, int* piarrImgOut)
 {
 	// 1. quant iteration's calculation
 	const int I_F = (int)(log2((double)(IImgrows)));
 	// !1
-
+	
+	// 2. calc. constants
 	const float val_dF = (VAlFmax - VAlFmin) / ((float)(IImgrows));
 	int ideltaT = int(ceil((IMaxDT - 1.) * (1. / (VAlFmin * VAlFmin)
 		- 1. / ((VAlFmin + val_dF) * (VAlFmin + val_dF)))
 		/ (1. / (VAlFmin
 			* VAlFmin) - 1. / (VAlFmax * VAlFmax))));
+	// !2
 
-
-	// 1. declare pointers to device arrays
+	// 3. declare pointers 
 	int*  p0 = 0;
 	int*  p1 = 0;
 	int*  piarrOut_0 = 0;
-	int*  piarrOut_1 = 0;
-	
-	// !1
+	int*  piarrOut_1 = 0;	
+	// !3
 
-	// 2. allocate memory to device arrays
+	// 4. allocate memory 
 	clock_t start = clock();
 	piarrOut_0 = (int*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(int));
 	piarrOut_1 = (int*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(int));
+	// !4
 	
-	clock_t end = clock();
-	double duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by cudaMalloc: " << duration << " seconds" << std::endl;
 
-	// 3  Initialize the device arrays with zeros
+	// 5  Initialize the arrays with zeros
 	start = clock();
 	memset( piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	memset( piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
-	// !3
-	end = clock();
-	duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by cudaMemset: " << duration << " seconds" << std::endl;
-
-	// 4.copy input data from host to device
-	start = clock();
+	// !5
 	
-	end = clock();
-	duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by cudaMemcpy: " << duration << " seconds" << std::endl;
-	// !4
-
-	// 5. call initialization func
+	// 6. call initialization func
 	fnc_init( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
-
-	// 7.pointers initialization
+	// !6
+	
+	// 7.pointers fixing
 	 p0 =  piarrOut_0;
 	 p1 =  piarrOut_1;
 	// 7!
 
-	// 8. allocate memory to device  auxiliary arrays
+	// 8. allocate memory to  auxiliary arrays
 	start = clock();
 	float*  arr_val0 = 0;
 	arr_val0 = (float*)malloc(IImgrows / 2 * sizeof(float));
@@ -99,15 +77,14 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	int*  arr_dT_RI = 0;
 	arr_dT_RI = (int*)calloc(IImgrows * (ideltaT + 1), sizeof(int));
 	
-
-	end = clock();
-	duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by allocate memory: " << duration << " seconds" << std::endl;
 	// !8
+
+	// 9. intialisations
 	int iInp0 = IImgrows;
 	int iInp1 = ideltaT + 1;
 
 	int iOut0 = 0, iOut1 = 0, iOut2 = 0;
+	// !9
 
 	//// output in .npy:
 	//int* parrinit2 = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
@@ -119,6 +96,8 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 
 	//npy::SaveArrayAsNumpy("init_arr2.npy", false, leshape122.size(), leshape122.data(), v2);
 	//free(parrinit2);
+
+	// 10. calculations
 	for (int iit = 1; iit < (I_F + 1); ++iit)
 	{
 		fncFdmtIteration( p0, val_dF, iInp0, iInp1
@@ -135,8 +114,9 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 		iInp0 = iOut0;
 		iInp1 = iOut1;
 
-		// !
+		
 	}
+	// !10
 
 	memcpy(piarrImgOut,  p0, IImgcols * IMaxDT* sizeof(int));
 	start = clock();
@@ -154,9 +134,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	free( arr_dT_RI);
 	
 
-	end = clock();
-	duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by free: " << duration << " seconds" << std::endl;
+	
 
 }
 
@@ -245,6 +223,8 @@ void fncFdmtIteration(int*  piarrInp, const float val_dF, const int IDim0, const
 		
 		}
 	} // OMP (начало блока, который выполняется в нескольких потоках !
+	// output in .npy:
+	
 	
 
 	// !10
@@ -259,7 +239,6 @@ void fncFdmtIteration(int*  piarrInp, const float val_dF, const int IDim0, const
 		,  iarr_dT_MI,  iarr_dT_ML
 		,  iarr_dT_RI);
 	
-
 	// !11
 
 	// 13. 
@@ -282,37 +261,39 @@ void shift_and_sum_cpu_v1(int*  piarrInp, const int IDim0, const int IDim1
 	, int*  piarrOut)
 {
 	int iw = IOutPutDim1 * IDim2;
-	for (int i = 0; i < IOutPutDim0 * IOutPutDim1 * IDim2; ++i)
-	{
-		int i_F = i / iw;
-		int irest = i % iw;
-		int i_dT = irest / IDim2;
-		if (i_dT > iarr_deltaTLocal[i_F])
+#pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
+	{ // OMP (начало блока, который выполняется в нескольких потоках
+		for (int i = 0; i < IOutPutDim0 * IOutPutDim1 * IDim2; ++i)
 		{
-			return;
-		}
-		int idx = irest % IDim2;
-		// claculation of bound index: 
-		// arr_dT_ML[i_F, i_dT]
-		// index of arr_dT_ML
-		// arr_dT_ML is matrix with IOutPutDim0 rows and IOutPutDim1 cols
-		int ind = i_F * IOutPutDim1 + i_dT;
-		// !
+			int i_F = i / iw;
+			int irest = i % iw;
+			int i_dT = irest / IDim2;
+			if (i_dT > iarr_deltaTLocal[i_F])
+			{
+				continue;
+			}
+			int idx = irest % IDim2;
+			// claculation of bound index: 
+			// arr_dT_ML[i_F, i_dT]
+			// index of arr_dT_ML
+			// arr_dT_ML is matrix with IOutPutDim0 rows and IOutPutDim1 cols
+			int ind = i_F * IOutPutDim1 + i_dT;
+			// !
 
-		// calculation of:
-		//  Output[i_F][i_dT][idx] =  input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
-		  // calculation num row of submatix No_2 * i_F of  piarrInp = arr_dT_MI[ind]
-		piarrOut[i] = piarrInp[2 * i_F * IDim1 * IDim2 +
-			iarr_dT_MI[ind] * IDim2 + idx];
+			// calculation of:
+			//  Output[i_F][i_dT][idx] =  input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
+			  // calculation num row of submatix No_2 * i_F of  piarrInp = arr_dT_MI[ind]
+			piarrOut[i] = piarrInp[2 * i_F * IDim1 * IDim2 +
+				iarr_dT_MI[ind] * IDim2 + idx];
 
-		if (idx >= iarr_dT_ML[ind])
-		{
-			int numRow = iarr_dT_RI[ind];
-			int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + idx - iarr_dT_ML[ind];
-			//atomicAdd(& piarrOut[i],  piarrInp[ind]);
-			piarrOut[i] += piarrInp[indInpMtrx];
+			if (idx >= iarr_dT_ML[ind])
+			{
+				int numRow = iarr_dT_RI[ind];
+				int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + idx - iarr_dT_ML[ind];				
+				piarrOut[i] += piarrInp[indInpMtrx];
+			}
 		}
-	}	
+	}
 	
 }
 
@@ -323,33 +304,35 @@ void shift_and_sum_cpu(int*  piarrInp, const int IDim0, const int IDim1
 	, int*  iarr_dT_ML, int*  iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
 	, int*  piarrOut)
 {
-	
-	for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
-	{
-
-		for (int i_dT = 0; i_dT < (1 + iarr_deltaTLocal[i_F]); ++i_dT)
+#pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
+	{ // OMP (начало блока, который выполняется в нескольких потоках	
+		for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
 		{
-			int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
-			// number of element of beginning of the input 2 * i_F matrix's row with number 
-			// dT_middle_index[i_F][i_dT]
-			int numRowInputMtrxBegin0 = 2 * i_F * IDim1 * IDim2 + IDim2 * (iarr_dT_MI[i_F * IOutPutDim1 + i_dT]);
-			memcpy(& piarrOut[numRowOutputMtrxBegin0], & piarrInp[numRowInputMtrxBegin0], IDim2 * sizeof(int));
 
-			// number of beginning element of summated rows
-			int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
-			// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
-			int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
-
-			// number of the row of the submatrix of input matrix with number 2 * i_F + 1
-			int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
-			// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
-			int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix;
-			for (int j = 0; j < (IDim2 - numElemInRow); ++j)
+			for (int i_dT = 0; i_dT < (1 + iarr_deltaTLocal[i_F]); ++i_dT)
 			{
-				piarrOut[numRowOutputMtrxBegin1 + j] += piarrInp[numRowInputMtrxBegin1 + j];
-			}			
-			
-			
+				int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
+				// number of element of beginning of the input 2 * i_F matrix's row with number 
+				// dT_middle_index[i_F][i_dT]
+				int numRowInputMtrxBegin0 = 2 * i_F * IDim1 * IDim2 + IDim2 * (iarr_dT_MI[i_F * IOutPutDim1 + i_dT]);
+				memcpy(&piarrOut[numRowOutputMtrxBegin0], &piarrInp[numRowInputMtrxBegin0], IDim2 * sizeof(int));
+
+				// number of beginning element of summated rows
+				int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
+				// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
+				int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
+
+				// number of the row of the submatrix of input matrix with number 2 * i_F + 1
+				int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
+				// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
+				int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix;
+				for (int j = 0; j < (IDim2 - numElemInRow); ++j)
+				{
+					piarrOut[numRowOutputMtrxBegin1 + j] += piarrInp[numRowInputMtrxBegin1 + j];
+				}
+
+
+			}
 		}
 	}
 	
@@ -363,66 +346,64 @@ void create_2d_arrays(const int IDim0, const int IDim1
 	, int*  iarr_dT_rest_index)
 
 {
-	for (int i = 0; i < IDim0 * IDim1;++i)
-	{
-		int i_F = i / IDim1;
-		int i_dT = i % IDim1;
-		if (i_dT > (iarr_deltaTLocal[i_F]))
+    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
+	{ // OMP (начало блока, который выполняется в нескольких потоках
+
+		for (int i_F = 0; i_F < IDim0; ++i_F)
 		{
-			iarr_dT_middle_index[i] = 0;
-			iarr_dT_middle_larger[i] = 0;
-			iarr_dT_rest_index[i] = 0;
-			return;
+			if (i_F == 4)
+			{
+				int ii = 0;
+			}
+			for (int i_dT = 0; i_dT < IDim1; ++i_dT)
+			{
+				int i = i_F * IDim1 + i_dT;
+				if (i_dT > (iarr_deltaTLocal[i_F]))
+				{
+					iarr_dT_middle_index[i] = 0;
+					iarr_dT_middle_larger[i] = 0;
+					iarr_dT_rest_index[i] = 0;
+					continue;
+				}
+				iarr_dT_middle_index[i] = round(((float)i_dT) * arr_val0[i_F]);
+				int ivalt = round(((float)i_dT) * arr_val1[i_F]);
+				iarr_dT_middle_larger[i] = ivalt;
+				iarr_dT_rest_index[i] = i_dT - ivalt;
+			}
 		}
-
-		iarr_dT_middle_index[i] = round(((float)i_dT) * arr_val0[i_F]);
-		int ivalt = round(((float)i_dT) * arr_val1[i_F]);
-		iarr_dT_middle_larger[i] = ivalt;
-		iarr_dT_rest_index[i] = i_dT - ivalt;
-	}
-
+	}	
 }
 //--------------------------------------------------------------------------------------
 void fnc_init(int*  piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaT, int*  piarrOut)
 {
-	//// output in .npy:
-	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
-	//	cudaMemcpy(parr,  piarrImg, IImgrows * IImgcols  * sizeof(int)
-	//		, cudaMemcpyDeviceToHost);
-	//	std::vector<int> v6(parr, parr + IImgrows * IImgcols );
-
-	//	std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
-
-	//	npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
-	//	free(parr);
-
+	
 	memset( piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
-
-	for (int i = 0; i < IImgrows; ++i)
-	{
+    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
+	{ // OMP (начало блока, который выполняется в нескольких потоках
+		for (int i = 0; i < IImgrows; ++i)
 		{
-			memcpy(& piarrOut[i * (IDeltaT + 1) * IImgcols], & piarrImg[i * IImgcols]
-				, IImgcols * sizeof(int));
+			{
+				memcpy(&piarrOut[i * (IDeltaT + 1) * IImgcols], &piarrImg[i * IImgcols]
+					, IImgcols * sizeof(int));
+			}
 		}
 	}
 
-
-	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
-		for (int iF = 0; iF < IImgrows; ++iF)
-		{
-
-			int threadsPerBlock = 1024;
-			int numberOfBlocks = (i_dT + threadsPerBlock - 1) / threadsPerBlock;
-			int*  result = & piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
-			int*  arg0 = & piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
-			int*  arg1 = & piarrImg[iF * IImgcols];
-			for (int j = 0; j < (IImgcols - i_dT); ++j)
+    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
+	{ // OMP (начало блока, который выполняется в нескольких потоках
+		for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
+			for (int iF = 0; iF < IImgrows; ++iF)
 			{
-				result[j] = arg0[j] + arg1[j];
+				int* result = &piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
+				int* arg0 = &piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
+				int* arg1 = &piarrImg[iF * IImgcols];
+				for (int j = 0; j < (IImgcols - i_dT); ++j)
+				{
+					result[j] = arg0[j] + arg1[j];
+				}
 			}
-			
-		}
+	}
 
 }
 

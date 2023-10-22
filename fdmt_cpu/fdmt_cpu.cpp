@@ -4,57 +4,65 @@
 #include <iostream>
 #include <iostream>
 
-
 #include <math.h>
 #include <stdio.h>
-#include <array>
 #include <iostream>
-#include <string>
 
 #include <vector>
 #include <cstdlib> // For random value generation
 #include <ctime>   // For seeding the random number generator
 #include "npy.hpp"
-#include <algorithm> 
-#include <chrono>
 #include <stdlib.h>
 #include "fileInput.h"
 #include "FdmtFuncs.h"
 
-using namespace std;
 
+
+
+using namespace std;
+char strInpFolder[] = "D://VS_PROJECTS//fdmt_cpu//2048";
+char strPathOutImageNpyFile[] = "out_image.npy";
 
 
 int main()
 {
-	char strFolder[] = "";
-	char strOutImageNpyFile[] = "out_image.npy";
-
+//--------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+//------------------- prepare to work -------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+// initiate pointer to input image
 	int* piarr = (int*)malloc(sizeof(int));
 	
-	int** ppiarrImage = &piarr;
+	// initiate 2-pointer to input image, in order to realloc memory to satisfy arbitrary dimensions
+	int** ppiarrImage = &piarr;	
 	
-	*ppiarrImage = (int*)realloc(*ppiarrImage, 40 * sizeof(int));
-	
+	// initiating input variables
 	int iMaxDT = 0;
 	int iImRows = 0, iImCols = 0;
 	float val_fmax = 0., val_fmin = 0.;
-	int ireturn = downloadInputData(strFolder, strOutImageNpyFile, &iMaxDT, ppiarrImage, &iImRows, &iImCols,
+
+	// reading input files from folder 
+	int ireturn = downloadInputData(strInpFolder,  &iMaxDT, ppiarrImage, &iImRows, &iImCols,
 		&val_fmin, &val_fmax);
+	
+	// analysis output of reading function
 	switch (ireturn)
 	{
 	case 1:
-		cout << "Err. Can't allocate memory for input image " << std::endl;
+		cout << "Err. Can't allocate memory for input image. Oooops... " << std::endl;
 		return 1;
 	case 2:
-		cout << "Err. Input dimensions must be a power of 2 " << std::endl;
+		cout << "Err. Input dimensions must be a power of 2. Oooops... " << std::endl;
 		return 1;
 	case 0:
 		cout << "Input data downloaded properly " << std::endl;
 		break;
 	default:
+		cout << "Happened something extraordinary! Oooops..." << std::endl;
 		break;
 	}
+
+	// declare constants
 	const int IMaxDT = iMaxDT;
 	const int IImgrows = iImRows;
 	const int IImgcols = iImCols;
@@ -62,31 +70,37 @@ int main()
 	const float VAlFmax = val_fmax;
 
 
-
+	// handy pointer to input image
 	int* piarrImage = *ppiarrImage;
-	// 6. allocate memory for device array
+
+	//--------------------------------------------------------------------------------------------------------------
+	//-------------------- end of prepare ------------------------------------------------------------------------------------------
+	//------------------- begin to work -------------------------------------------------------------------------------------------
+	//--------------------------------------------------------------------------------------------------------------
+	// 1. allocate memory for device array
 
 	int* piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int)); 
-	// !6
+	// !1
 
-	// 7. calculations	
+	// 2. calculations	
 	clock_t start = clock();	
 	
 
-	fncFdmt_cu_v0(piarrImage, IImgrows, IImgcols
+	fncFdmt_cpu_v0(piarrImage, IImgrows, IImgcols
 		, VAlFmin, VAlFmax, IMaxDT, piarrImOut);
-	/*clock_t end = clock();
+	clock_t end = clock();
 	double duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;*/
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;
 	
-	// !7
-	// output in .npy:
+	// !2
+	
+	// write output image in <*>.NPY file with path strPathOutImageNpyFile:
 
 	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
 	std::array<long unsigned, 2> leshape101 {IImgcols,IMaxDT};
 
-	npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), v1);
+	npy::SaveArrayAsNumpy(strPathOutImageNpyFile, false, leshape101.size(), leshape101.data(), v1);
 	free(piarrImOut);
 	return 0;
 }

@@ -279,26 +279,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 		/ (1. / (VAlFmin
 				* VAlFmin) - 1. / (VAlFmax * VAlFmax))));
 
-	//// 2. calculation arrays with dimensions of output arrays for each iteration	
-	//vector<int> ivctOutDim0(I_F + 1);
-	//vector<int> ivctOutDim1(I_F + 1);
-	//vector<int> ivctOutDim2(I_F + 1);
-	//ivctOutDim0[0] = IImgrows;
-	//ivctOutDim1[0] = ideltaT + 1;
-	//ivctOutDim2[0] = IImgcols;
-
-	//fncCalcDimensionsOfOutputArrays(&ivctOutDim0, &ivctOutDim1
-	//	, &ivctOutDim2, IImgrows, ideltaT + 1
-	//	, IImgcols, IMaxDT, VAlFmin
-	//	, VAlFmax);
-	//vector <int>mult(I_F + 1);
-	//for (int i = 0; i < mult.size(); ++i)
-	//{
-	//	mult[i] = ivctOutDim0[i] * ivctOutDim1[i] * ivctOutDim2[i];
-	//}
-	//
-	//auto maxElement1 = std::max_element(mult.begin(), mult.end());
-	//int maxValue = *maxElement1;
+	
 
 	
 	// 1. declare pointers to device arrays

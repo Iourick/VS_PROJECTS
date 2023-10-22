@@ -1,6 +1,6 @@
 #pragma once
 //-------------------------------------------------------------------------
-void fncFdmt_cu_v0(int* piarrImg, const int iImgrows
+void fncFdmt_cpu_v0(int* piarrImg, const int iImgrows
 	, const int iImgcols, const float f_min
 	, const  float f_max, const int imaxDT, int* piarrOut);
 
