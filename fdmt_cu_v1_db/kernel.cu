@@ -147,9 +147,19 @@ int main(int argc, char** argv)
 	int* piarrImage = new int[vctXX.size()];
 	for (int i = 0; i < vctXX.size(); ++i)
 	{
-		piarrImage[i] = 1;// vctXX[i];
+		piarrImage[i] =  vctXX[i];
 		
 	}
+
+	// output in .npy:
+	
+	
+	std::vector<int> v(piarrImage, piarrImage + vctXX.size());
+
+	std::array<long unsigned, 1> leshape126 {vctXX.size()};
+
+	npy::SaveArrayAsNumpy("XX00.npy", false, leshape126.size(), leshape126.data(), v);
+	
 	// !5
 
 	// checking dimensions
@@ -211,10 +221,19 @@ int main(int argc, char** argv)
 	IROWS = ivctImShape[1];
 	ICOLS = ivctDataType_maxDT[1];
 	// zaglushka
-	memcpy(piarrImOut, piarrImage, IROWS * ICOLS * sizeof(int));
+	//memcpy(piarrImOut, piarrImage, IROWS * ICOLS * sizeof(int));
 	// !zaglushka
+	int* pi = new int[ICOLS];
 	
-
+	int num = IROWS / 2;
+	
+	for (int i = 0; i < num; ++i)
+	{
+		memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
+		memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1- i) * ICOLS], ICOLS * sizeof(int));
+		memcpy(&piarrImOut[(IROWS -1 - i) * ICOLS], pi, ICOLS * sizeof(int));
+	}
+	delete pi;
 	int imax = *std::max_element(piarrImage, piarrImage + ivctImShape[0] * ivctImShape[1]);
 	int imin = *std::min_element(piarrImage, piarrImage + ivctImShape[0] * ivctImShape[1]);
 	float coeff = 255. / (double(imax));
@@ -625,7 +644,7 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 
 	npy::SaveArrayAsNumpy("init_arr5.npy", false, leshape125.size(), leshape125.data(), v5);
 	free(parrinit5);
-	if (ITerNum == 3)
+	if (ITerNum == 8)
 	{
 		// output in .npy:
 		int* parrinit = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
@@ -655,16 +674,16 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 		free(parrinit2);
 
 
-		// output in .npy:
-		int* parrinit6 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
-		cudaMemcpy(parrinit6, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
-			, cudaMemcpyDeviceToHost);
-		std::vector<int> v6(parrinit5, parrinit6 + IDim0 * IDim1 * IDim2);
+		//// output in .npy:
+		//int* parrinit6 = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+		//cudaMemcpy(parrinit6, d_piarrInp, IDim0 * IDim1 * IDim2 * sizeof(int)
+		//	, cudaMemcpyDeviceToHost);
+		//std::vector<int> v6(parrinit5, parrinit6 + IDim0 * IDim1 * IDim2);
 
-		std::array<long unsigned, 1> leshape126 {IDim0* IDim1* IDim2};
+		//std::array<long unsigned, 1> leshape126 {IDim0* IDim1* IDim2};
 
-		npy::SaveArrayAsNumpy("init_arr6.npy", false, leshape126.size(), leshape126.data(), v3);
-		free(parrinit6);
+		//npy::SaveArrayAsNumpy("init_arr6.npy", false, leshape126.size(), leshape126.data(), v3);
+		//free(parrinit6);
 	}
 
 	// !11
@@ -877,6 +896,9 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 	int i_dT = i % IDim1;
 	if (i_dT > (d_iarr_deltaTLocal[i_F]))
 	{
+		d_iarr_dT_middle_index[i] = 0;		
+		d_iarr_dT_middle_larger[i] = 0;
+		d_iarr_dT_rest_index[i] = 0;
 		return;
 	}
 
@@ -894,6 +916,17 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaT, int* d_piarrOut)
 {
+	// output in .npy:
+		int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
+		cudaMemcpy(parr, d_piarrImg, IImgrows * IImgcols  * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v6(parr, parr + IImgrows * IImgcols );
+
+		std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
+
+		npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
+		free(parr);
+
 	cudaMemset(d_piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
 
 	for (int i = 0; i < IImgrows; ++i)
@@ -905,7 +938,7 @@ void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 	}
 
 
-	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
+	/*for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
 		for (int iF = 0; iF < IImgrows; ++iF)
 		{
 
@@ -915,9 +948,20 @@ void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 			int* d_arg0 = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
 			int* d_arg1 = &d_piarrImg[iF * IImgcols];
 			sumArrays << <numberOfBlocks, threadsPerBlock >> > (d_result, d_arg0, d_arg1, IImgcols - i_dT);
-		}
+			cudaDeviceSynchronize();
+		}*/
 
 }
+//[F, T] = Image.shape
+//
+//deltaF = (f_max - f_min) / float(F)
+//deltaT = int(np.ceil((maxDT - 1) * (1. / f_min * *2 - 1. / (f_min + deltaF) * *2) / (1. / f_min * *2 - 1. / f_max * *2)))
+//
+//Output = np.zeros([F, deltaT + 1, T], dtype = dataType)
+//Output[:, 0, : ] = Image
+//
+//for i_dT in range(1, deltaT + 1) :
+//	Output[:, i_dT, i_dT : ] = Output[:, i_dT - 1, i_dT : ] + Image[:, : -i_dT]
 //-----------------------------------------------------------------------------
 //CUDA kernel for element-wise summation
 __global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
