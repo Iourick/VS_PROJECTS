@@ -47,11 +47,7 @@ void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 	, int* d_piarrOut);
 
 
-void fnc_init_n(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaTplus1, int* d_piarrOut);
-
-__global__
-void fnc_init_(int* d_piarrImg, const int IImgrows, const int IImgcols
+void fnc_init_fdmt(int* d_piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaTplus1, int* d_piarrOut);
 
 __global__

@@ -8,11 +8,6 @@
 #include <iostream>
 #include <string>
 
-#include <GL/glut.h>
-#include <GL/gl.h>
-#include <IL/il.h>
-#include <IL/ilu.h>
-#include <IL/ilut.h>
 #include <vector>
 #include <cstdlib> // For random value generation
 #include <ctime>   // For seeding the random number generator
@@ -26,7 +21,7 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//512";
+char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image.npy";
 
 
@@ -175,14 +170,14 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	// !1
 
 	// 2. temp variables calculations
-	const float val_dF = (VAlFmax - VAlFmin) / ((float)(IImgrows));	
+	const float val_dF = (VAlFmax - VAlFmin) / ((float)(IImgrows));
 	int ideltaT = int(ceil((IMaxDT - 1.) * (1. / (VAlFmin * VAlFmin)
-		- 1. / ((VAlFmin + val_dF)* (VAlFmin + val_dF)))
+		- 1. / ((VAlFmin + val_dF) * (VAlFmin + val_dF)))
 		/ (1. / (VAlFmin
-				* VAlFmin) - 1. / (VAlFmax * VAlFmax))));
+			* VAlFmin) - 1. / (VAlFmax * VAlFmax))));
 	// !2
 
-	
+
 	// 3. declare pointers to device arrays
 	int* d_p0 = 0;
 	int* d_p1 = 0;
@@ -190,12 +185,12 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	int* d_piarrOut_1 = 0;
 	int* d_piarrImgInp = 0;
 	// !3
-		
+
 	// 4. allocate memory to device arrays
 	clock_t start = clock();
 	cudaMalloc(&d_piarrOut_0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	cudaMalloc(&d_piarrOut_1, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
-	cudaMalloc(&d_piarrImgInp, IImgrows  * IImgcols * sizeof(int));
+	cudaMalloc(&d_piarrImgInp, IImgrows * IImgcols * sizeof(int));
 	// !4
 	clock_t end = clock();
 	double duration = double(end - start) / CLOCKS_PER_SEC;
@@ -204,7 +199,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	// 5  Initialize the device arrays with zeros
 	start = clock();
 	cudaMemset(d_piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
-	cudaMemset(d_piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
+	cudaMemset(d_piarrOut_1, 0, IImgrows * (ideltaT + 1)/2 * IImgcols * sizeof(int));
 	// !5
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
@@ -221,18 +216,13 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 
 	// 7. call initialization func
 	start = clock();
-	int quantEl = IImgrows * IImgcols;
-	int threadsPerBlock = 256;
-	int numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
-	//fnc_init_ << < numberOfBlocks, threadsPerBlock >> > (d_piarrImgInp, IImgrows, IImgcols, ideltaT + 1, d_piarrOut_0);
-	fnc_init(d_piarrImgInp, IImgrows, IImgcols, ideltaT + 1, d_piarrOut_0);
+	//fnc_init(d_piarrImgInp, IImgrows, IImgcols, ideltaT, d_piarrOut_0);
+	fnc_init_fdmt(d_piarrImgInp, IImgrows, IImgcols, ideltaT, d_piarrOut_0);
 	end = clock();
-	duration = double(1000000.*(end - start) / CLOCKS_PER_SEC);
-	std::cout << "Time taken by fnc_init_: " << duration << " miliseconds" << std::endl;
-	// !7
-	
-	
-	// !7
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by fnc_init: " << duration << " seconds" << std::endl;
+	// !7	
+
 
 	// 8.pointers initialization
 	d_p0 = d_piarrOut_0;
@@ -249,50 +239,50 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 
 	int* d_arr_deltaTLocal = 0;
 	cudaMalloc(&d_arr_deltaTLocal, IImgrows / 2 * sizeof(int));
-	
+
 	int* d_arr_dT_MI = 0;
-	cudaMalloc(&d_arr_dT_MI, IImgrows* (ideltaT + 1) * sizeof(int));
+	cudaMalloc(&d_arr_dT_MI, IImgrows * (ideltaT + 1) * sizeof(int));
 
 	int* d_arr_dT_ML = 0;
 	cudaMallocManaged(&d_arr_dT_ML, IImgrows * (ideltaT + 1) * sizeof(int));
 
 	int* d_arr_dT_RI = 0;
 	cudaMalloc(&d_arr_dT_RI, IImgrows * (ideltaT + 1) * sizeof(int));
-	
+
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by allocating memory to device  auxiliary arrays: " << duration << " seconds" << std::endl;
 	// !9
 	int iInp0 = IImgrows;
 	int iInp1 = ideltaT + 1;
-	
+
 	int iOut0 = 0, iOut1 = 0, iOut2 = 0;
 
 	// 10. iterations
 	start = clock();
 	for (int iit = 1; iit < (I_F + 1); ++iit)
-	{		
-		fncFdmtIteration(d_p0, val_dF,iInp0, iInp1
-			, IImgcols,  IMaxDT,  VAlFmin
-			, VAlFmax, iit,  d_arr_val0
-			, d_arr_val1,  d_arr_deltaTLocal
+	{
+		fncFdmtIteration(d_p0, val_dF, iInp0, iInp1
+			, IImgcols, IMaxDT, VAlFmin
+			, VAlFmax, iit, d_arr_val0
+			, d_arr_val1, d_arr_deltaTLocal
 			, d_arr_dT_MI, d_arr_dT_ML, d_arr_dT_RI
 			, d_p1, iOut0, iOut1);
-		
+
 		// exchange order of pointers
 		int* d_pt = d_p0;
 		d_p0 = d_p1;
 		d_p1 = d_pt;
 		iInp0 = iOut0;
 		iInp1 = iOut1;
-		
+
 		// !
 	}
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by iterations: " << duration << " seconds" << std::endl;
 	// ! 10
-	
+
 	// 11. copy output to host
 	start = clock();
 	cudaMemcpy(piarrImgOut, d_p0, IImgcols * IMaxDT
@@ -307,16 +297,16 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	cudaFree(d_arr_val0);
 	cudaFree(d_arr_val1);
 	cudaFree(d_arr_deltaTLocal);
-	
+
 	cudaFree(d_piarrOut_0);
 	cudaFree(d_piarrOut_1);
 	cudaFree(d_piarrImgInp);
-	
+
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
 	cudaFree(d_arr_dT_RI);
 	cudaDeviceReset();
-	
+
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by cudaFree: " << duration << " seconds" << std::endl;
@@ -346,14 +336,14 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 // IDim0: this is iImgrows - quantity of rows of input power image, this is F
 // IDim1: changes 
 // IDim2: this is iImgcols - quantity of cols of input power image, this is T 
-void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, const int IDim1
+void fncFdmtIteration(int* d_piarrInp, const float val_dF, const int IDim0, const int IDim1
 	, const int IDim2, const int IMaxDT, const float VAlFmin
 	, const float VAlFmax, const int ITerNum, float* d_arr_val0
 	, float* d_arr_val1, int* d_iarr_deltaTLocal
-	, int* d_iarr_dT_MI,  int* d_iarr_dT_ML,  int* d_iarr_dT_RI
-	, int* d_piarrOut, int & iOutPutDim0, int& iOutPutDim1)
+	, int* d_iarr_dT_MI, int* d_iarr_dT_ML, int* d_iarr_dT_RI
+	, int* d_piarrOut, int& iOutPutDim0, int& iOutPutDim1)
 {
-	
+
 	float valDeltaF = pow(2., ITerNum) * val_dF;
 	float temp0 = 1. / (VAlFmin * VAlFmin) -
 		1. / ((VAlFmin + valDeltaF) * (VAlFmin + valDeltaF));
@@ -363,19 +353,19 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	int ideltaT = (int)(ceil(((float)IMaxDT - 1.0) * temp0 / VAlTemp1));
 	iOutPutDim1 = ideltaT + 1;
 	iOutPutDim0 = IDim0 / 2;
-		
+
 
 	// set zeros in output array
 	cudaMemset(d_piarrOut, 0, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(int));
 	// !
-	 
+
 	float val_correction = 0;
 	if (ITerNum > 0)
 	{
 		val_correction = val_dF / 2.;
 	}
 
-	
+
 	// 9. auxiliary constants initialization
 	const float VAlC2 = (VAlFmax - VAlFmin) / ((float)(iOutPutDim0));
 	// !9	
@@ -383,31 +373,31 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	// 10. calculating first 3 auxillary 1 dim arrays
 	int threadsPerBlock = 1024;
 	int numberOfBlocks = (iOutPutDim0 + threadsPerBlock - 1) / threadsPerBlock;
-	
+
 	create_auxillary_1d_arrays << <numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, IMaxDT, VAlTemp1, VAlC2, VAlFmin, val_correction
 		, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal);
 	cudaDeviceSynchronize();
-	
+
 	// !10
 
-	
+
 
 	// 12. calculating second 3 auxillary 2 dim arrays
 	int quantEl = iOutPutDim0 * iOutPutDim1;
 	threadsPerBlock = 256;
-	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;	
+	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
 
 	kernel_2d_arrays << < numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, iOutPutDim1, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal
 		, d_iarr_dT_MI, d_iarr_dT_ML
 		, d_iarr_dT_RI);
 	cudaDeviceSynchronize();
-	
+
 	// !11
 
-    // 13. 
-	quantEl =  iOutPutDim0* iOutPutDim1* IDim2;
+	// 13. 
+	quantEl = iOutPutDim0 * iOutPutDim1 * IDim2;
 	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
 	kernel_shift_and_sum << <numberOfBlocks, threadsPerBlock >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
@@ -417,7 +407,7 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);*/
 	cudaDeviceSynchronize();
 
-	
+
 
 }
 
@@ -441,7 +431,7 @@ void kernel_shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 	{
 		return;
 	}
-	int idx =  irest % IDim2;
+	int idx = irest % IDim2;
 	// claculation of bound index: 
 	// arr_dT_ML[i_F, i_dT]
 	// index of arr_dT_ML
@@ -453,8 +443,8 @@ void kernel_shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 	// d_Output[i_F][i_dT][idx] = d_input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
 	  // calculation num row of submatix No_2 * i_F of d_piarrInp = arr_dT_MI[ind]
 	d_piarrOut[i] = d_piarrInp[2 * i_F * IDim1 * IDim2 +
-	d_iarr_dT_MI[ind] * IDim2 + idx];
-	
+		d_iarr_dT_MI[ind] * IDim2 + idx];
+
 	if (idx >= d_iarr_dT_ML[ind])
 	{
 		int numRow = d_iarr_dT_RI[ind];
@@ -490,8 +480,8 @@ void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 
 	for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
 	{
-		
-		for (int i_dT = 0; i_dT < ( 1 +iarr_deltaTLocal[i_F]); ++i_dT)
+
+		for (int i_dT = 0; i_dT < (1 + iarr_deltaTLocal[i_F]); ++i_dT)
 		{
 			int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
 			// number of element of beginning of the input 2 * i_F matrix's row with number 
@@ -508,7 +498,7 @@ void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 			// number of the row of the submatrix of input matrix with number 2 * i_F + 1
 			int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
 			// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
-			int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix ;
+			int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix;
 			int threadsPerBlock = 1024;
 			int numberOfBlocks = (IDim2 - numElemInRow + threadsPerBlock - 1) / threadsPerBlock;
 			sumArrays_ << <numberOfBlocks, threadsPerBlock >> > (&d_piarrOut[numRowOutputMtrxBegin1], &d_piarrInp[numRowInputMtrxBegin1], IDim2 - numElemInRow);
@@ -551,7 +541,7 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 
 {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
-	
+
 	if (i > IDim0 * IDim1)
 	{
 		return;
@@ -560,7 +550,7 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 	int i_dT = i % IDim1;
 	if (i_dT > (d_iarr_deltaTLocal[i_F]))
 	{
-		d_iarr_dT_middle_index[i] = 0;		
+		d_iarr_dT_middle_index[i] = 0;
 		d_iarr_dT_middle_larger[i] = 0;
 		d_iarr_dT_rest_index[i] = 0;
 		return;
@@ -570,73 +560,9 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 	int ivalt = round(((float)i_dT) * d_arr_val1[i_F]);
 	d_iarr_dT_middle_larger[i] = ivalt;
 	d_iarr_dT_rest_index[i] = i_dT - ivalt;
-	
-
-}
-//--------------------------------------------------------------------------------------
-__global__
-void fnc_init_(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaTplus1, int* d_piarrOut)
-{
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid > IImgrows * IImgcols)
-	{
-		return;
-	}
-	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
-	int iF = tid / IImgcols;
-	int numElemInRow = tid % IImgcols;
-
-	int* piOut = &d_piarrImg[iF * quantElemInMtrx + numElemInRow];
-	int* piInp = &d_piarrImg[iF * IImgcols];
-	int itemp = piInp[numElemInRow];
-	piOut[0] = itemp;
-	//piInp += IImgcols - numElemInRow;
-	for (int i_dT = 1; i_dT < IDeltaTplus1; ++i_dT)
-	{
-		if (i_dT <= numElemInRow)
-		{
-			atomicAdd(&itemp, piInp[numElemInRow - i_dT]);
-			//itemp += piInp[numElemInRow - i_dT];
-
-		}
-		
-		piOut[i_dT * IImgcols] = itemp;
-		
-	}
 
 
 }
-//__global__
-//void fnc_init_(int* d_piarrImg, const int IImgrows, const int IImgcols
-//	, const int IDeltaTplus1, int* d_piarrOut)
-//{
-//	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-//	if (tid > IImgrows * IImgcols)
-//	{
-//		return;
-//	}
-//	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
-//	int iF = tid / IImgrows;
-//	int numElemInRow = tid % IImgrows;
-//
-//
-//	int itemp = d_piarrImg[iF * IImgcols + numElemInRow];
-//	d_piarrOut[iF * quantElemInMtrx + numElemInRow] = d_piarrImg[iF * IImgcols + numElemInRow];
-//
-//	for (int i_dT = 1; i_dT < IDeltaTplus1; ++i_dT)
-//	{
-//		if (numElemInRow >= i_dT)
-//		{
-//			itemp += d_piarrImg[iF * IImgcols + IImgcols - numElemInRow];
-//
-//		}
-//		d_piarrOut[iF * quantElemInMtrx + i_dT * IImgcols + numElemInRow] = itemp;
-//	}
-//
-//
-//}
-//-------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------
 void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaT, int* d_piarrOut)
@@ -677,79 +603,7 @@ void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 		}
 
 }
-//--------------------------------------------------------------------------------------
-void fnc_init_n(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaT, int* d_piarrOut)
-{
-	//// output in .npy:
-	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
-	//	cudaMemcpy(parr, d_piarrImg, IImgrows * IImgcols  * sizeof(int)
-	//		, cudaMemcpyDeviceToHost);
-	//	std::vector<int> v6(parr, parr + IImgrows * IImgcols );
 
-	//	std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
-
-	//	npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
-	//	free(parr);
-
-	int threadsPerBlock = 1024;
-	int numberOfBlocks = (IImgrows* IImgcols + threadsPerBlock - 1) / threadsPerBlock;
-	kernel_seed<<< numberOfBlocks, threadsPerBlock>>>(d_piarrImg, IImgrows, IImgcols
-		, IDeltaT, d_piarrOut);
-
-
-	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
-	{
-		init_iter << < numberOfBlocks, threadsPerBlock >> > (d_piarrImg, IImgrows, IImgcols, IDeltaT
-			, i_dT, d_piarrOut);
-	}
-
-		
-
-}
-//---------------------------------------------------------------------------
-__global__
-void kernel_seed(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaT, int* d_piarrOut)
-{
-	const int IDeltaTplus1 = IDeltaT + 1;
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid > IImgrows * IImgcols)
-	{
-		return;
-	}
-	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
-	int iF = tid / IImgcols;
-	int numElemInRow = tid % IImgcols;
-
-	d_piarrOut[iF * quantElemInMtrx + numElemInRow] = d_piarrImg[iF * IImgcols];	
-
-}
-//---------------------------------------------------------------------------------------------------
-__global__
- void init_iter(int* d_piarrImg, const int IImgrows, const int IImgcols, const int IDeltaT
-, const int i_dT, int* d_piarrOut)
-{
-
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid > IImgrows * IImgcols)
-	{
-		return;
-	}
-	const int IDeltaTplus1 = IDeltaT + 1;
-	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
-	int iF = tid / IImgcols;
-	int numElemInRow = tid % IImgcols;
-	d_piarrOut[iF * quantElemInMtrx + i_dT * IDeltaTplus1 + numElemInRow] = d_piarrOut[iF * quantElemInMtrx + (i_dT - 1) * IDeltaTplus1 + numElemInRow];
-
-	if (i_dT <= numElemInRow)
-	{
-		d_piarrOut[iF * quantElemInMtrx + i_dT * IDeltaTplus1 + numElemInRow] +=
-			d_piarrImg[iF * IImgcols + numElemInRow - i_dT];
-	}
-
-	
-}
 //-----------------------------------------------------------------------------
 //CUDA kernel for element-wise summation
 __global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
@@ -767,8 +621,90 @@ __global__ void sumArrays_(int* d_result, const int* d_arr1, int n)
 	int tid = blockIdx.x * blockDim.x + threadIdx.x;
 	if (tid < n)
 	{
-		d_result[tid] += d_arr1[tid] ;
+		d_result[tid] += d_arr1[tid];
 	}
+}
+
+
+//--------------------------------------------------------------------------------------
+void fnc_init_fdmt(int* d_piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, int* d_piarrOut)
+{
+	//// output in .npy:
+	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
+	//	cudaMemcpy(parr, d_piarrImg, IImgrows * IImgcols  * sizeof(int)
+	//		, cudaMemcpyDeviceToHost);
+	//	std::vector<int> v6(parr, parr + IImgrows * IImgcols );
+
+	//	std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
+
+	//	npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
+	//	free(parr);
+
+	int threadsPerBlock = 1024;
+	int numberOfBlocks = (IImgrows* IImgcols + threadsPerBlock - 1) / threadsPerBlock;
+	kernel_seed<<< numberOfBlocks, threadsPerBlock>>>(d_piarrImg, IImgrows, IImgcols
+		, IDeltaT, d_piarrOut);
+	cudaDeviceSynchronize();
+
+	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
+	{
+		init_iter << < numberOfBlocks, threadsPerBlock >> > (d_piarrImg, IImgrows, IImgcols, IDeltaT
+			, i_dT, d_piarrOut);
+		cudaDeviceSynchronize();
+	}
+	}		
+	
+//---------------------------------------------------------------------------
+__global__
+void kernel_seed(int* d_piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, int* d_piarrOut)
+{
+	const int IDeltaTplus1 = IDeltaT + 1;
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid > IImgrows * IImgcols)
+	{
+		return;
+	}
+	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
+	int iF = tid / IImgcols;
+	int numElemInRow = tid % IImgcols;
+
+	d_piarrOut[iF * quantElemInMtrx + numElemInRow] = d_piarrImg[iF * IImgcols + numElemInRow];
+
+}
+//---------------------------------------------------------------------------------------------------
+__global__
+ void init_iter(int* d_piarrImg, const int IImgrows, const int IImgcols, const int IDeltaT
+, const int i_dT, int* d_piarrOut)
+{
+
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid > IImgrows * IImgcols)
+	{
+		return;
+	}
+	const int IDeltaTplus1 = IDeltaT + 1;
+	int quantElemInMtrx = (IImgcols * IDeltaTplus1);
+	int iF = tid / IImgcols;
+	int numElemInRow = tid % IImgcols;
+	int* ip0 = &d_piarrOut[iF * quantElemInMtrx + (i_dT-1) * IImgcols + numElemInRow];
+	int* ip1 = ip0 + IImgcols;
+
+
+	if (i_dT <= numElemInRow)
+	{
+		*ip1 = *ip0 + d_piarrImg[iF * IImgcols + numElemInRow - i_dT];
+			//d_piarrOut[iF * quantElemInMtrx + (i_dT - 1) * IImgcols + numElemInRow] + d_piarrImg[iF * IImgcols + numElemInRow - i_dT];
+		/*atomicAdd(&d_piarrOut[iF * quantElemInMtrx + i_dT * IImgcols + numElemInRow],
+			d_piarrImg[iF * IImgcols + numElemInRow - i_dT]);*/
+	}
+	else
+	{
+		*ip1 = 0;
+	}
+
+	
 }
 
 //-------------------------------------------------------------------------------------------------------------------------------

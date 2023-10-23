@@ -688,7 +688,7 @@ void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
 		{
 
 			int threadsPerBlock = 1024;
-			int numberOfBlocks = (i_dT + threadsPerBlock - 1) / threadsPerBlock;
+			int numberOfBlocks = (IImgcols - i_dT + threadsPerBlock - 1) / threadsPerBlock;
 			int* d_result = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
 			int* d_arg0 = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
 			int* d_arg1 = &d_piarrImg[iF * IImgcols];

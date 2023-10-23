@@ -20,7 +20,7 @@
 
 
 using namespace std;
-char strInpFolder[] = "..//FDMT_TESTS//512";
+char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image.npy";
 
 
