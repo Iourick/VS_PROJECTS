@@ -95,8 +95,12 @@
     <ClInclude Include="Dependencies\freeglut\include\GL\freeglut.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\glut.h" />
     <ClInclude Include="Dependencies\freeglut\include\IL\devil_internal_exports.h" />
+    <ClInclude Include="fileInput.h" />
     <ClInclude Include="kernel.cuh" />
     <ClInclude Include="npy.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="fileInput.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

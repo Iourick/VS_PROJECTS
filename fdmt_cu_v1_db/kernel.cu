@@ -20,11 +20,16 @@
 #include <algorithm> 
 #include "kernel.cuh"
 #include <chrono>
-
+#include "fileInput.h"
 
 
 using namespace std;
 std::vector<std::vector<int>> ivctOut;
+char strInpFolder[] = "D://VS_PROJECTS//FDMT_TESTS//512";
+char strPathOutImageNpyFile[] = "out_image.npy";
+
+
+
 int IROWS;
 int ICOLS;
 
@@ -116,85 +121,69 @@ int main(int argc, char** argv)
 	//// Create a std::vector from the integer array
 	//std::vector<int> v(iarr, iarr + n);
 	//-------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+//------------------- prepare to work -------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+// initiate pointer to input image
+	int* piarr = (int*)malloc(sizeof(int));
 
-	bool fortran_order = false;
-	// 1. loading typeofdata
-	std::vector<unsigned long> shape {};
-	std::vector<int> ivctDataType_maxDT;
-	npy::LoadArrayFromNumpy("D://MyVSprojPy//iarrDataType_maxDT.npy", shape, fortran_order, ivctDataType_maxDT);
-	const int IMaxDT = ivctDataType_maxDT[1];
+	// initiate 2-pointer to input image, in order to realloc memory to satisfy arbitrary dimensions
+	int** ppiarrImage = &piarr;
+
+	// initiating input variables
+	int iMaxDT = 0;
+	int iImRows = 0, iImCols = 0;
+	float val_fmax = 0., val_fmin = 0.;
+
+	// reading input files from folder 
+	int ireturn = downloadInputData(strInpFolder, &iMaxDT, ppiarrImage, &iImRows, &iImCols,
+		&val_fmin, &val_fmax);
+
+	// analysis output of reading function
+	switch (ireturn)
+	{
+	case 1:
+		cout << "Err. Can't allocate memory for input image. Oooops... " << std::endl;
+		return 1;
+	case 2:
+		cout << "Err. Input dimensions must be a power of 2. Oooops... " << std::endl;
+		return 1;
+	case 0:
+		cout << "Input data downloaded properly " << std::endl;
+		break;
+	default:
+		cout << "Happened something extraordinary! Oooops..." << std::endl;
+		break;
+	}
+
+	// declare constants
+	const int IMaxDT = iMaxDT;
+	const int IImgrows = iImRows;
+	const int IImgcols = iImCols;
+	const float VAlFmin = val_fmin;
+	const float VAlFmax = val_fmax;
+
+
+	// handy pointer to input image
+	int* piarrImage = *ppiarrImage;
+
+	//--------------------------------------------------------------------------------------------------------------
+	//-------------------- end of prepare ------------------------------------------------------------------------------------------
+	//------------------- begin to calculate -------------------------------------------------------------------------------------------
+	//--------------------------------------------------------------------------------------------------------------
+	// 1. allocate memory for device array
+	
+
+	int* piarrImOut = new int[IImgcols * IMaxDT];
 	// !1
 
-	// 2. loading XX
-	std::vector<unsigned long> shape1 {};
-	std::vector<int> vctXX;
-	npy::LoadArrayFromNumpy("D://MyVSprojPy//XX.npy", shape1, fortran_order, vctXX);
-	// !2
-
-	// 3. loading shape
-	std::vector<unsigned long> shape0 {};
-	std::vector<int> ivctImShape;
-	npy::LoadArrayFromNumpy("D://MyVSprojPy//iarrShape.npy", shape0, fortran_order, ivctImShape);
-	// !3
-
-	// 4. loading fmin and fmax  
-	std::vector<unsigned long> shape2 {};
-	std::vector<float> vctfmin_max;
-	npy::LoadArrayFromNumpy("D://MyVSprojPy//fmin_max.npy", shape2, fortran_order, vctfmin_max);
-	// ! 4
-
-	// 5. creating dynamic array arrXX
-	int* piarrImage = new int[vctXX.size()];
-	for (int i = 0; i < vctXX.size(); ++i)
-	{
-		piarrImage[i] =  vctXX[i];
-		
-	}
-
-	// output in .npy:
-	
-	
-	std::vector<int> v(piarrImage, piarrImage + vctXX.size());
-
-	std::array<long unsigned, 1> leshape126 {vctXX.size()};
-
-	npy::SaveArrayAsNumpy("XX00.npy", false, leshape126.size(), leshape126.data(), v);
-	
-	// !5
-
-	// checking dimensions
-	bool bDim0_OK = false, bDim1_OK = false;
-	int numcur = 2;
-	for (int i = 1; i < 31; ++i)
-	{
-		numcur = 2 * numcur;
-		if (numcur == ivctImShape[0])
-		{
-			bDim0_OK = true;
-		}
-		if (numcur == ivctImShape[1])
-		{
-			bDim1_OK = true;
-		}
-	}
-
-	if (!(bDim0_OK && bDim1_OK))
-	{
-		cout << "Input dimensions must be a power of 2 " << std::endl;
-		return;
-	}
-
-	// 6. allocate memory for device array
-
-	int* piarrImOut = new int[ivctImShape[1] * IMaxDT];
-	// !6
-
-	// 7. calculations	
+	// 2. calculations	
 	//clock_t start = clock();	
 	auto start = std::chrono::high_resolution_clock::now();
 
-	fncFdmt_cu_v0(piarrImage, ivctImShape[0], ivctImShape[1]
-		, vctfmin_max[0], vctfmin_max[1], ivctDataType_maxDT[1], piarrImOut);
+	fncFdmt_cu_v0(piarrImage, IImgrows, IImgcols
+		, VAlFmin, VAlFmax, IMaxDT, piarrImOut);
 	/*clock_t end = clock();	
 	double duration = double(end - start) / CLOCKS_PER_SEC;	
 	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;*/
@@ -205,21 +194,25 @@ int main(int argc, char** argv)
 
     // Выводим время выполнения в микросекундах
     std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() << " milliseconds" << std::endl;
-	// !7
+	// !2
+	
 	// output in .npy:
 	
-	std::vector<int> v1(piarrImOut, piarrImOut + ivctImShape[1] * ivctDataType_maxDT[1]);
+	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
-	std::array<long unsigned, 1> leshape101 {ivctImShape[1] * ivctDataType_maxDT[1]};
+	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
 
-	npy::SaveArrayAsNumpy("out_arr.npy", false, leshape101.size(), leshape101.data(), v1);
+	npy::SaveArrayAsNumpy(strPathOutImageNpyFile, false, leshape101.size(), leshape101.data(), v1);
+
+
 	
-//-------------------------------------------------------------------------------
-//------  otput image -------------------------------------------------------------------------
-//-------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------
-	IROWS = ivctImShape[1];
-	ICOLS = ivctDataType_maxDT[1];
+	//--------------------------------------------------------------------------------------------------------------
+	//-------------------- end of calculations ------------------------------------------------------------------------------------------
+	//------------------- begin to draw output image -------------------------------------------------------------------------------------------
+	//--------------------------------------------------------------------------------------------------------------
+
+	IROWS = IImgcols;
+	ICOLS = IMaxDT;
 	// zaglushka
 	//memcpy(piarrImOut, piarrImage, IROWS * ICOLS * sizeof(int));
 	// !zaglushka
@@ -234,8 +227,8 @@ int main(int argc, char** argv)
 		memcpy(&piarrImOut[(IROWS -1 - i) * ICOLS], pi, ICOLS * sizeof(int));
 	}
 	delete pi;
-	int imax = *std::max_element(piarrImage, piarrImage + ivctImShape[0] * ivctImShape[1]);
-	int imin = *std::min_element(piarrImage, piarrImage + ivctImShape[0] * ivctImShape[1]);
+	int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+	int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
 	float coeff = 255. / (double(imax));
     ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0)); // Initialize with your data
     for (int i = 0; i < IROWS; ++i)
@@ -257,11 +250,9 @@ int main(int argc, char** argv)
 
     // Set up other GLUT callbacks as needed (e.g., keyboard input)
 
-    glutMainLoop();
-
-    
+    glutMainLoop();    
 	delete piarrImage;
-	delete piarrImOut;
+	delete piarr;
 	
     return 0;
 }
@@ -273,74 +264,66 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	const int I_F = (int)(log2((double)(IImgrows)));
 	// !1
 
+	// 2. temp variables calculations
 	const float val_dF = (VAlFmax - VAlFmin) / ((float)(IImgrows));	
 	int ideltaT = int(ceil((IMaxDT - 1.) * (1. / (VAlFmin * VAlFmin)
 		- 1. / ((VAlFmin + val_dF)* (VAlFmin + val_dF)))
 		/ (1. / (VAlFmin
 				* VAlFmin) - 1. / (VAlFmax * VAlFmax))));
+	// !2
 
 	
-
-	
-	// 1. declare pointers to device arrays
+	// 3. declare pointers to device arrays
 	int* d_p0 = 0;
 	int* d_p1 = 0;
 	int* d_piarrOut_0 = 0;
 	int* d_piarrOut_1 = 0;
 	int* d_piarrImgInp = 0;
-	// !1
+	// !3
 		
-	// 2. allocate memory to device arrays
+	// 4. allocate memory to device arrays
 	clock_t start = clock();
 	cudaMalloc(&d_piarrOut_0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	cudaMalloc(&d_piarrOut_1, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	cudaMalloc(&d_piarrImgInp, IImgrows  * IImgcols * sizeof(int));
-	// !2
+	// !4
 	clock_t end = clock();
 	double duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by cudaMalloc: " << duration << " seconds" << std::endl;
 
-	// 3  Initialize the device arrays with zeros
+	// 5  Initialize the device arrays with zeros
 	start = clock();
 	cudaMemset(d_piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	cudaMemset(d_piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
-	// !3
+	// !5
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by cudaMemset: " << duration << " seconds" << std::endl;
 
-	// 4.copy input data from host to device
+	// 6.copy input data from host to device
 	start = clock();
 	cudaMemcpy(d_piarrImgInp, piarrImgInp, IImgrows * IImgcols * sizeof(int)
 		, cudaMemcpyHostToDevice);
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by cudaMemcpy: " << duration << " seconds" << std::endl;
-	// !4
+	// !6
 
-	// 5. call initialization func
+	// 7. call initialization func
+	start = clock();
 	fnc_init(d_piarrImgInp, IImgrows, IImgcols, ideltaT, d_piarrOut_0);
-
-	// output in .npy:
-	int* parrinit = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
-	cudaMemcpy(parrinit, d_piarrOut_0, IImgrows * IImgcols * (1 + ideltaT) * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-	std::vector<int> v(parrinit, parrinit + IImgrows * IImgcols * (1 + ideltaT));
-
-	std::array<long unsigned, 1> leshape12 {IImgrows* IImgcols* (1 + ideltaT)};
-	
-	npy::SaveArrayAsNumpy("init_arr.npy", false, leshape12.size(), leshape12.data(), v);
-	free(parrinit);
-	//! 5
-	
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by fnc_init: " << duration << " seconds" << std::endl;
+	// !7	
 	
 
-	// 7.pointers initialization
+	// 8.pointers initialization
 	d_p0 = d_piarrOut_0;
 	d_p1 = d_piarrOut_1;
-	// 7!
+	// 8!
 
-	// 8. allocate memory to device  auxiliary arrays
+	// 9. allocate memory to device  auxiliary arrays
 	start = clock();
 	float* d_arr_val0 = 0;
 	cudaMalloc(&d_arr_val0, IImgrows / 2 * sizeof(float));
@@ -350,8 +333,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 
 	int* d_arr_deltaTLocal = 0;
 	cudaMalloc(&d_arr_deltaTLocal, IImgrows / 2 * sizeof(int));
-
-	// 11. memory allocation for 3 auxillaty 2 dimensional arrays on GPU
+	
 	int* d_arr_dT_MI = 0;
 	cudaMalloc(&d_arr_dT_MI, IImgrows* (ideltaT + 1) * sizeof(int));
 
@@ -363,23 +345,15 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by allocate memory: " << duration << " seconds" << std::endl;
-	// !8
+	std::cout << "Time taken by allocating memory to device  auxiliary arrays: " << duration << " seconds" << std::endl;
+	// !9
 	int iInp0 = IImgrows;
 	int iInp1 = ideltaT + 1;
 	
 	int iOut0 = 0, iOut1 = 0, iOut2 = 0;
 
-	//// output in .npy:
-	//int* parrinit2 = (int*)malloc(IImgrows * IImgcols * (1 + ideltaT) * sizeof(int));
-	//cudaMemcpy(parrinit2, d_piarrOut_0, IImgrows* IImgcols* (1 + ideltaT) * sizeof(int)
-	//	, cudaMemcpyDeviceToHost);
-	//std::vector<int> v2(parrinit2, parrinit2 + IImgrows * IImgcols * (1 + ideltaT));
-
-	//std::array<long unsigned, 1> leshape122 {IImgrows* IImgcols* (1 + ideltaT)};
-
-	//npy::SaveArrayAsNumpy("init_arr2.npy", false, leshape122.size(), leshape122.data(), v2);
-	//free(parrinit2);
+	// 10. iterations
+	start = clock();
 	for (int iit = 1; iit < (I_F + 1); ++iit)
 	{		
 		fncFdmtIteration(d_p0, val_dF,iInp0, iInp1
@@ -388,18 +362,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 			, d_arr_val1,  d_arr_deltaTLocal
 			, d_arr_dT_MI, d_arr_dT_ML, d_arr_dT_RI
 			, d_p1, iOut0, iOut1);
-		/*if (iit == 8)
-		{
-			int* parrinit0 = (int*)malloc(iOut0 * iOut1 * IImgcols * sizeof(int));
-			cudaMemcpy(parrinit0, d_piarrOut_1, iOut0 * iOut1 * IImgcols * sizeof(int)
-				, cudaMemcpyDeviceToHost);
-			std::vector<int> v0(parrinit0, parrinit0 + iOut0 * iOut1 * IImgcols);
-
-			std::array<long unsigned, 1> leshape120 {iOut0* iOut1* IImgcols};
-
-			npy::SaveArrayAsNumpy("arr_InterimOut.npy", false, leshape120.size(), leshape120.data(), v0);
-			free(parrinit0);
-		}*/
+		
 		// exchange order of pointers
 		int* d_pt = d_p0;
 		d_p0 = d_p1;
@@ -409,9 +372,21 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 		
 		// !
 	}
-
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by iterations: " << duration << " seconds" << std::endl;
+	// ! 10
+	
+	// 11. copy output to host
+	start = clock();
 	cudaMemcpy(piarrImgOut, d_p0, IImgcols * IMaxDT
 		* sizeof(int), cudaMemcpyDeviceToHost);
+	end = clock();
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by copying memory to host: " << duration << " seconds" << std::endl;
+	// ! 11
+
+	// 12 free memory on device
 	start = clock();
 	cudaFree(d_arr_val0);
 	cudaFree(d_arr_val1);
@@ -420,8 +395,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	cudaFree(d_piarrOut_0);
 	cudaFree(d_piarrOut_1);
 	cudaFree(d_piarrImgInp);
-
-	// 14. free memory
+	
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
 	cudaFree(d_arr_dT_RI);
@@ -430,6 +404,7 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by cudaFree: " << duration << " seconds" << std::endl;
+	// !12
 
 }
 
@@ -492,37 +467,6 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	// 10. calculating first 3 auxillary 1 dim arrays
 	int threadsPerBlock = 1024;
 	int numberOfBlocks = (iOutPutDim0 + threadsPerBlock - 1) / threadsPerBlock;
-	/*int F_Jumps = iOutPutDim0;
-	float* arr_val0 = new float[F_Jumps];
-	float* arr_val1 = new float[F_Jumps];
-	int* iarr_deltaTLocal = new int[F_Jumps];
-	for (int i_F = 0; i_F < F_Jumps; ++i_F)
-	{
-		
-		float valf_start = VAlC2 * i_F + VAlFmin;
-		float valf_end = VAlC2 * ( 1. + i_F) + VAlFmin;
-		
-		float valf_middle = (valf_end - valf_start)/2. + valf_start - val_correction;
-		float valf_middle_larger = (valf_end - valf_start) / 2. + valf_start + val_correction;
-		float temp0 = 1. / (valf_start * valf_start) - 1. / (valf_end * valf_end);
-
-		arr_val0[i_F] = -(1. / (valf_middle * valf_middle) - 1. / (valf_start * valf_start)) / temp0;
-
-		arr_val1[i_F] = -(1. / (valf_middle_larger * valf_middle_larger)
-			- 1. / (valf_start * valf_start)) / temp0;
-
-		iarr_deltaTLocal[i_F] = (int)(ceil((((float)(IMaxDT)) - 1.) * temp0 / VAlTemp1));
-		int iii = 0;
-	}
-	cudaMemcpy(d_arr_val0, arr_val0, iOutPutDim0 * sizeof(float)
-		, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_arr_val1, arr_val1, iOutPutDim0 * sizeof(float)
-		, cudaMemcpyHostToDevice);
-	cudaMemcpy(d_iarr_deltaTLocal, iarr_deltaTLocal, iOutPutDim0 * sizeof(int)
-		, cudaMemcpyHostToDevice);
-		delete arr_val0[];
-		delete arr_val1[];
-		delete iarr_deltaTLocal[];*/
 	
 	create_auxillary_1d_arrays << <numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, IMaxDT, VAlTemp1, VAlC2, VAlFmin, val_correction

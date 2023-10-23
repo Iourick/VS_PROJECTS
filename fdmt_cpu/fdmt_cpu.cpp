@@ -14,13 +14,13 @@
 #include "npy.hpp"
 #include <stdlib.h>
 #include "fileInput.h"
-#include "FdmtFuncs.h"
+#include "FdmtCpuFuncs.h"
 
 
 
 
 using namespace std;
-char strInpFolder[] = "D://VS_PROJECTS//fdmt_cpu//2048";
+char strInpFolder[] = "..//FDMT_TESTS//512";
 char strPathOutImageNpyFile[] = "out_image.npy";
 
 
@@ -45,7 +45,7 @@ int main()
 	int ireturn = downloadInputData(strInpFolder,  &iMaxDT, ppiarrImage, &iImRows, &iImCols,
 		&val_fmin, &val_fmax);
 	
-	// analysis output of reading function
+	// output's analys   of reading function
 	switch (ireturn)
 	{
 	case 1:
@@ -55,7 +55,8 @@ int main()
 		cout << "Err. Input dimensions must be a power of 2. Oooops... " << std::endl;
 		return 1;
 	case 0:
-		cout << "Input data downloaded properly " << std::endl;
+		cout << "Input data downloaded properly. Congradulations! " << std::endl;
+		
 		break;
 	default:
 		cout << "Happened something extraordinary! Oooops..." << std::endl;
@@ -90,7 +91,7 @@ int main()
 		, VAlFmin, VAlFmax, IMaxDT, piarrImOut);
 	clock_t end = clock();
 	double duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;
+	//std::cout << "Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;
 	
 	// !2
 	
@@ -101,7 +102,8 @@ int main()
 	std::array<long unsigned, 2> leshape101 {IImgcols,IMaxDT};
 
 	npy::SaveArrayAsNumpy(strPathOutImageNpyFile, false, leshape101.size(), leshape101.data(), v1);
-	free(piarrImOut);
+	free(piarr);
+	std::cout << "Succeeded. Time taken by function fncFdmt_cu_v0: " << duration << " seconds" << std::endl;
 	return 0;
 }
 

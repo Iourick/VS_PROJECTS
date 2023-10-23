@@ -18,21 +18,21 @@
     <ClCompile Include="fdmt_cpu.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="fileInput.cpp">
+    <ClCompile Include="..\MyVSLib_C++\FdmtCpuFuncs.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="FdmtFuncs.cpp">
+    <ClCompile Include="..\MyVSLib_C++\fileInput.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="FileInput.h">
+    <ClInclude Include="..\MyVSLib_C++\fileInput.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="npy.hpp">
+    <ClInclude Include="..\MyVSLib_C++\npy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="FdmtFuncs.h">
+    <ClInclude Include="..\MyVSLib_C++\FdmtCpuFuncs.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
