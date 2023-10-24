@@ -15,10 +15,12 @@
 #include <ctime>   // For seeding the random number generator
 #include "npy.hpp"
 #include <algorithm> 
-#include "kernel.cuh"
+
 #include <chrono>
 #include "fileInput.h"
-#include "kernel.cuh"
+#include "wchar.h"
+
+
 
 extern int IROWS = 0;
 extern int ICOLS = 0;
@@ -79,7 +81,7 @@ void saveImage(const char* filename)
     ilDeleteImages(1, &imageID);
 }
 
-void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const int ICols )
+void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const int ICols,const char* filename)
 {
     ICOLS = ICols;
     IROWS = IRows;
@@ -93,7 +95,7 @@ void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const i
         memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
         memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));
     }
-    delete pi;
+    delete []pi;
     int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
     int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
     float coeff = 255. / (double(imax));
@@ -109,14 +111,18 @@ void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const i
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
     glutInitWindowSize(ICOLS, IROWS);
-    glutCreateWindow("Image Viewer");
+    glutCreateWindow(filename);
 
     glutDisplayFunc(display);
-    // After displaying the image, save it as "image.png"
-    saveImage("image.png");
-
+    // After displaying the image, save it as filename 
+    saveImage(filename);
+    
     // Set up other GLUT callbacks as needed (e.g., keyboard input)
 
     glutMainLoop();
-    delete[]pi;
+    
+    
+    return;
 }
+
+

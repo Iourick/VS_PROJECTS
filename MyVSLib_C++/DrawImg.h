@@ -1,6 +1,6 @@
 #pragma once
 void saveImage(const char* filename);
 
-void createImg(int argc, char** argv, int* piarrImOut, const int IRows, const int ICols);
+void createImg(int argc, char** argv, int* piarrImOut, const int IRows, const int ICols,const char* filename);
 
 void saveImage(const char* filename);

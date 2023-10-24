@@ -1,7 +1,7 @@
 #include "FdmtCpuFuncs.h"
 #include <math.h>
 #include <stdio.h>
-#include <iostream>/
+#include <iostream>
 #include "npy.hpp"
 #include <algorithm> 
 #include <stdlib.h>
@@ -31,20 +31,24 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	// !3
 
 	// 4. allocate memory 
-	clock_t start = clock();
+	
 	piarrOut_0 = (int*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(int));
 	piarrOut_1 = (int*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(int));
 	// !4
 	
 
 	// 5  Initialize the arrays with zeros
-	start = clock();
+	
 	memset( piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	memset( piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(int));
 	// !5
 	
 	// 6. call initialization func
-	fnc_init( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
+	clock_t start = clock() * 1000.;
+	fnc_init_cpu( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
+	clock_t end = clock() * 1000.;
+	double duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by fnc_init_cpu: " << duration << " miliseconds" << std::endl;
 	// !6
 	
 	// 7.pointers fixing
@@ -53,7 +57,7 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	// 7!
 
 	// 8. allocate memory to  auxiliary arrays
-	start = clock();
+	
 	float*  arr_val0 = 0;
 	arr_val0 = (float*)malloc(IImgrows / 2 * sizeof(float));
 	
@@ -100,7 +104,7 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	// 10. calculations
 	for (int iit = 1; iit < (I_F + 1); ++iit)
 	{
-		fncFdmtIteration( p0, val_dF, iInp0, iInp1
+		fncFdmtIteration_cpu( p0, val_dF, iInp0, iInp1
 			, IImgcols, IMaxDT, VAlFmin
 			, VAlFmax, iit,  arr_val0
 			,  arr_val1,  arr_deltaTLocal
@@ -132,9 +136,6 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	free( arr_dT_MI);
 	free( arr_dT_ML);
 	free( arr_dT_RI);
-	
-
-	
 
 }
 
@@ -160,7 +161,7 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 // IDim0: this is iImgrows - quantity of rows of input power image, this is F
 // IDim1: changes 
 // IDim2: this is iImgcols - quantity of cols of input power image, this is T 
-void fncFdmtIteration(int*  piarrInp, const float val_dF, const int IDim0, const int IDim1
+void fncFdmtIteration_cpu(int*  piarrInp, const float val_dF, const int IDim0, const int IDim1
 	, const int IDim2, const int IMaxDT, const float VAlFmin
 	, const float VAlFmax, const int ITerNum, float*  arr_val0
 	, float*  arr_val1, int*  iarr_deltaTLocal
@@ -233,7 +234,7 @@ void fncFdmtIteration(int*  piarrInp, const float val_dF, const int IDim0, const
 	// 12. calculating second 3 auxillary 2 dim arrays
 	
 
-	create_2d_arrays(iOutPutDim0
+	create_2d_arrays_cpu(iOutPutDim0
 		, iOutPutDim1,  arr_val0,  arr_val1,  iarr_deltaTLocal
 		,  iarr_dT_MI,  iarr_dT_ML
 		,  iarr_dT_RI);
@@ -339,7 +340,7 @@ void shift_and_sum_cpu(int*  piarrInp, const int IDim0, const int IDim1
 
 //--------------------------------------------------------------------------------------
 
-void create_2d_arrays(const int IDim0, const int IDim1
+void create_2d_arrays_cpu(const int IDim0, const int IDim1
 	, float*  arr_val0, float*  arr_val1, int*  iarr_deltaTLocal
 	, int*  iarr_dT_middle_index, int*  iarr_dT_middle_larger
 	, int*  iarr_dT_rest_index)
@@ -373,7 +374,7 @@ void create_2d_arrays(const int IDim0, const int IDim1
 	}	
 }
 //--------------------------------------------------------------------------------------
-void fnc_init(int*  piarrImg, const int IImgrows, const int IImgcols
+void fnc_init_cpu(int*  piarrImg, const int IImgrows, const int IImgcols
 	, const int IDeltaT, int*  piarrOut)
 {
 	

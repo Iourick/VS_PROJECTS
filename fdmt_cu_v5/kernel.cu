@@ -19,10 +19,12 @@
 #include "DrawImg.h"
 
 
+
 using namespace std;
 
 char strInpFolder[] = "..//FDMT_TESTS//2048";
-char strPathOutImageNpyFile[] = "out_image.npy";
+char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
+char strPathOutImageNpyFile_cpu[] = "out_image_CPU.npy";
 
 
 
@@ -114,7 +116,7 @@ int main(int argc, char** argv)
 
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of prepare ------------------------------------------------------------------------------------------
-	//------------------- begin to calculate -------------------------------------------------------------------------------------------
+	//------------------- begin to calculate cuda var -------------------------------------------------------------------------------------------
 	//--------------------------------------------------------------------------------------------------------------
 	// 1. allocate memory for device array
 	
@@ -146,18 +148,18 @@ int main(int argc, char** argv)
 
 	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
 
-	npy::SaveArrayAsNumpy(strPathOutImageNpyFile, false, leshape101.size(), leshape101.data(), v1);
+	npy::SaveArrayAsNumpy(strPathOutImageNpyFile_gpu, false, leshape101.size(), leshape101.data(), v1);
 
 
 	
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
-	//------------------- begin to draw output image -------------------------------------------------------------------------------------------
-	//--------------------------------------------------------------------------------------------------------------
-	/*IROWS = IImgcols;
-	ICOLS = IMaxDT;*/
-	createImg( argc, argv,piarrImOut, IImgcols, IMaxDT);
+	//------------------- begin to draw output image for cuda -------------------------------------------------------------------------------------------
 	
+	char filename_cu[] = "image_cu.png";
+	createImg( argc, argv,piarrImOut, IImgcols, IMaxDT, filename_cu);
+
+
 	
     return 0;
 }
