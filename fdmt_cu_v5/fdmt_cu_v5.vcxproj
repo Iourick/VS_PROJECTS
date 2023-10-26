@@ -62,6 +62,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)Dependencies\freeglut\bin\$(Platform)" "$(OutDir)"</Command>
@@ -85,6 +86,7 @@
     </Link>
     <CudaCompile>
       <TargetMachinePlatform>64</TargetMachinePlatform>
+      <FastMath>false</FastMath>
     </CudaCompile>
     <PostBuildEvent>
       <Command>copy "$(SolutionDir)Dependencies\freeglut\bin\$(Platform)" "$(OutDir)"</Command>

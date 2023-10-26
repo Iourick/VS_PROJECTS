@@ -481,18 +481,35 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 	int quantEl = iOutPutDim0 * iOutPutDim1;
 	threadsPerBlock = 256;
 	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;	
-
+	auto start = std::chrono::high_resolution_clock::now();
 	kernel_2d_arrays << < numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, iOutPutDim1, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal
 		, d_iarr_dT_MI, d_iarr_dT_ML
 		, d_iarr_dT_RI);
 	cudaDeviceSynchronize();
+	auto end = std::chrono::high_resolution_clock::now();
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
+
+	std::cout << "Time taken by kernel_2d_arrays: " << duration.count() << " microseconds" << std::endl;
+
+	// output in .npy:
+		int* parr = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
+		cudaMemcpy(parr, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+			, cudaMemcpyDeviceToHost);
+		std::vector<int> v6(parr, parr + iOutPutDim0 * iOutPutDim1);
+
+		std::array<long unsigned, 2> leshape126 {iOutPutDim0, iOutPutDim1};
+
+		npy::SaveArrayAsNumpy("orig.npy", false, leshape126.size(), leshape126.data(), v6);
+		free(parr);
+
 	
 	// !11
 
     // 13. 
 	quantEl =  iOutPutDim0* iOutPutDim1* IDim2;
 	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
+	
 	kernel_shift_and_sum << <numberOfBlocks, threadsPerBlock >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
@@ -500,6 +517,7 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);*/
 	cudaDeviceSynchronize();
+
 
 	
 

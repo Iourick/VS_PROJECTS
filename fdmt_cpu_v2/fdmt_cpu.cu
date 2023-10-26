@@ -21,20 +21,9 @@
 #if DRAW == true
 #include "DrawImg.h"
 #endif
-
-
-
-
-
-
-
-
-
-
 using namespace std;
 char strInpFolder[] = "..//FDMT_TESTS//2048";
-char strPathOutImageNpyFile[] = "out_image.npy";
-
+char strPathOutImageNpyFile[] = "out_image_CPU.npy";
 
 int main(int argc, char** argv)
 {

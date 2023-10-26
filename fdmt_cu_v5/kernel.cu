@@ -223,8 +223,27 @@ void fncFdmt_cu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	end = clock();
 	duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by fnc_init: " << duration << " seconds" << std::endl;
-	// !7	
+	// !7
 
+	/*start = clock()*1000.;
+	for (int i = 0; i < 1000; ++i)
+	{
+		cudaMemcpy(d_piarrImgInp, d_piarrOut_0, IImgrows * IImgcols * sizeof(int)
+			, cudaMemcpyDeviceToDevice);
+	}
+	end = clock() * 1000.;
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by MemcpyDeviceToDevice: " << duration << " microseconds" << std::endl;
+
+	start = clock() * 1000.;
+	for (int i = 0; i < IImgrows; ++i)
+	{
+		cudaMemcpy(d_piarrImgInp, d_piarrOut_0, IImgrows  * sizeof(int)
+			, cudaMemcpyDeviceToDevice);
+	}
+	end = clock() * 1000.;
+	duration = double(end - start) / CLOCKS_PER_SEC;
+	std::cout << "Time taken by MemcpyDeviceToDevice 1 row x IImgrowstimes  : " << duration << " miliseconds" << std::endl;*/
 
 	// 8.pointers initialization
 	d_p0 = d_piarrOut_0;
