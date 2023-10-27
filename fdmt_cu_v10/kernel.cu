@@ -23,7 +23,7 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//2048";
+char strInpFolder[] = "..//FDMT_TESTS//512";
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
 
@@ -37,7 +37,51 @@ char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
 int main(int argc, char** argv)
 {
+	/*const int IDim0 = 5;
+	const int IDim1 = 100;
+	const int IDim2 = 200;*/
+
+	const int IDim0 = 5;
+	const int IDim1 = 256;
+	const int IDim2 = 512;
+
+	/*const int IDim0 = 4;
+	const int IDim1 = 2;
+	const int IDim2 = 1024;*/
+
+
+	/*int* iarr = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
+
+	int* iarrout = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int)); 
+
+	for (int i = 0; i < IDim0 * IDim1 * IDim2; ++i)
+	{
+		iarr[i] = 0;
+	}
+
+	int* d_iarr = 0;
+	cudaMallocManaged(&d_iarr, IDim0 * IDim1 * IDim2 * sizeof(int));
+	cudaMemcpy(d_iarr, iarr, IDim0 * IDim1 * IDim2 * sizeof(int), cudaMemcpyHostToDevice);
+	const dim3 blockSize1 = dim3(1, 1, 64);
 	
+	const dim3 gridSize1 = dim3(IDim0, IDim1, (IDim2 + blockSize1.z - 1) / blockSize1.z);
+
+	
+	
+	kernel_0<<< gridSize1, blockSize1>>>( d_iarr, IDim0, IDim1,  IDim2);
+
+	cudaMemcpy(iarrout, d_iarr, IDim0 * IDim1 * IDim2 * sizeof(int), cudaMemcpyDeviceToHost);
+	cudaDeviceSynchronize();
+	for (int i = 0; i < IDim0 * IDim1 * IDim2; ++i)
+	{
+		std::cout <<"arr["<< i << "]" << "=  " << iarrout[i] << std::endl;
+	}
+
+	free(iarr);
+	free(iarrout);
+	cudaFree(d_iarr);
+
+	int iend = 0;*/
 	//const std::vector<int> data1 {1, 2, 3, 4, 5, 6};
 	//std::array<long unsigned, 2> leshape11 {2, 3};
 	//std::array<long unsigned, 1> leshape12 {6};
@@ -195,7 +239,7 @@ int main(int argc, char** argv)
 	auto start = std::chrono::high_resolution_clock::now();
 
 	
-	fncFdmt_cu_v0(piarrImage  // input image
+	fncFdmt_cu_v1(piarrImage  // input image
 		, d_piarrImage 
 		, IImgrows, IImgcols // dimensions of input image 	
 		, d_piarrState0		// auxillary allocated buffer of mrmory in device
@@ -221,9 +265,9 @@ int main(int argc, char** argv)
 	// !2
 	
 	// output in .npy:IImgcols * IMaxDT * sizeof(int));
-	/*int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
-	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);*/
-	std::vector<int> v1(u_piarrImOut, u_piarrImOut + IImgcols * IMaxDT);
+	int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
+	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
+	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
 	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
 

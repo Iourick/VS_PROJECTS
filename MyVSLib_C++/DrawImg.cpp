@@ -40,12 +40,41 @@ void display() {
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
 
+    int maxData = ivctOut[0][0]; // Initialize maxData with the first element
+
+    int minData = ivctOut[0][0]; // Initialize maxData with the first element
+
+
+    for (int i = 0; i < IROWS; i++) {
+        for (int j = 0; j < ICOLS; j++) {
+            if (ivctOut[i][j] > maxData)
+            {
+                maxData = ivctOut[i][j]; // Update maxData if a greater value is found
+            }
+            if (ivctOut[i][j] < minData)
+            {
+                minData = ivctOut[i][j]; // Update maxData if a greater value is found
+            }
+
+        }
+    }    
+
+    
+
+
     // Render the piarrOut array as an image here
     glBegin(GL_POINTS);
     for (int i = 0; i < IROWS; i++) {
-        for (int j = 0; j < ICOLS; j++) {
-            float grayscale = static_cast<float>(ivctOut[i][j]) / 255.0;
-            glColor3f(grayscale, grayscale, grayscale); // Grayscale color
+        for (int j = 0; j < ICOLS; j++)
+        {
+
+            float grayscale = static_cast<float>(ivctOut[i][j]);// / 255.0;
+            // Calculate RGB values based on linear mapping
+            float red = (grayscale - minData) / (maxData - minData);
+            float green = 1.0 - red;  // Set to 0 for simplicity
+            float blue = 0.25 * (1.0 - red);
+
+            glColor3f(red, green, blue); // Grayscale color
             glVertex2f(j, i); // Draw a point for each pixel
         }
     }

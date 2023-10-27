@@ -4,7 +4,7 @@
 
 
 
-void fncFdmt_cu_v0(int* piarrImage // input image
+void fncFdmt_cu_v1(int* piarrImage // input image
 	, int* d_piarrImage       // on-device auxiliary memory buffer
 	, const int IImgrows, const int IImgcols // dimensions of input image 	
 	, int* d_piarrState0		// on-device auxiliary memory buffer
@@ -79,6 +79,28 @@ void kernel_2d_arrays_v1(const int IDim0, const int IDim1
 	, float* d_arr_val0, float* d_arr_val1, int* d_iarr_deltaTLocal
 	, int* d_iarr_dT_middle_index, int* d_iarr_dT_middle_larger
 	, int* d_iarr_dT_rest_index);
+
+__global__
+void kernel3D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut);
+
+__global__
+void kernel_0(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2);
+
+__global__
+void kernel2D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut);
+
+__global__
+void kernel1D_shift_and_sum_v1(const int quantBlocksPerRow, int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut);
 
 
 

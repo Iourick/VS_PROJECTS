@@ -23,7 +23,7 @@ using namespace std;
 
 //-------------------------------------------------------------------------
 
-void fncFdmt_cu_v0(int* piarrImage // input image
+void fncFdmt_cu_v1(int* piarrImage // input image
 	, int* d_piarrImage       // on-device auxiliary memory buffer
 	, const int IImgrows, const int IImgcols // dimensions of input image 	
 	, int* d_piarrState0		// on-device auxiliary memory buffer
@@ -59,11 +59,9 @@ void fncFdmt_cu_v0(int* piarrImage // input image
 	int* d_p1 = d_piarrState1;
 	// 8!
 
-
-
 	// !9
-	int iInp0 = IImgrows;
-	int iInp1 = IDeltaT + 1;
+	int iInp1 = IImgrows;
+	int iInp0 = IDeltaT + 1;
 
 	int iOut0 = 0, iOut1 = 0, iOut2 = 0;
 
@@ -137,8 +135,8 @@ void fncFdmtIteration(int* d_piarrInp, const float val_dF, const int IDim0, cons
 	const float VAlTemp1 = 1. / (VAlFmin * VAlFmin) - 1. / (VAlFmax * VAlFmax);
 
 	int ideltaT = (int)(ceil(((float)IMaxDT - 1.0) * temp0 / VAlTemp1));
-	iOutPutDim1 = ideltaT + 1;
-	iOutPutDim0 = IDim0 / 2;
+	iOutPutDim0 = ideltaT + 1;
+	iOutPutDim1 = IDim1 / 2;
 
 
 	// set zeros in output array
@@ -153,12 +151,12 @@ void fncFdmtIteration(int* d_piarrInp, const float val_dF, const int IDim0, cons
 
 
 	// 9. auxiliary constants initialization
-	const float VAlC2 = (VAlFmax - VAlFmin) / ((float)(iOutPutDim0));
+	const float VAlC2 = (VAlFmax - VAlFmin) / ((float)(iOutPutDim1));
 	// !9	
 
 	// 10. calculating first 3 auxillary 1 dim arrays
 	int threadsPerBlock = 1024;
-	int numberOfBlocks = (iOutPutDim0 + threadsPerBlock - 1) / threadsPerBlock;
+	int numberOfBlocks = (iOutPutDim1 + threadsPerBlock - 1) / threadsPerBlock;
 
 	create_auxillary_1d_arrays << <numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
 		, IMaxDT, VAlTemp1, VAlC2, VAlFmin, val_correction
@@ -171,54 +169,270 @@ void fncFdmtIteration(int* d_piarrInp, const float val_dF, const int IDim0, cons
 
 	// 12. calculating second 3 auxillary 2 dim arrays
 	
-	/*const dim3 blockSize = dim3(1, 1024);
-	const dim3 gridSize = dim3((iOutPutDim0 + blockSize.x - 1) / blockSize.x, (iOutPutDim1 + blockSize.y - 1) / blockSize.y);
+	const dim3 blockSize = dim3(1, 1024);
+	const dim3 gridSize = dim3((iOutPutDim1 + blockSize.x - 1) / blockSize.x, (iOutPutDim0 + blockSize.y - 1) / blockSize.y);
 	auto start = std::chrono::high_resolution_clock::now();
-	kernel_2d_arrays_v1 << < gridSize, blockSize >> > (iOutPutDim0
-		, iOutPutDim1, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal
+	kernel_2d_arrays_v1 << < gridSize, blockSize >> > (iOutPutDim1
+		, iOutPutDim0, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal
 		, d_iarr_dT_MI, d_iarr_dT_ML
 		, d_iarr_dT_RI);
 	cudaDeviceSynchronize();
 
 	auto end = std::chrono::high_resolution_clock::now();	
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "Time taken by kernel_2d_arrays_v1: " << duration.count() << " microseconds" << std::endl;*/
+	//std::cout << "Time taken by kernel_2d_arrays_v1: " << duration.count() << " microseconds" << std::endl;
+	
+	/*int* parr1 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
+	cudaMemcpy(parr1, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+	std::vector<int> v7(parr1, parr1 + iOutPutDim0 * iOutPutDim1);
+
+	std::array<long unsigned, 2> leshape127 {iOutPutDim1, iOutPutDim0};
+
+	npy::SaveArrayAsNumpy("new.npy", false, leshape127.size(), leshape127.data(), v7);
+	free(parr1);*/
 
 
-	int quantEl = iOutPutDim0 * iOutPutDim1;
-	threadsPerBlock = 256;
-	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
-	auto start = std::chrono::high_resolution_clock::now();
-	kernel_2d_arrays << < numberOfBlocks, threadsPerBlock >> > (iOutPutDim0
-		, iOutPutDim1, d_arr_val0, d_arr_val1, d_iarr_deltaTLocal
-		, d_iarr_dT_MI, d_iarr_dT_ML
-		, d_iarr_dT_RI);
-	cudaDeviceSynchronize();
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 
-	std::cout << "Time taken by kernel_2d_arrays: " << duration.count() << " microseconds" << std::endl;
+	
+
+	//std::cout << "Time taken by kernel_2d_arrays: " << duration1.count() << " microseconds" << std::endl;
 	//// output in .npy:
 	//int* parr = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
 	//cudaMemcpy(parr, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
 	//	, cudaMemcpyDeviceToHost);
 	//std::vector<int> v6(parr, parr + iOutPutDim0 * iOutPutDim1);
 
-	//std::array<long unsigned, 2> leshape126 {iOutPutDim0, iOutPutDim1};
+	//std::array<long unsigned, 2> leshape126 {iOutPutDim1, iOutPutDim0};
 
-	//npy::SaveArrayAsNumpy("new.npy", false, leshape126.size(), leshape126.data(), v6);
+	//npy::SaveArrayAsNumpy("old.npy", false, leshape126.size(), leshape126.data(), v6);
 	//free(parr);
 	// !11
 
 	// 13. 
-	quantEl = iOutPutDim0 * iOutPutDim1 * IDim2;
-	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
-	kernel_shift_and_sum << <numberOfBlocks, threadsPerBlock >> > (d_piarrInp
+	/*threadsPerBlock = 1024;
+	const int quantBlocksPerRow = (IDim2 + threadsPerBlock - 1) / threadsPerBlock;
+	numberOfBlocks = iOutPutDim0 * iOutPutDim1 * quantBlocksPerRow;
+	kernel1D_shift_and_sum_v1<<< numberOfBlocks, threadsPerBlock>>>(quantBlocksPerRow
+		, d_piarrInp,  IDim0,  IDim1, IDim2,  d_iarr_deltaTLocal, d_iarr_dT_MI
+		,  d_iarr_dT_ML, d_iarr_dT_RI, iOutPutDim0, iOutPutDim1
+		, d_piarrOut);
+	cudaDeviceSynchronize();*/
+	
+		//IDim0 - quantity of submatrixes, = iDeltaT +1
+	//IDim1 - quantity of F, or quantity of rows of submatrix, "output_dims[0] = output_dims[0]//2;"
+	//IDim2 - quantity of cols of submattrix, IDim2 = quant cols of input image	
+	// d_iarr_deltaTLocal is one dimensional array with with length = IOutPutDim1
+	// d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI =2 dimensional arrays with dimension:IOutPutDim1 x IDim2
+	//
+
+	const dim3 blockSize1 = dim3(1, 1, 64);
+	const dim3 gridSize1 = dim3(iOutPutDim0, iOutPutDim1,  (IDim2 + blockSize1.z - 1) / blockSize1.z);
+
+	kernel3D_shift_and_sum_v1<<< gridSize1, blockSize1>>>(d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
-	
 	cudaDeviceSynchronize();
 
+	/*const dim3 blockSize1 = dim3(1,  1024);
+	const dim3 gridSize1 = dim3(iOutPutDim0* iOutPutDim1, (IDim2 + blockSize1.z - 1) / blockSize1.z);
+
+	kernel2D_shift_and_sum_v1 << < gridSize1, blockSize1 >> > (d_piarrInp
+		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
+		, iOutPutDim0, iOutPutDim1, d_piarrOut);
+	cudaDeviceSynchronize();*/
+
+	/*int* parr1 = (int*)malloc(iOutPutDim0 * iOutPutDim1 * IDim2  * sizeof(int));
+	cudaMemcpy(parr1, d_piarrOut, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(int)
+		, cudaMemcpyDeviceToHost);
+	std::vector<int> v7(parr1, parr1 + iOutPutDim0 * iOutPutDim1 * IDim2);
+
+	std::array<long unsigned, 3> leshape127 {iOutPutDim0, iOutPutDim1, IDim2};
+
+	npy::SaveArrayAsNumpy("new.npy", false, leshape127.size(), leshape127.data(), v7);
+	free(parr1);
+	int ii = 0;*/
+
+}
+//IDim0 - quantity of submatrixes, = iDeltaT +1
+//IDim1 - quantity of F, or quantity of rows of submatrix, "output_dims[0] = output_dims[0]//2;"
+//IDim2 - quantity of cols of submattrix, IDim2 = quant cols of input image	
+// d_iarr_deltaTLocal is one dimensional array with with length = IOutPutDim1
+// d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI - are 2 dimensional arrays with dimension:IOutPutDim1 x IDim2
+// 
+__global__
+void kernel1D_shift_and_sum_v1(const int quantBlocksPerRow,int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut)
+{
+	// quant elements per submatrix
+	int quantBlocksPerMtrx = IDim1 * quantBlocksPerRow;
+
+	//number of submatrix
+	int i_dT = blockIdx.x / quantBlocksPerMtrx;
+
+	
+	int i_rest = blockIdx.x % quantBlocksPerMtrx;
+
+	// number of row of submatrix
+	int i_F = i_rest/ quantBlocksPerRow;
+	if (i_dT > d_iarr_deltaTLocal[i_F])
+	{
+		return;
+	}
+
+	// number of block in the row
+	int numBlockPerRow = i_rest % quantBlocksPerRow;
+
+	// number of col of element in roew of submatrix
+	int numElemCol = numBlockPerRow * blockDim.x + threadIdx.x;
+	
+	if (numElemCol >= IDim2)
+	{
+		return;
+	}
+
+	int quantElemPerOutSubmatrix = IOutPutDim1 * IDim2;
+	int numElem = i_dT * quantElemPerOutSubmatrix + i_F * IDim2 + numElemCol;
+
+	
+	if (i_dT > d_iarr_deltaTLocal[i_F])
+	{
+		return;
+	}
+	
+	// claculation of bound index: 
+	// arr_dT_ML[i_F, i_dT]
+	// index of arr_dT_ML
+	// arr_dT_ML is matrix with IOutPutDim0 rows and IOutPutDim1 cols
+	// position elemens of d_iarr_dT_MI, d_iarr_dT_ML,d_iarr_dT_RI
+	int ind = i_F * IOutPutDim0 + i_dT;
+	// !
+	// calculation indexes of input array
+	// d_input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
+	int numInpElem0 = d_iarr_dT_MI[ind] * IDim1 * IDim2 + 2 * i_F * IDim2 + numElemCol;
+	int numInpElem1 = d_iarr_dT_RI[ind] * IDim1 * IDim2 + (1 + 2 * i_F) * IDim2 + numElemCol; 
+	
+
+	if (numElemCol >= d_iarr_dT_ML[ind])
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - d_iarr_dT_ML[ind]];
+	}
+	else
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+	}
+}
+
+//-----------------------------------------------------------------------------------------------------------------------
+//IDim0 - quantity of submatrixes, = iDeltaT +1
+//IDim1 - quantity of F, or quantity of rows of submatrix, "output_dims[0] = output_dims[0]//2;"
+//IDim2 - quantity of cols of submattrix, IDim2 = quant cols of input image	
+// d_iarr_deltaTLocal is one dimensional array with with length = IOutPutDim1
+// d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI - are 2 dimensional arrays with dimension:IOutPutDim1 x IDim2
+// 
+__global__
+void kernel3D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut)
+{
+	int i_dT = blockIdx.x * blockDim.x + threadIdx.x;
+	int i_F = blockIdx.y * blockDim.y + threadIdx.y;
+	if (i_dT > d_iarr_deltaTLocal[i_F])
+	{
+		return;
+	}
+	int quantMtxElems = IOutPutDim1 * IDim2;
+	int numCol = blockIdx.z * blockDim.z + threadIdx.z;
+	if (numCol > IDim2)
+	{
+		return;
+	}
+
+	int numElem = i_dT * quantMtxElems + i_F * IDim2 + numCol;
+	//d_piarrInp[numElem] = numElem;
+
+	int quantInpMtxElems = IDim1 * IDim2;
+	int idT_middle_index = d_iarr_dT_MI[i_F * IOutPutDim0 + i_dT];
+	int numInpElem0 = idT_middle_index * quantInpMtxElems + 2 * i_F * IDim2 + numCol;
+	int idT_rest_index = d_iarr_dT_RI[i_F * IOutPutDim0 + i_dT];
+	int numInpElem1 = idT_rest_index * quantInpMtxElems + (1 + 2 * i_F) * IDim2 + numCol;
+	// 
+
+
+	int idT_middle_larger = d_iarr_dT_ML[i_F * IOutPutDim0 + i_dT];
+	if (numCol >= idT_middle_larger)
+
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - idT_middle_larger];
+	}
+	else
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+	}
+
+
+	//Output[i_F, i_dT, :dT_middle_larger] = Input[2 * i_F, dT_middle_index, :dT_middle_larger]
+	//i_T_min = dT_middle_larger
+	//i_T_max = T
+	//Output[i_F, i_dT, dT_middle_larger:] = Input[2 * i_F, dT_middle_index, dT_middle_larger:]
+		//+ Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]	
+}
+
+//IDim0 - quantity of submatrixes, = iDeltaT +1
+//IDim1 - quantity of F, or quantity of rows of submatrix, "output_dims[0] = output_dims[0]//2;"
+//IDim2 - quantity of cols of submattrix, IDim2 = quant cols of input image	
+// d_iarr_deltaTLocal is one dimensional array with with length = IOutPutDim1
+// d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI - are 2 dimensional arrays with dimension:IOutPutDim1 x IDim0
+// 
+__global__
+void kernel2D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut)
+{
+	int i_dT = (blockIdx.x * blockDim.x + threadIdx.x)/ IOutPutDim1;
+	int i_F = (blockIdx.x * blockDim.x + threadIdx.x) % IOutPutDim1;
+	if (i_dT > d_iarr_deltaTLocal[i_F])
+	{
+		return;
+	}
+	int quantMtxElems = IOutPutDim1 * IDim2;
+	int numCol = blockIdx.y * blockDim.y + threadIdx.y;
+	if (numCol > IDim2)
+	{
+		return;
+	}
+
+	int numElem = i_dT * quantMtxElems + i_F * IDim2 + numCol;
+	//d_piarrInp[numElem] = numElem;
+
+	int quantInpMtxElems = IDim1 * IDim2;
+	int idT_middle_index = d_iarr_dT_MI[i_F * IOutPutDim0 + i_dT];
+	int numInpElem0 = idT_middle_index * quantInpMtxElems + 2 * i_F * IDim2 + numCol;
+	int idT_rest_index = d_iarr_dT_RI[i_F * IOutPutDim0 + i_dT];
+	int numInpElem1 = idT_rest_index * quantInpMtxElems + (1 + 2 * i_F) * IDim2 + numCol;
+	// 
+
+
+	int idT_middle_larger = d_iarr_dT_ML[i_F * IOutPutDim0 + i_dT];
+	if (numCol >= idT_middle_larger)
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - idT_middle_larger];
+	}
+	else
+	{
+		d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+	}
+
+
+	//Output[i_F, i_dT, :dT_middle_larger] = Input[2 * i_F, dT_middle_index, :dT_middle_larger]
+	//i_T_min = dT_middle_larger
+	//i_T_max = T
+	//Output[i_F, i_dT, dT_middle_larger:] = Input[2 * i_F, dT_middle_index, dT_middle_larger:]
+		//+ Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]	
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
@@ -381,13 +595,13 @@ void kernel_2d_arrays_v1(const int IDim0, const int IDim1
 	, int* d_iarr_dT_rest_index)
 
 {
-	__shared__ float shared_arr[2];
-	__shared__ int shared_iarr[1];
 	int iF = blockIdx.x * blockDim.x;
+	/*__shared__ float shared_arr[2];
+	__shared__ int shared_iarr[1];	
 	shared_arr[0] = d_arr_val0[iF];
 	shared_arr[1] = d_arr_val1[iF];
 	shared_iarr[0] = d_iarr_deltaTLocal[iF];
-	__syncthreads();
+	__syncthreads();*/
 
 	int numElem = blockIdx.x * blockDim.x * IDim1 + blockIdx.y * blockDim.y + threadIdx.y;
 
@@ -398,7 +612,7 @@ void kernel_2d_arrays_v1(const int IDim0, const int IDim1
 		return;
 	}
 	
-	if (i_dT > shared_iarr[0])
+	if (i_dT > d_iarr_deltaTLocal[iF])
 	{
 		d_iarr_dT_middle_index[numElem] = 0;
 		d_iarr_dT_middle_larger[numElem] = 0;
@@ -406,8 +620,8 @@ void kernel_2d_arrays_v1(const int IDim0, const int IDim1
 		return;
 	}
 
-	d_iarr_dT_middle_index[numElem] = round(((float)i_dT) * shared_arr[0]);
-	int ivalt = round(((float)i_dT) * shared_arr[0]);
+	d_iarr_dT_middle_index[numElem] = round(((float)i_dT) * d_arr_val0[iF]);
+	int ivalt = round(((float)i_dT) * d_arr_val1[iF]);
 	d_iarr_dT_middle_larger[numElem] = ivalt;
 	d_iarr_dT_rest_index[numElem] = i_dT - ivalt;
 
@@ -417,7 +631,7 @@ void kernel_2d_arrays_v1(const int IDim0, const int IDim1
 
 //--------------------------------------------------------------------------------------
 void fnc_init_fdmt(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaTp1, int* d_piarrOut)
+	, const int IDeltaT, int* d_piarrOut)
 {
 	//// output in .npy:
 	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
@@ -439,7 +653,7 @@ void fnc_init_fdmt(int* d_piarrImg, const int IImgrows, const int IImgcols
 	const dim3 blockSize = dim3(1, 2048);	
 	const dim3 gridSize = dim3((IImgrows + blockSize.x - 1) / blockSize.x, (IImgcols + blockSize.y -1)/ blockSize.y);
 
-	for (int i_dT = 1; i_dT < (IDeltaTp1 +1); ++i_dT)
+	for (int i_dT = 1; i_dT < (IDeltaT +1); ++i_dT)
 	{
 		
 		kernel_init_iter_v1 << < gridSize, blockSize >> > (d_piarrImg, IImgrows, IImgcols
@@ -589,4 +803,48 @@ __global__ void sumArrays_(int* d_result, const int* d_arr1, int n)
 		d_result[tid] += d_arr1[tid];
 	}
 }
+
+__global__
+void kernel_0(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2)
+{
+	int i_dT = blockIdx.x * blockDim.x + threadIdx.x;
+	int i_F = blockIdx.y * blockDim.y + threadIdx.y;
+	int quantMtxElems = IDim1 * IDim2;
+	int numCol = blockIdx.z * blockDim.z + threadIdx.z;
+	if (numCol > IDim2)
+	{
+		return;
+	}
+
+	int numElem = i_dT * quantMtxElems + i_F * IDim2 + numCol;
+	d_piarrInp[numElem] = numElem ;
+
+	//int quantInpMtxElems = IDim1 * IDim2;
+	//int idT_middle_index = d_iarr_dT_MI[i_F * IOutPutDim0 + i_dT];
+	//int numInpElem0 = idT_middle_index * quantInpMtxElems + 2 * i_F * IDim2  + numCol;
+	//int idT_rest_index = d_iarr_dT_RI[i_F * IOutPutDim0 + i_dT];
+	//int numInpElem1 = idT_rest_index * quantInpMtxElems + (1 + 2 * i_F) * IDim2 + numCol;
+	//// 
+	//
+
+	//int idT_middle_larger = d_iarr_dT_ML[i_F * IOutPutDim0 + i_dT];
+	//if (numCol >= idT_middle_larger)
+	//{
+	//	d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1  - idT_middle_larger];
+	//}
+	//else
+	//{
+	//	d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+	//}
+
+
+//Output[i_F, i_dT, :dT_middle_larger] = Input[2 * i_F, dT_middle_index, :dT_middle_larger]
+//i_T_min = dT_middle_larger
+//i_T_max = T
+//Output[i_F, i_dT, dT_middle_larger:] = Input[2 * i_F, dT_middle_index, dT_middle_larger:]
+	//+ Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]	
+}
+
+
 
