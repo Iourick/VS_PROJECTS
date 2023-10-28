@@ -23,7 +23,7 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//512";
+char strInpFolder[] = "..//FDMT_TESTS//2048";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 

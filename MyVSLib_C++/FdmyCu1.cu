@@ -268,7 +268,8 @@ void fncFdmtIteration(int* d_piarrInp, const float val_dF, const int IDim0, cons
 	// PROVIDES 85 ms !!!!!!!!!!!!!!!!!! THE BEST  !!!!!
 	const dim3 blockSize1 = dim3(1, 1, 64);
 	const dim3 gridSize1 = dim3(iOutPutDim0, iOutPutDim1,  (IDim2 + blockSize1.z - 1) / blockSize1.z);
-	kernel3D_shift_and_sum_v1<<< gridSize1, blockSize1>>>(d_piarrInp
+	size_t smemsize = 24;
+	kernel3D_shift_and_sum_v11<<< gridSize1, blockSize1, smemsize >>>(d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
 	cudaDeviceSynchronize();
@@ -481,71 +482,6 @@ void kernel1D_shift_and_sum_v11(const int quantBlocksPerRow, int* d_piarrInp, co
 	}
 
 }
-////---------------------------------------------------------------
-//__global__
-//void kernel1D_shift_and_sum_v1(const int quantBlocksPerRow, int* d_piarrInp, const int IDim0, const int IDim1
-//	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
-//	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-//	, int* d_piarrOut)
-//{
-//	// quant elements per submatrix
-//	int quantBlocksPerMtrx = IDim1 * quantBlocksPerRow;
-//
-//	//number of submatrix
-//	int i_dT = blockIdx.x / quantBlocksPerMtrx;
-//
-//
-//	int i_rest = blockIdx.x % quantBlocksPerMtrx;
-//
-//	// current row of submatrix number  
-//	int i_F = i_rest / quantBlocksPerRow;
-//	if (i_dT > d_iarr_deltaTLocal[i_F])
-//	{
-//		return;
-//	}
-//
-//	// current number of block in the row
-//	int numBlockInRow = i_rest % quantBlocksPerRow;
-//
-//	// number of col of element in roew of submatrix
-//	int numElemCol = numBlockInRow * blockDim.x + threadIdx.x;
-//
-//	if (numElemCol >= IDim2)
-//	{
-//		return;
-//	}
-//
-//	int quantElemPerOutSubmatrix = IOutPutDim1 * IDim2;
-//	int numElem = i_dT * quantElemPerOutSubmatrix + i_F * IDim2 + numElemCol;
-//
-//
-//	if (i_dT > d_iarr_deltaTLocal[i_F])
-//	{
-//		return;
-//	}
-//
-//	// claculation of bound index: 
-//	// arr_dT_ML[i_F, i_dT]
-//	// index of arr_dT_ML
-//	// arr_dT_ML is matrix with IOutPutDim0 rows and IOutPutDim1 cols
-//	// position elemens of d_iarr_dT_MI, d_iarr_dT_ML,d_iarr_dT_RI
-//	int ind = i_F * IOutPutDim0 + i_dT;
-//	// !
-//	// calculation indexes of input array
-//	// d_input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
-//	int numInpElem0 = d_iarr_dT_MI[ind] * IDim1 * IDim2 + 2 * i_F * IDim2 + numElemCol;
-//	int numInpElem1 = d_iarr_dT_RI[ind] * IDim1 * IDim2 + (1 + 2 * i_F) * IDim2 + numElemCol;
-//
-//
-//	if (numElemCol >= d_iarr_dT_ML[ind])
-//	{
-//		d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - d_iarr_dT_ML[ind]];
-//	}
-//	else
-//	{
-//		d_piarrOut[numElem] = d_piarrInp[numInpElem0];
-//	}
-//}
 
 //-----------------------------------------------------------------------------------------------------------------------
 //IDim0 - quantity of submatrixes, = iDeltaT +1
@@ -574,7 +510,7 @@ void kernel3D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
 	}
 
 	int numElem = i_dT * quantMtxElems + i_F * IDim2 + numCol;
-	//d_piarrInp[numElem] = numElem;
+	
 
 	int quantInpMtxElems = IDim1 * IDim2;
 	int idT_middle_index = d_iarr_dT_MI[i_F * IOutPutDim0 + i_dT];
@@ -601,6 +537,69 @@ void kernel3D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
 	//i_T_max = T
 	//Output[i_F, i_dT, dT_middle_larger:] = Input[2 * i_F, dT_middle_index, dT_middle_larger:]
 		//+ Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]	
+}
+//-----------------------------------------------------------------------------------------------------------------------
+//IDim0 - quantity of submatrixes, = iDeltaT +1
+//IDim1 - quantity of F, or quantity of rows of submatrix, "output_dims[0] = output_dims[0]//2;"
+//IDim2 - quantity of cols of submattrix, IDim2 = quant cols of input image	
+// d_iarr_deltaTLocal is one dimensional array with with length = IOutPutDim1
+// d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI - are 2 dimensional arrays with dimension:IOutPutDim1 x IDim2
+// 
+__global__
+void kernel3D_shift_and_sum_v11(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut)
+{
+	
+	__shared__ int shared_iarr[6];
+	//__shared__ int iarr0[64];
+	//__shared__ int iarr1[64];
+	int i_dT = blockIdx.x * blockDim.x + threadIdx.x;
+	int iF = blockIdx.y * blockDim.y + threadIdx.y;
+	shared_iarr[0] = i_dT;
+	shared_iarr[1] = d_iarr_deltaTLocal[iF];
+	int itemp = iF * IOutPutDim0 + i_dT;
+	shared_iarr[2] = d_iarr_dT_MI[itemp];
+	shared_iarr[3] = d_iarr_dT_RI[itemp];
+	shared_iarr[4] = d_iarr_dT_ML[itemp];
+	shared_iarr[5] = iF;
+	
+	__syncthreads();
+
+	
+	
+	if (shared_iarr[0] > shared_iarr[1])
+	{
+		return;
+	}
+	int quantMtxElems = IOutPutDim1 * IDim2;
+	int numCol = blockIdx.z * blockDim.z + threadIdx.z;
+	if (numCol > IDim2)
+	{
+		return;
+	}
+
+	int numElem = shared_iarr[0] * quantMtxElems + shared_iarr[5] * IDim2 + numCol;
+	d_piarrOut[numElem] = shared_iarr[1];
+	//int quantInpMtxElems = IDim1 * IDim2;
+	//
+	//int numInpElem0 = shared_iarr[2] * quantInpMtxElems + 2 * shared_iarr[5] * IDim2 + numCol;
+	//
+	//int numInpElem1 = shared_iarr[3] * quantInpMtxElems + (1 + 2 * shared_iarr[5]) * IDim2 + numCol;
+	//// 
+	//
+
+	//
+	//if (numCol >= shared_iarr[4])
+	//{
+	//	d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - shared_iarr[4]];
+	//}
+	//else
+	//{
+	//	d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+	//}
+
 }
 
 //IDim0 - quantity of submatrixes, = iDeltaT +1
