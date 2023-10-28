@@ -23,7 +23,8 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//2048";
+char strInpFolder[] = "..//FDMT_TESTS//512";
+
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
 
@@ -37,13 +38,62 @@ char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
 int main(int argc, char** argv)
 {
+	//// test init
+	//int n = 4;
+	//int* iarrin = (int*)malloc(n * n * sizeof(int));
+
+	//int* d_iarrin = 0;
+	//cudaMalloc(&d_iarrin, n * n * sizeof(int));
+
+	//for (int i = 0; i < n * n; ++i)
+	//{
+	//	iarrin[i] = i;
+	//}
+	//cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);
+	//
+	//int* d_out =0;
+	//cudaMalloc(&d_out, n * n * 100*sizeof(int));
+	//int IDeltaT0 = 2;
+
+
+	//fnc_init_fdmt(d_iarrin, n, n, IDeltaT0, d_out);
+
+
+	//int *out =  (int*)malloc(n * n * 100*sizeof(int));
+	//cudaMemcpy(out, d_out, n * n * (IDeltaT0 +1)*sizeof(int), cudaMemcpyDeviceToHost);
+	//int in = 0;
+	//for (int i = 0; i < (IDeltaT0 + 1); ++i)
+	//{
+	//	for (int j = 0; j < n; ++j)
+	//	{
+	//		for (int k = 0; k < n; ++k)
+
+	//		{
+	//			std::cout << out[in]<< ";";
+	//			++in;
+	//		}
+	//		std::cout << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//	std::cout << "------------------" << std::endl;
+
+	//}
+	//free(iarrin);
+	//free(out);
+	//
+	//cudaFree(d_iarrin);
+	//cudaFree(d_out);
+	//int uuy = 0;
+	//---------------------------------------------------------
+
+
 	/*const int IDim0 = 5;
 	const int IDim1 = 100;
 	const int IDim2 = 200;*/
 
-	const int IDim0 = 5;
+	/*const int IDim0 = 5;
 	const int IDim1 = 256;
-	const int IDim2 = 512;
+	const int IDim2 = 512;*/
 
 	/*const int IDim0 = 4;
 	const int IDim1 = 2;
@@ -117,10 +167,10 @@ int main(int argc, char** argv)
 //------------------- prepare to work -------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
 // initiate pointer to input image
-	int* piarr = (int*)malloc(sizeof(int));
+	int* piarr_ = (int*)malloc(sizeof(int));
 
 	// initiate 2-pointer to input image, in order to realloc memory to satisfy arbitrary dimensions
-	int** ppiarrImage = &piarr;
+	int** ppiarrImage = &piarr_;
 
 	// initiating input variables
 	int iMaxDT = 0;
@@ -280,9 +330,9 @@ int main(int argc, char** argv)
 	//------------------- begin to draw output image for cuda -------------------------------------------------------------------------------------------
 	
 	char filename_cu[] = "image_GPU.png";
-	createImg( argc, argv, u_piarrImOut, IImgcols, IMaxDT, filename_cu);
+	createImg( argc, argv, piarrImOut, IImgcols, IMaxDT, filename_cu);
 	
-	free(piarr);
+	free(piarr_);
 	cudaFree(u_piarrImOut);
 	//free(piarrImOut);
 	cudaFree(d_piarrImage);

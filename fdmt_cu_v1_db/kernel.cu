@@ -494,7 +494,7 @@ void fncFdmtIteration(int* d_piarrInp,const float val_dF,  const int IDim0, cons
 
 	// output in .npy:
 		int* parr = (int*)malloc(iOutPutDim0 * iOutPutDim1 * sizeof(int));
-		cudaMemcpy(parr, d_iarr_dT_MI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
+		cudaMemcpy(parr, d_iarr_dT_RI, iOutPutDim0 * iOutPutDim1 * sizeof(int)
 			, cudaMemcpyDeviceToHost);
 		std::vector<int> v6(parr, parr + iOutPutDim0 * iOutPutDim1);
 

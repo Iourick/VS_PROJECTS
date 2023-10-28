@@ -117,6 +117,12 @@ void kernel1D_shift_and_sum_v11(const int quantBlocksPerRow, int* d_piarrInp, co
 	, int* d_iarr_dT_ML, int* d_iarr_dT_RI*/, const int IOutPutDim0, const int IOutPutDim1
 	, int* d_piarrOut);
 
+__global__
+void kernel_shift_and_sum_(int* d_piarrInp, const int IDim0, const int IDim1
+	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
+	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
+	, int* d_piarrOut);
+
 
 
 
