@@ -348,67 +348,67 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 
 }
 //--------------------------------------------------------------------------------------
-void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaT, int* d_piarrOut)
-{
-	//// output in .npy:
-	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
-	//	cudaMemcpy(parr, d_piarrImg, IImgrows * IImgcols  * sizeof(int)
-	//		, cudaMemcpyDeviceToHost);
-	//	std::vector<int> v6(parr, parr + IImgrows * IImgcols );
-
-	//	std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
-
-	//	npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
-	//	free(parr);
-
-	cudaMemset(d_piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
-
-	for (int i = 0; i < IImgrows; ++i)
-	{
-		{
-			cudaMemcpy(&d_piarrOut[i * (IDeltaT + 1) * IImgcols], &d_piarrImg[i * IImgcols]
-				, IImgcols * sizeof(int), cudaMemcpyDeviceToDevice);
-		}
-	}
-
-
-	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
-		for (int iF = 0; iF < IImgrows; ++iF)
-		{
-
-			int threadsPerBlock = 1024;
-			int numberOfBlocks = (IImgcols - i_dT + threadsPerBlock - 1) / threadsPerBlock;
-			int* d_result = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
-			int* d_arg0 = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
-			int* d_arg1 = &d_piarrImg[iF * IImgcols];
-			sumArrays << <numberOfBlocks, threadsPerBlock >> > (d_result, d_arg0, d_arg1, IImgcols - i_dT);
-			cudaDeviceSynchronize();
-		}
-
-}
-
-//-----------------------------------------------------------------------------
+//void fnc_init(int* d_piarrImg, const int IImgrows, const int IImgcols
+//	, const int IDeltaT, int* d_piarrOut)
+//{
+//	//// output in .npy:
+//	//	int* parr = (int*)malloc(IImgrows * IImgcols  * sizeof(int));
+//	//	cudaMemcpy(parr, d_piarrImg, IImgrows * IImgcols  * sizeof(int)
+//	//		, cudaMemcpyDeviceToHost);
+//	//	std::vector<int> v6(parr, parr + IImgrows * IImgcols );
+//
+//	//	std::array<long unsigned, 1> leshape126 {IImgrows* IImgcols};
+//
+//	//	npy::SaveArrayAsNumpy("init00.npy", false, leshape126.size(), leshape126.data(), v6);
+//	//	free(parr);
+//
+//	cudaMemset(d_piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
+//
+//	for (int i = 0; i < IImgrows; ++i)
+//	{
+//		{
+//			cudaMemcpy(&d_piarrOut[i * (IDeltaT + 1) * IImgcols], &d_piarrImg[i * IImgcols]
+//				, IImgcols * sizeof(int), cudaMemcpyDeviceToDevice);
+//		}
+//	}
+//
+//
+//	for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
+//		for (int iF = 0; iF < IImgrows; ++iF)
+//		{
+//
+//			int threadsPerBlock = 1024;
+//			int numberOfBlocks = (IImgcols - i_dT + threadsPerBlock - 1) / threadsPerBlock;
+//			int* d_result = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
+//			int* d_arg0 = &d_piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
+//			int* d_arg1 = &d_piarrImg[iF * IImgcols];
+//			sumArrays << <numberOfBlocks, threadsPerBlock >> > (d_result, d_arg0, d_arg1, IImgcols - i_dT);
+//			cudaDeviceSynchronize();
+//		}
+//
+//}
+//
+////-----------------------------------------------------------------------------
 //CUDA kernel for element-wise summation
-__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
-{
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n)
-	{
-		d_result[tid] = d_arr1[tid] + d_arr2[tid];
-	}
-}
-//-----------------------------------------------------------------------------
-//CUDA kernel for element-wise summation
-__global__ void sumArrays_(int* d_result, const int* d_arr1, int n)
-{
-	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-	if (tid < n)
-	{
-		d_result[tid] += d_arr1[tid];
-	}
-}
-
+//__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
+//{
+//	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+//	if (tid < n)
+//	{
+//		d_result[tid] = d_arr1[tid] + d_arr2[tid];
+//	}
+//}
+////-----------------------------------------------------------------------------
+////CUDA kernel for element-wise summation
+//__global__ void sumArrays_(int* d_result, const int* d_arr1, int n)
+//{
+//	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+//	if (tid < n)
+//	{
+//		d_result[tid] += d_arr1[tid];
+//	}
+//}
+//
 
 //--------------------------------------------------------------------------------------
 void fnc_init_fdmt(int* d_piarrImg, const int IImgrows, const int IImgcols

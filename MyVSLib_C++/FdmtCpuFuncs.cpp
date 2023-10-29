@@ -6,6 +6,7 @@
 #include <algorithm> 
 #include <stdlib.h>
 
+extern int quantFlops;
 using namespace std;
 //-------------------------------------------------------------------------
 void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
@@ -199,12 +200,7 @@ void fncFdmtIteration_cpu(int*  piarrInp, const float val_dF, const int IDim0, c
 	int threadsPerBlock = 1024;
 	int numberOfBlocks = (iOutPutDim0 + threadsPerBlock - 1) / threadsPerBlock;
 	int F_Jumps = iOutPutDim0;
-	
-	
 
-//#pragma omp parallel num_threads(nt) // OMP (главная директива для запуска нескольких потоков, количество потоков nt)
-#pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках
 		for (int i_F = 0; i_F < F_Jumps; ++i_F)
 		{
 
@@ -221,9 +217,10 @@ void fncFdmtIteration_cpu(int*  piarrInp, const float val_dF, const int IDim0, c
 				- 1. / (valf_start * valf_start)) / temp0;
 
 			iarr_deltaTLocal[i_F] = (int)(ceil((((float)(IMaxDT)) - 1.) * temp0 / VAlTemp1));
+			quantFlops += 30;
 		
 		}
-	} // ! OMP (начало блока, который выполняется в нескольких потоках !
+	
 	
 	
 
@@ -261,8 +258,7 @@ void shift_and_sum_cpu_v1(int*  piarrInp, const int IDim0, const int IDim1
 	, int*  piarrOut)
 {
 	int iw = IOutPutDim1 * IDim2;
-#pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках
+
 		for (int i = 0; i < IOutPutDim0 * IOutPutDim1 * IDim2; ++i)
 		{
 			int i_F = i / iw;
@@ -293,7 +289,7 @@ void shift_and_sum_cpu_v1(int*  piarrInp, const int IDim0, const int IDim1
 				piarrOut[i] += piarrInp[indInpMtrx];
 			}
 		}
-	}
+	
 	
 }
 
@@ -304,24 +300,24 @@ void shift_and_sum_cpu(int*  piarrInp, const int IDim0, const int IDim1
 	, int*  iarr_dT_ML, int*  iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
 	, int*  piarrOut)
 {
-#pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках	
+
 		for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
 		{
 
 			for (int i_dT = 0; i_dT < (1 + iarr_deltaTLocal[i_F]); ++i_dT)
 			{
 				int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
+				quantFlops += 4;
 				// number of element of beginning of the input 2 * i_F matrix's row with number 
 				// dT_middle_index[i_F][i_dT]
 				int numRowInputMtrxBegin0 = 2 * i_F * IDim1 * IDim2 + IDim2 * (iarr_dT_MI[i_F * IOutPutDim1 + i_dT]);
 				memcpy(&piarrOut[numRowOutputMtrxBegin0], &piarrInp[numRowInputMtrxBegin0], IDim2 * sizeof(int));
-
+				quantFlops += 6;
 				// number of beginning element of summated rows
 				int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
 				// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
 				int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
-
+				quantFlops++;
 				// number of the row of the submatrix of input matrix with number 2 * i_F + 1
 				int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
 				// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
@@ -329,12 +325,13 @@ void shift_and_sum_cpu(int*  piarrInp, const int IDim0, const int IDim1
 				for (int j = 0; j < (IDim2 - numElemInRow); ++j)
 				{
 					piarrOut[numRowOutputMtrxBegin1 + j] += piarrInp[numRowInputMtrxBegin1 + j];
+					++quantFlops;
 				}
 
 
 			}
 		}
-	}
+	
 	
 }
 
@@ -346,8 +343,7 @@ void create_2d_arrays_cpu(const int IDim0, const int IDim1
 	, int*  iarr_dT_rest_index)
 
 {
-    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках
+    
 
 		for (int i_F = 0; i_F < IDim0; ++i_F)
 		{
@@ -369,9 +365,10 @@ void create_2d_arrays_cpu(const int IDim0, const int IDim1
 				int ivalt = round(((float)i_dT) * arr_val1[i_F]);
 				iarr_dT_middle_larger[i] = ivalt;
 				iarr_dT_rest_index[i] = i_dT - ivalt;
+				quantFlops += 4;
 			}
 		}
-	}	
+		
 }
 //--------------------------------------------------------------------------------------
 void fnc_init_cpu(int*  piarrImg, const int IImgrows, const int IImgcols
@@ -379,8 +376,7 @@ void fnc_init_cpu(int*  piarrImg, const int IImgrows, const int IImgcols
 {
 	
 	memset( piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
-    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках
+    
 		for (int i = 0; i < IImgrows; ++i)
 		{
 			{
@@ -388,10 +384,9 @@ void fnc_init_cpu(int*  piarrImg, const int IImgrows, const int IImgcols
 					, IImgcols * sizeof(int));
 			}
 		}
-	}
+	
 
-    #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
-	{ // OMP (начало блока, который выполняется в нескольких потоках
+    
 		for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
 			for (int iF = 0; iF < IImgrows; ++iF)
 			{
@@ -401,9 +396,10 @@ void fnc_init_cpu(int*  piarrImg, const int IImgrows, const int IImgcols
 				for (int j = 0; j < (IImgcols - i_dT); ++j)
 				{
 					result[j] = arg0[j] + arg1[j];
+					++quantFlops;
 				}
 			}
-	}
+	
 
 }
 
