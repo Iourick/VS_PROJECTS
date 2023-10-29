@@ -25,6 +25,8 @@ using namespace std;
 char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image_CPU.npy";
 
+extern int quantFlops = 0;
+
 int main(int argc, char** argv)
 {
 	//--------------------------------------------------------------------------------------------------------------

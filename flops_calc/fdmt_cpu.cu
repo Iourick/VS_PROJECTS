@@ -22,7 +22,7 @@
 #include "DrawImg.h"
 #endif
 using namespace std;
-extern  std::vector<std::vector<int>> ivctOut(1, std::vector<int>(1));
+//extern  std::vector<std::vector<int>> ivctOut(1, std::vector<int>(1));
 extern int quantFlops = 0;
 
 
@@ -30,9 +30,9 @@ using namespace std;
 char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image_CPU.npy";
 
-const int GFLPS_512  = 0.00320386;
-const int GFLPS_1024 = 0.0137001;
-const int GFLPS_2048 = 0.0586616;
+const float GFLPS_512  = 0.00320386;
+const float GFLPS_1024 = 0.0137001;
+const float GFLPS_2048 = 0.0586616;
 
 int main(int argc, char** argv)
 {
@@ -114,33 +114,36 @@ int main(int argc, char** argv)
 	ppiarrImage = 0;
 	free(piarr);
 
-	int iflops = 0;
+	float flops = 0;
 	if (iImRows == 512)
 	{
-		iflops = GFLPS_512;
+		flops = GFLPS_512;
 	}
 	else
 	{
 		if (iImRows == 1024)
 		{
-			iflops = GFLPS_1024;
+			flops = GFLPS_1024;
 		}
 		else
 		{
-			iflops = GFLPS_2048;
+			flops = GFLPS_2048;
 		}
 	}
-	cout << "GFLP = " << ((double)iflops) * 1.0E-9 << "  GFP" << endl;
-	cout << "GFLP/sec = " << ((double)iflops) / ((double)duration) * 1000. * 1.0E-9 << "  GFP" << endl;
-	
-	ivctOut = std::vector<std::vector<int>>(IImgcols, std::vector<int>(IMaxDT, 0)); // Initialize with your data
+	cout << "GFLP = " << ((double)flops) * 1.0E-9 << "  GFP" << endl;
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000. * 1.0E-9 << "  GFP" << endl;
+	cout << "duration = " << duration << endl;
+
+
+	std::vector<int> vctOut1D(piarrImOut, piarrImOut + IImgcols* IMaxDT);
+	free(piarrImOut);
 #if DRAW == true
 	char filename_cpu[] = "image_cpu.png";
-	//std::vector<std::vector<int>> myVector(rows, std::vector<int>(cols));
-	vctImPrepare(IImgcols, IMaxDT, piarrImOut, ivctOut);
-	createImg(argc, argv, ivctOut, IImgcols, IMaxDT, filename_cpu);
-	
+	//createImg(argc, argv, piarrImOut, IImgcols, IMaxDT, filename_cpu);
+	createImg_(argc, argv, vctOut1D, IImgcols, IMaxDT, filename_cpu);
 #endif
+
+	
 	
 	return 0;
 }

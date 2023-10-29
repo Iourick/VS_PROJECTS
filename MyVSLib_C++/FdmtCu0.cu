@@ -240,59 +240,6 @@ void kernel_shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
 
 //-----------------------------------------------------------------------------------------------------------------------
 
-void shift_and_sum(int* d_piarrInp, const int IDim0, const int IDim1
-	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
-	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, int* d_piarrOut)
-{
-	int iarr_deltaTLocal[1000] = { 0 };
-	cudaMemcpy(iarr_deltaTLocal, d_iarr_deltaTLocal, IOutPutDim0 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-
-	int* iarr_dT_ML = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
-	cudaMemcpy(iarr_dT_ML, d_iarr_dT_ML, IOutPutDim0 * IOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-
-	int* iarr_dT_MI = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
-	cudaMemcpy(iarr_dT_MI, d_iarr_dT_MI, IOutPutDim0 * IOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-
-	int* iarr_dT_RI = (int*)malloc(IOutPutDim0 * IOutPutDim1 * sizeof(int));
-	cudaMemcpy(iarr_dT_RI, d_iarr_dT_RI, IOutPutDim0 * IOutPutDim1 * sizeof(int)
-		, cudaMemcpyDeviceToHost);
-
-
-	for (int i_F = 0; i_F < IOutPutDim0; ++i_F)
-	{
-
-		for (int i_dT = 0; i_dT < (1 + iarr_deltaTLocal[i_F]); ++i_dT)
-		{
-			int numRowOutputMtrxBegin0 = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2;
-			// number of element of beginning of the input 2 * i_F matrix's row with number 
-			// dT_middle_index[i_F][i_dT]
-			int numRowInputMtrxBegin0 = 2 * i_F * IDim1 * IDim2 + IDim2 * (iarr_dT_MI[i_F * IOutPutDim1 + i_dT]);
-			cudaMemcpy(&d_piarrOut[numRowOutputMtrxBegin0], &d_piarrInp[numRowInputMtrxBegin0], IDim2 * sizeof(int)
-				, cudaMemcpyDeviceToDevice);
-
-			// number of beginning element of summated rows
-			int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
-			// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
-			int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
-
-			// number of the row of the submatrix of input matrix with number 2 * i_F + 1
-			int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
-			// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
-			int numRowInputMtrxBegin1 = (2 * i_F + 1) * IDim1 * IDim2 + IDim2 * numRowOfInputSubmatrix;
-			int threadsPerBlock = 1024;
-			int numberOfBlocks = (IDim2 - numElemInRow + threadsPerBlock - 1) / threadsPerBlock;
-			sumArrays_ << <numberOfBlocks, threadsPerBlock >> > (&d_piarrOut[numRowOutputMtrxBegin1], &d_piarrInp[numRowInputMtrxBegin1], IDim2 - numElemInRow);
-			cudaDeviceSynchronize();
-		}
-	}
-	free(iarr_dT_RI);
-	free(iarr_dT_ML);
-	free(iarr_dT_MI);
-}
 __global__
 void create_auxillary_1d_arrays(const int IFjumps, const int IMaxDT, const float VAlTemp1
 	, const float VAlc2, const float VAlf_min, const float VAlcorrection

@@ -236,12 +236,8 @@ int main(int argc, char** argv)
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//------------------- begin to draw output image for cuda -------------------------------------------------------------------------------------------
 	
-	char filename_cu[] = "image_GPU.png";
-	createImg( argc, argv, u_piarrImOut, IImgcols, IMaxDT, filename_cu);
-	
-	free(piarr);
-	cudaFree(u_piarrImOut);
-	//free(piarrImOut);
+		
+	free(piarr);	
 	cudaFree(d_piarrImage);
 	cudaFree(d_piarrState0);
 	cudaFree(d_piarrState0);
@@ -251,6 +247,9 @@ int main(int argc, char** argv)
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
 	cudaFree(d_arr_dT_RI);
+
+	char filename_cu[] = "image_GPU.png";
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cu);
 
 	return 0;
 }

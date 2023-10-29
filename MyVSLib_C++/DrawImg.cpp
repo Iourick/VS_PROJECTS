@@ -19,14 +19,12 @@
 #include <chrono>
 #include "fileInput.h"
 #include "wchar.h"
-#include <vector>
 
 
 
 extern int IROWS = 0;
 extern int ICOLS = 0;
-using namespace std;
-extern  vector<vector<int>> ivctOut;// = std::vector<std::vector<int>>(1, std::vector<int>(1, 0));
+extern  std::vector<std::vector<int>> ivctOut = std::vector<std::vector<int>>(1, std::vector<int>(1, 0));
 
 void display() {
     //glClearColor(0.0, 0.0, 0.0, 0.0); // Background color (black)
@@ -47,29 +45,23 @@ void display() {
     int minData = ivctOut[0][0]; // Initialize maxData with the first element
 
 
-    for (int i = 0; i < IROWS; i++) {
-        for (int j = 0; j < ICOLS; j++) {
-            if (ivctOut[i][j] > maxData)
-            {
-                maxData = ivctOut[i][j]; // Update maxData if a greater value is found
-            }
-            if (ivctOut[i][j] < minData)
-            {
-                minData = ivctOut[i][j]; // Update maxData if a greater value is found
-            }
+    auto maxElement = std::max_element(ivctOut.begin(), ivctOut.end(), [](const std::vector<int>& a, const std::vector<int>& b) {
+        return *std::max_element(a.begin(), a.end()) < *std::max_element(b.begin(), b.end());
+        });
 
-        }
-    }    
+    maxData = *std::max_element(maxElement->begin(), maxElement->end());
 
-    
+    auto minElement = std::min_element(ivctOut.begin(), ivctOut.end(), [](const std::vector<int>& a, const std::vector<int>& b) {
+        return *std::min_element(a.begin(), a.end()) < *std::min_element(b.begin(), b.end());
+        });
 
+    minData = *std::min_element(minElement->begin(), minElement->end());
 
     // Render the piarrOut array as an image here
     glBegin(GL_POINTS);
     for (int i = 0; i < IROWS; i++) {
         for (int j = 0; j < ICOLS; j++)
         {
-
             float grayscale = static_cast<float>(ivctOut[i][j]);// / 255.0;
             // Calculate RGB values based on linear mapping
             float red = (grayscale - minData) / (maxData - minData);
@@ -111,78 +103,95 @@ void saveImage(const char* filename)
 
     ilDeleteImages(1, &imageID);
 }
-//std::vector<std::vector<int>>& inputVector
-//void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const int ICols
-//    ,const char* filename)
-//{
-//    ICOLS = ICols;
-//    IROWS = IRows;
-//    int* pi = new int[ICOLS];
-//
-//    int num = IROWS / 2;
-//
-//    for (int i = 0; i < num; ++i)
-//    {
-//        memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
-//        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
-//        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));
-//    }
-//    delete []pi;
-//    int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-//    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-//    float coeff = 255. / (double(imax));
-//    ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0)); // Initialize with your data
-//    for (int i = 0; i < IROWS; ++i)
-//        for (int j = 0; j < ICOLS; ++j)
-//        {
-//            ivctOut[i][j] = (int)(coeff * piarrImOut[i * ICOLS + j]);
-//            ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
-//
-//        }
-//
-//    glutInit(&argc, argv);
-//    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
-//    glutInitWindowSize(ICOLS, IROWS);
-//    glutCreateWindow(filename);
-//
-//    glutDisplayFunc(display);
-//    // After displaying the image, save it as filename 
-//    saveImage(filename);
-//    
-//    // Set up other GLUT callbacks as needed (e.g., keyboard input)
-//
-//    glutMainLoop();
-//    
-//    
-//    return;
-//}
-void createImg(int argc, char** argv, std::vector<std::vector<int>>& ivctOut0
+
+void createImg(int argc, char** argv, int * piarrImOut, const int IRows, const int ICols,const char* filename)
+{
+    ICOLS = ICols;
+    IROWS = IRows;
+    int* pi = new int[ICOLS];
+
+    int num = IROWS / 2;
+
+    for (int i = 0; i < num; ++i)
+    {
+        memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));
+    }
+    delete []pi;
+    int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+    float coeff = 255. / (double(imax));
+    ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0)); // Initialize with your data
+    for (int i = 0; i < IROWS; ++i)
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            ivctOut[i][j] = (int)(coeff * piarrImOut[i * ICOLS + j]);
+            ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
+
+        }
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(ICOLS, IROWS);
+    glutCreateWindow(filename);
+
+    glutDisplayFunc(display);
+    // After displaying the image, save it as filename 
+    saveImage(filename);
+    
+    // Set up other GLUT callbacks as needed (e.g., keyboard input)
+
+    glutMainLoop();
+    
+    
+    return;
+}
+
+void createImg_(int argc, char** argv, std::vector<int>& vctOut1D
     , const int IRows, const int ICols, const char* filename)
 {
     ICOLS = ICols;
     IROWS = IRows;
-    //int* pi = new int[ICOLS];
+    ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0));
+    int imax = fabs(vctOut1D[0]);
+    
+    for (int i = 0; i < IROWS; ++i)
+    {
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            int t = vctOut1D[i * ICOLS + j];
+            ivctOut[i][j] = t;
+            if (fabs(t) > imax)
+            {
+                imax = t;
+            }            
+        }
+    }
+    /*std::swap(ivctOut[2], ivctOut[3]);
+    int* pi = new int[ICOLS];*/
 
-    //int num = IROWS / 2;
+    int num = IROWS / 2;
 
-    //for (int i = 0; i < num; ++i)
-    //{
-    //    memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
-    //    memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
-    //    memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));
-    //}
+    for (int i = 0; i < num; ++i)
+    {
+        std::swap(ivctOut[i], ivctOut[IROWS - 1 - i]);
+        /*memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));*/
+    }
     //delete[]pi;
-    //int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-    //int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-    //float coeff = 255. / (double(imax));
-    //ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0)); // Initialize with your data
-    //for (int i = 0; i < IROWS; ++i)
-    //    for (int j = 0; j < ICOLS; ++j)
-    //    {
-    //        ivctOut[i][j] = (int)(coeff * piarrImOut[i * ICOLS + j]);
-    //        ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
+    /*int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);*/
+    float coeff = 255. / (double(imax));
+     // Initialize with your data
+    for (int i = 0; i < IROWS; ++i)
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            ivctOut[i][j] = (int)(coeff * ivctOut[i][j]);
+            //ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
 
-    //    }
+        }
 
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
@@ -199,36 +208,6 @@ void createImg(int argc, char** argv, std::vector<std::vector<int>>& ivctOut0
 
 
     return;
-}
-////, std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0)))
-void vctImPrepare(const int IRows, const int ICols, int * piarrImOut
-    , std::vector<std::vector<int>>& ivctOut0)
-    
-{
-    ICOLS = ICols;
-    IROWS = IRows;
-    int* pi = new int[ICOLS];
-
-    int num = IROWS / 2;
-
-    for (int i = 0; i < num; ++i)
-    {
-        memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
-        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
-        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));
-    }
-    delete[]pi;
-    int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);
-    float coeff = 255. / (double(imax));
-     // Initialize with your data
-    for (int i = 0; i < IROWS; ++i)
-        for (int j = 0; j < ICOLS; ++j)
-        {
-            ivctOut0[i][j] = (int)(coeff * piarrImOut[i * ICOLS + j]);
-            ivctOut0[i][j] = (int)piarrImOut[i * ICOLS + j];
-
-        }
 }
 
 

@@ -176,11 +176,11 @@ int main(int argc, char** argv)
 //------------------- prepare to work -------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
 // 1. initiate pointer to input image
-	int* piarr_ = (int*)malloc(sizeof(int));
+	int* piarr = (int*)malloc(sizeof(int));
 // !1
  
 	// 2. initiate 2-pointer to input image, in order to realloc memory to satisfy arbitrary dimensions
-	int** ppiarrImage = &piarr_;
+	int** ppiarrImage = &piarr;
 	// !2
 
 	// 3. initiating input variables
@@ -330,11 +330,7 @@ int main(int argc, char** argv)
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//-------------------  drawing of output image for cuda -------------------------------------------------------------------------------------------
 	
-	char filename_cu[] = "image_GPU.png";
-	createImg( argc, argv, piarrImOut, IImgcols, IMaxDT, filename_cu);
-	
-	free(piarr_);
-	cudaFree(u_piarrImOut);	
+	free(piarr);
 	cudaFree(d_piarrImage);
 	cudaFree(d_piarrState0);
 	cudaFree(d_piarrState0);
@@ -344,6 +340,9 @@ int main(int argc, char** argv)
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
 	cudaFree(d_arr_dT_RI);
+
+	char filename_cu[] = "image_GPU.png";
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cu);
 
 	return 0;
 }
