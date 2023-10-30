@@ -1,4 +1,4 @@
-#include "FdmtCpuFuncs.h"
+#include "FdmtCpu_omp.h"
 #include <math.h>
 #include <stdio.h>
 #include <iostream>

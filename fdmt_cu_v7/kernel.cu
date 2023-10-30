@@ -18,6 +18,7 @@
 #include <chrono>
 #include "fileInput.h"
 #include "DrawImg.h"
+#include "Constants.h"
 
 
 
@@ -222,9 +223,9 @@ int main(int argc, char** argv)
 	// !2
 	
 	// output in .npy:IImgcols * IMaxDT * sizeof(int));
-	/*int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
-	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);*/
-	std::vector<int> v1(u_piarrImOut, u_piarrImOut + IImgcols * IMaxDT);
+	int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
+	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
+	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
 	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
 
@@ -236,20 +237,39 @@ int main(int argc, char** argv)
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//------------------- begin to draw output image for cuda -------------------------------------------------------------------------------------------
 	
-		
-	free(piarr);	
+	float flops = 0;
+	if (iImRows == 512)
+	{
+		flops = GFLPS_512;
+	}
+	else
+	{
+		if (iImRows == 1024)
+		{
+			flops = GFLPS_1024;
+		}
+		else
+		{
+			flops = GFLPS_2048;
+		}
+	}
+
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / 10.) * 1000. << "  GFP" << endl;
+
+	free(piarr);
 	cudaFree(d_piarrImage);
 	cudaFree(d_piarrState0);
-	cudaFree(d_piarrState0);
+	cudaFree(d_piarrState1);
 	cudaFree(d_arr_val0);
 	cudaFree(d_arr_val1);
 	cudaFree(d_arr_deltaTLocal);
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
 	cudaFree(d_arr_dT_RI);
+	free(piarrImOut);
 
-	char filename_cu[] = "image_GPU.png";
-	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cu);
+	char filename_cpu[] = "image_cpu.png";
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
 
 	return 0;
 }

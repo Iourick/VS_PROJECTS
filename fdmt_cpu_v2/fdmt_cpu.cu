@@ -14,7 +14,8 @@
 #include "npy.hpp"
 #include <stdlib.h>
 #include "fileInput.h"
-#include "FdmtCpuFuncs.h"
+#include "FdmtCpu_omp.h"
+#include "Constants.h"
 
 
 #define DRAW true 
@@ -106,10 +107,31 @@ int main(int argc, char** argv)
 	npy::SaveArrayAsNumpy(strPathOutImageNpyFile, false, leshape101.size(), leshape101.data(), v1);
 	free(piarr);
 	
-
+	float flops = 0;
+	if (iImRows == 512)
+	{
+		flops = GFLPS_512;
+	}
+	else
+	{
+		if (iImRows == 1024)
+		{
+			flops = GFLPS_1024;
+		}
+		else
+		{
+			flops = GFLPS_2048;
+		}
+	}
+	cout << "GFLP = " << flops << "  GFP" << endl;
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000. << "  GFP" << endl;	
+	cout << "FLOPS = " << quantFlops << endl;
+	
+	free(piarrImOut);
 #if DRAW == true
 	char filename_cpu[] = "image_cpu.png";
-	createImg(argc, argv, piarrImOut, IImgcols, IMaxDT, filename_cpu);
+	
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
 #endif
 
 	return 0;

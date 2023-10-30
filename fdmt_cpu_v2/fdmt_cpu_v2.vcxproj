@@ -94,13 +94,14 @@
     <CudaCompile Include="fdmt_cpu.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\MyVSLib_C++\Constants.h" />
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
-    <ClInclude Include="..\MyVSLib_C++\FdmtCpuFuncs.h" />
+    <ClInclude Include="..\MyVSLib_C++\FdmtCpu_omp.h" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\MyVSLib_C++\DrawImg.cpp" />
-    <ClCompile Include="..\MyVSLib_C++\FdmtCpuFuncs.cpp" />
+    <ClCompile Include="..\MyVSLib_C++\FdmtCpu_omp.cpp" />
     <ClCompile Include="..\MyVSLib_C++\fileInput.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

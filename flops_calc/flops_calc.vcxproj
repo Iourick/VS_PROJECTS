@@ -94,6 +94,7 @@
     <CudaCompile Include="fdmt_cpu.cu" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\MyVSLib_C++\Constants.h" />
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
     <ClInclude Include="..\MyVSLib_C++\FdmtCpuFuncs.h" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />

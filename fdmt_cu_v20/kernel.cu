@@ -27,6 +27,7 @@
 #include <chrono>
 #include "fileInput.h"
 #include "DrawImg.h"
+#include "Constants.h"
 
 
 
@@ -329,20 +330,45 @@ int main(int argc, char** argv)
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//-------------------  drawing of output image for cuda -------------------------------------------------------------------------------------------
+	float flops = 0;
+	if (iImRows == 512)
+	{
+		flops = GFLPS_512;
+	}
+	else
+	{
+		if (iImRows == 1024)
+		{
+			flops = GFLPS_1024;
+		}
+		else
+		{
+			flops = GFLPS_2048;
+		}
+	}
 	
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / 10.) * 1000. << "  GFP" << endl;
+	
+	free(piarrImOut);
 	free(piarr);
 	cudaFree(d_piarrImage);
 	cudaFree(d_piarrState0);
-	cudaFree(d_piarrState0);
+	cudaFree(d_piarrState1);
 	cudaFree(d_arr_val0);
 	cudaFree(d_arr_val1);
 	cudaFree(d_arr_deltaTLocal);
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
-	cudaFree(d_arr_dT_RI);
+	cudaFree(d_arr_dT_RI);	
+	cudaFree(u_piarrImOut);
+	
+	
 
-	char filename_cu[] = "image_GPU.png";
-	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cu);
+	char filename_cpu[] = "image_cpu.png";
+
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
+
+
 
 	return 0;
 }

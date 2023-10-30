@@ -1,5 +1,5 @@
 ﻿// fdmt_cpu.cpp : This file contains the 'main' function. Program execution begins and ends there.
-//
+// THIS PROJECT IS DEDICATED FOR FLOPS CALCULATION
 
 #include <iostream>
 #include <iostream>
@@ -15,6 +15,7 @@
 #include <stdlib.h>
 #include "fileInput.h"
 #include "FdmtCpuFuncs.h"
+#include "Constants.h"
 
 
 #define DRAW true 
@@ -30,9 +31,7 @@ using namespace std;
 char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image_CPU.npy";
 
-const float GFLPS_512  = 0.00320386;
-const float GFLPS_1024 = 0.0137001;
-const float GFLPS_2048 = 0.0586616;
+
 
 int main(int argc, char** argv)
 {
@@ -130,9 +129,10 @@ int main(int argc, char** argv)
 			flops = GFLPS_2048;
 		}
 	}
-	cout << "GFLP = " << ((double)flops) * 1.0E-9 << "  GFP" << endl;
-	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000. * 1.0E-9 << "  GFP" << endl;
+	cout << "GFLP = " << flops << "  GFP" << endl;
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000.  << "  GFP" << endl;
 	cout << "duration = " << duration << endl;
+	cout << "FLOPS = " << quantFlops << endl;
 
 
 	std::vector<int> vctOut1D(piarrImOut, piarrImOut + IImgcols* IMaxDT);
@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 #if DRAW == true
 	char filename_cpu[] = "image_cpu.png";
 	//createImg(argc, argv, piarrImOut, IImgcols, IMaxDT, filename_cpu);
-	createImg_(argc, argv, vctOut1D, IImgcols, IMaxDT, filename_cpu);
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
 #endif
 
 	

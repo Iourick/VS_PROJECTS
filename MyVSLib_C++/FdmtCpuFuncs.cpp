@@ -221,13 +221,6 @@ void fncFdmtIteration_cpu(int*  piarrInp, const float val_dF, const int IDim0, c
 		
 		}
 	
-	
-	
-
-	// !10
-
-
-
 	// 12. calculating second 3 auxillary 2 dim arrays
 	
 
@@ -317,7 +310,7 @@ void shift_and_sum_cpu(int*  piarrInp, const int IDim0, const int IDim1
 				int numElemInRow = iarr_dT_ML[i_F * IOutPutDim1 + i_dT];
 				// number of beginning element of output matrix  Output[i_F, i_dT, dT_middle_larger:]
 				int numRowOutputMtrxBegin1 = numRowOutputMtrxBegin0 + numElemInRow;
-				quantFlops++;
+				quantFlops += 10;
 				// number of the row of the submatrix of input matrix with number 2 * i_F + 1
 				int numRowOfInputSubmatrix = iarr_dT_RI[i_F * IOutPutDim1 + i_dT];
 				// number of beginning element of the input matrix Input[2 * i_F + 1, dT_rest_index, :i_T_max - dT_middle_larger]
