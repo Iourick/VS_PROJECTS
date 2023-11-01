@@ -65,6 +65,8 @@ void kernel3D_shift_and_sum_v21(int* d_piarrInp, const int IDim0, const int IDim
 	, const int IOutPutDim0, const int IOutPutDim1
 	, int* d_piarrOut);
 
+__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n);
+
 
 
 

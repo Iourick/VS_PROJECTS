@@ -448,3 +448,13 @@ void kernel_0(int* d_piarrInp, const int IDim0, const int IDim1
 
 
 
+__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
+{
+	int tid = blockIdx.x * blockDim.x + threadIdx.x;
+	if (tid < n)
+	{
+		d_result[tid] = d_arr1[tid] + d_arr2[tid];
+	}
+}
+
+

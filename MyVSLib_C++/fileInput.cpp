@@ -1,6 +1,6 @@
 //THIS FILE CONTAINS FUNCTION TO READ FOUR <*>.NPY FILES WITH INPUT INFORMATION
 
-#define _CRT_SECURE_NO_WARNINGS
+//#define _CRT_SECURE_NO_WARNINGS
 #include "fileInput.h"
 #include <math.h>
 #include <iostream>

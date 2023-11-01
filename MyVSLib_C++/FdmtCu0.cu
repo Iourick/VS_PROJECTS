@@ -18,7 +18,7 @@
 #include <chrono>
 #include "npy.hpp"
 
-
+#include "FdmtCuKeith.cuh"
 using namespace std;
 
 //-------------------------------------------------------------------------
@@ -47,12 +47,15 @@ void fncFdmt_cu_v0(int * piarrImage // input image
 	// 7. call initialization func
 	clock_t start = clock();
 	
-	fnc_init_fdmt(d_piarrImage, IImgrows, IImgcols, IDeltaT, d_piarrState0);
+	//fnc_init_fdmt(d_piarrImage, IImgrows, IImgcols, IDeltaT, d_piarrState0);
 	clock_t end = clock();
 	double duration = double(end - start) / CLOCKS_PER_SEC;
 	std::cout << "Time taken by fnc_init: " << duration << " seconds" << std::endl;
 	// !7
-
+	dim3 grid_shape(1, IImgrows);
+	int nthreads = 256;
+	fdmt_initialise_kernel << <grid_shape, nthreads >> > (d_piarrImage,
+		d_piarrState0, IDeltaT, IMaxDT, IImgrows, IImgcols);
 	
 	// 8.pointers initialization
 	int *d_p0 = d_piarrState0;
@@ -336,15 +339,7 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 //}
 //
 ////-----------------------------------------------------------------------------
-//CUDA kernel for element-wise summation
-//__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n)
-//{
-//	int tid = blockIdx.x * blockDim.x + threadIdx.x;
-//	if (tid < n)
-//	{
-//		d_result[tid] = d_arr1[tid] + d_arr2[tid];
-//	}
-//}
+
 ////-----------------------------------------------------------------------------
 ////CUDA kernel for element-wise summation
 //__global__ void sumArrays_(int* d_result, const int* d_arr1, int n)

@@ -22,6 +22,8 @@
 
 
 
+
+
 using namespace std;
 
 char strInpFolder[] = "..//FDMT_TESTS//2048";
