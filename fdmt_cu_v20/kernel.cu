@@ -289,9 +289,10 @@ int main(int argc, char** argv)
 	// 7!
 
 
-	// 8. calculations		
+	// 8. calculations	
+	int num = 1;
 	auto start = std::chrono::high_resolution_clock::now();
-	for (int i = 0; i < 10; ++i)
+	for (int i = 0; i < num; ++i)
 	{
 		fncFdmt_cu_v2(piarrImage  // input image
 			, d_piarrImage
@@ -313,7 +314,7 @@ int main(int argc, char** argv)
 	
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 	
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count()/10. << " milliseconds" << std::endl;
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() / ((double)num) << " milliseconds" << std::endl;
 	// !8
 	
 	// 9. output in .npy:IImgcols * IMaxDT * sizeof(int));

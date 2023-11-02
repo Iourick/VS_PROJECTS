@@ -28,12 +28,9 @@ using namespace std;
 
 char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
+const bool BDIM_512_1024 = false;
 
 
-
-//extern int IROWS = 0;
-//extern int ICOLS = 0;
-//extern  std::vector<std::vector<int>> ivctOut = std::vector<std::vector<int>>(1, std::vector<int>(1, 0));
 
 
 //--------------------------------------------------------------------------------------
@@ -108,6 +105,16 @@ int main(int argc, char** argv)
 		break;
 	}
 
+	// 5.1
+	if ((iImRows == 1024) && (BDIM_512_1024))
+	{
+		iImRows = 512;
+		iMaxDT = 512;
+		piarr = (int*)realloc(piarr, iImRows * iImCols * sizeof(int));
+
+	}
+	// ! 5.1
+
 	// declare constants
 	const int IMaxDT = iMaxDT;
 	const int IImgrows = iImRows;
@@ -172,7 +179,7 @@ int main(int argc, char** argv)
 	cudaMemset(d_piarrState1, 0, IImgrows * (IDeltaT + 1) / 2 * IImgcols * sizeof(int));
 	// !5
 
-	// 9. allocate memory to device  auxiliary arrays
+	// 6. allocate memory to device  auxiliary arrays
 	
 	float* d_arr_val0 = 0;
 	cudaMalloc(&d_arr_val0, IImgrows / 2 * sizeof(float));
@@ -215,7 +222,7 @@ int main(int argc, char** argv)
 		, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
 		, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
 	
-		auto end = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
 
 	// Вычисляем разницу времени
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);

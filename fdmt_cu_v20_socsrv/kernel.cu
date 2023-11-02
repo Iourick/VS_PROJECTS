@@ -33,7 +33,7 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//1024";
+char strInpFolder[] = "..//FDMT_TESTS//2048";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 const bool BDIM_512_1024 = true;

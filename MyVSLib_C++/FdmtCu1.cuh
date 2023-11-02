@@ -97,6 +97,16 @@ void kernel2D_shift_and_sum_v1(int* d_piarrInp, const int IDim0, const int IDim1
 	, int* d_piarrOut);
 
 
+__global__
+void kernel_init_yk0(int* d_piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, int* d_pMtrxCur);
+
+
+__global__
+void kernel_init_yk1(int* d_piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, int* d_piarrState0);
+
+
 
 
 

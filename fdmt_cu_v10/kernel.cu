@@ -2,7 +2,7 @@
 	//in this project order of variables in matrix State 
 	//(in terminogy of original Python project)have been changed
 	//on the following below order:
-	//1-st variable - number of row of State (it is quantity of submatrixes)
+	//1-st variable - number of row of State (it is quantity of submatrixes)= maxDT
 	//2-nd variable - number of frequency (it is quantity of rows of each of submatrix)
 	//3-rd variable - number of T (quantuty of columns of input image)
 //--------------------------------------------------------------------------------------------
@@ -30,133 +30,129 @@
 #include "Constants.h"
 
 
-#include "FdmtCuKeith.cuh"
+//#include "FdmtCuKeith.cuh"
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//1024";
+char strInpFolder[] = "..//FDMT_TESTS//2048";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
-const bool BDIM_512_1024 = true;
-
-//extern int IROWS = 0;
-//extern int ICOLS = 0;
-//extern  std::vector<std::vector<int>> ivctOut = std::vector<std::vector<int>>(1, std::vector<int>(1, 0));
+const bool BDIM_512_1024 = false;
 
 
 //--------------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-	// test init
-	int n = 4;
+	//// STUDY INIT FUNC FOR KEITH
+	//int n = 4;
 
 
-	int IDeltaT0 = 2, IMaxDT0 = n;
+	//int IDeltaT0 = 2, IMaxDT0 = n;
 
-	int* iarrin = (int*)malloc(n * n * sizeof(int));
+	//int* iarrin = (int*)malloc(n * n * sizeof(int));
 
-	int* d_iarrin = 0;
-	cudaMalloc(&d_iarrin, n * n * sizeof(int));
+	//int* d_iarrin = 0;
+	//cudaMalloc(&d_iarrin, n * n * sizeof(int));
 
-	for (int i = 0; i < n * n; ++i)
-	{
-		//iarrin[i] = i;
-		iarrin[i] = 0;
-	}
-	iarrin[5] = 1;
-	cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);
-	
-	int* d_out =0;
-	cudaMalloc(&d_out, n * n * 100*sizeof(int));
-	
-
-
-	fnc_init_fdmt_v1(d_iarrin, n, n, IDeltaT0, d_out);
+	//for (int i = 0; i < n * n; ++i)
+	//{
+	//	//iarrin[i] = i;
+	//	iarrin[i] = 0;
+	//}
+	//iarrin[5] = 1;
+	//cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);
+	//
+	//int* d_out =0;
+	//cudaMalloc(&d_out, n * n * 100*sizeof(int));
+	//
 
 
-	int *out =  (int*)malloc(n * n * 100*sizeof(int));
-	cudaMemcpy(out, d_out, n * n * (IDeltaT0 +1)*sizeof(int), cudaMemcpyDeviceToHost);
-	int in = 0;
-	for (int i = 0; i < (IDeltaT0 + 1); ++i)
-	{
-		for (int j = 0; j < n; ++j)
-		{
-			for (int k = 0; k < n; ++k)
+	//fnc_init_fdmt_v1(d_iarrin, n, n, IDeltaT0, d_out);
 
-			{
-				std::cout << out[in]<< ";";
-				++in;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-		std::cout << "------------------" << std::endl;
 
-	}
-	std::cout << "------------------" << std::endl;
-	std::cout << "------  inp ------------" << std::endl;
-	//-------------   TRANSPOSE -----------------------------------------------------
-	
-	/*for (int i = 0; i < n ; ++i)
-		for (int j =0; j < i ; ++j)
+	//int *out =  (int*)malloc(n * n * 100*sizeof(int));
+	//cudaMemcpy(out, d_out, n * n * (IDeltaT0 +1)*sizeof(int), cudaMemcpyDeviceToHost);
+	//int in = 0;
+	//for (int i = 0; i < (IDeltaT0 + 1); ++i)
+	//{
+	//	for (int j = 0; j < n; ++j)
+	//	{
+	//		for (int k = 0; k < n; ++k)
 
-	{    
-			int temp = iarrin[i * n + j];
-			iarrin[i * n + j] = iarrin[j * n + i];
-			iarrin[j * n + i] = temp;
-	}
-	in = 0;
-	
-		for (int i = 0; i < n; ++i)
-		{
-			for (int j = 0; j < n; ++j)
+	//		{
+	//			std::cout << out[in]<< ";";
+	//			++in;
+	//		}
+	//		std::cout << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//	std::cout << "------------------" << std::endl;
 
-			{
-				std::cout << iarrin[in] << ";";
-				++in;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-		std::cout << "------------------" << std::endl;
+	//}
+	//std::cout << "------------------" << std::endl;
+	//std::cout << "------  inp ------------" << std::endl;
+	////-------------   TRANSPOSE -----------------------------------------------------
+	//
+	///*for (int i = 0; i < n ; ++i)
+	//	for (int j =0; j < i ; ++j)
 
-	
-	std::cout << "------------------" << std::endl;
-	std::cout << "------------------" << std::endl;
-	cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);*/
+	//{    
+	//		int temp = iarrin[i * n + j];
+	//		iarrin[i * n + j] = iarrin[j * n + i];
+	//		iarrin[j * n + i] = temp;
+	//}
+	//in = 0;
+	//
+	//	for (int i = 0; i < n; ++i)
+	//	{
+	//		for (int j = 0; j < n; ++j)
 
-	//-------------   KEITH -----------------------------------------------------	
-	int nthreads = 256;
-	dim3 grid_shape(1, n);
-	fdmt_initialise_kernel2 << <grid_shape, nthreads >> > (d_iarrin,
-		d_out, IDeltaT0+1, IMaxDT0, n, n,false);
-	cudaMemcpy(out, d_out, n * n * (IDeltaT0 + 1) * sizeof(int), cudaMemcpyDeviceToHost);
-	in = 0;
-	for (int i = 0; i < (IDeltaT0 + 1); ++i)
-	{
-		for (int j = 0; j < n; ++j)
-		{
-			for (int k = 0; k < n; ++k)
+	//		{
+	//			std::cout << iarrin[in] << ";";
+	//			++in;
+	//		}
+	//		std::cout << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//	std::cout << "------------------" << std::endl;
 
-			{
-				std::cout << out[in] << ";";
-				++in;
-			}
-			std::cout << std::endl;
-		}
-		std::cout << std::endl;
-		std::cout << "------------------" << std::endl;
+	//
+	//std::cout << "------------------" << std::endl;
+	//std::cout << "------------------" << std::endl;
+	//cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);*/
 
-	}
-	free(iarrin);
-	free(out);
-	
-	cudaFree(d_iarrin);
-	cudaFree(d_out);
-	int uuy = 0;
-	//---------------------------------------------------------
+	////-------------   KEITH -----------------------------------------------------	
+	//int nthreads = 256;
+	//dim3 grid_shape(1, n);
+	//fdmt_initialise_kernel2 << <grid_shape, nthreads >> > (d_iarrin,
+	//	d_out, IDeltaT0+1, IMaxDT0, n, n,false);
+	//cudaMemcpy(out, d_out, n * n * (IDeltaT0 + 1) * sizeof(int), cudaMemcpyDeviceToHost);
+	//in = 0;
+	//for (int i = 0; i < (IDeltaT0 + 1); ++i)
+	//{
+	//	for (int j = 0; j < n; ++j)
+	//	{
+	//		for (int k = 0; k < n; ++k)
 
+	//		{
+	//			std::cout << out[in] << ";";
+	//			++in;
+	//		}
+	//		std::cout << std::endl;
+	//	}
+	//	std::cout << std::endl;
+	//	std::cout << "------------------" << std::endl;
+
+	//}
+	//free(iarrin);
+	//free(out);
+	//
+	//cudaFree(d_iarrin);
+	//cudaFree(d_out);
+	//int uuy = 0;
+	////---------------------------------------------------------
+// END OF STUDY
 
 	/*const int IDim0 = 5;
 	const int IDim1 = 100;
@@ -380,7 +376,7 @@ int main(int argc, char** argv)
 			, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
 			, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
 	}
-		auto end = std::chrono::high_resolution_clock::now();
+	auto end = std::chrono::high_resolution_clock::now();
 	
 	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
 	
@@ -435,9 +431,9 @@ int main(int argc, char** argv)
 	cudaFree(u_piarrImOut);
 
 
-	char filename_cpu[] = "image_cpu.png";
+	char filename_GPU[] = "image_GPU.png";
 
-	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
+	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_GPU);
 
 	return 0;
 }

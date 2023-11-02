@@ -20,10 +20,6 @@ void fncFdmt_cu_v2(int* piarrImage // input image
 	, int* u_piarrImOut			// OUTPUT image, dim = IDeltaT x IImgcols
 );
 
-__global__
-void kernel_init_iter_v2(int* d_piarrImgRow, const int IImgrows, const int IImgcols
-	, const int i_dT, int* d_pMtrxPrev, int* d_pMtrxCur);
-
 void fncFdmtIteration_v2(int* d_piarrInp, const float val_dF, const int IDim0, const int IDim1
 	, const int IDim2, const int IMaxDT, const float VAlFmin
 	, const float VAlFmax, const int ITerNum, float* d_arr_val0
@@ -36,12 +32,13 @@ void create_auxillary_1d_arrays(const int IFjumps, const int IMaxDT, const float
 	, const float VAlc2, const float VAlf_min, const float VAlcorrection
 	, float* d_arr_val0, float* d_arr_val1, int* d_iarr_deltaTLocal);
 
+__global__
+void kernel_init_yk0(int* d_piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, int* d_piarrState0);
 
-
-void fnc_init_fdmt_v2(int* d_piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaTplus1, int* d_piarrOut);
-
-
+	__global__
+	void kernel_init_yk1(int* d_piarrImg, const int IImgrows, const int IImgcols
+		, const int IDeltaT, int* d_piarrState0);
 
 
 __global__
@@ -49,11 +46,6 @@ void kernel3D_shift_and_sum_v2(int* d_piarrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, float* d_arr_val0, float* d_arr_val1
 	, const int IOutPutDim0, const int IOutPutDim1
 	, int* d_piarrOut);
-
-
-__global__
-void kernel_0(int* d_piarrInp, const int IDim0, const int IDim1
-	, const int IDim2);
 
 __host__ __device__
 void calc3AuxillaryVars(int& ideltaTLocal, int& i_dT, int& iF, float& val0
@@ -65,7 +57,6 @@ void kernel3D_shift_and_sum_v21(int* d_piarrInp, const int IDim0, const int IDim
 	, const int IOutPutDim0, const int IOutPutDim1
 	, int* d_piarrOut);
 
-__global__ void sumArrays(int* d_result, const int* d_arr1, const int* d_arr2, int n);
 
 
 

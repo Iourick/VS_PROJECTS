@@ -99,14 +99,12 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <CudaCompile Include="..\MyVSLib_C++\FdmtCu0.cu" />
-    <CudaCompile Include="..\MyVSLib_C++\FdmtCuKeith.cu" />
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\MyVSLib_C++\Constants.h" />
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
     <ClInclude Include="..\MyVSLib_C++\FdmtCu0.cuh" />
-    <ClInclude Include="..\MyVSLib_C++\FdmtCuKeith.cuh" />
     <ClInclude Include="..\MyVSLib_C++\fileInput.h" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
     <ClInclude Include="Dependencies\freeglut\include\GL\freeglut.h" />
