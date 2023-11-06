@@ -36,40 +36,7 @@ const bool BDIM_512_1024 = false;
 //--------------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
-{
-	//--------------------------------------------------------------------------------------
-	
-	//const std::vector<int> data1 {1, 2, 3, 4, 5, 6};
-	//std::array<long unsigned, 2> leshape11 {2, 3};
-	//std::array<long unsigned, 1> leshape12 {6};
-
-	//const double data2[]{ 7 };
-	//std::array<long unsigned, 3> leshape21 {1, 1, 1};
-	//std::array<long unsigned, 0> leshape22 {};
-
-	//const std::array<double, 0> data3;
-	//std::array<long unsigned, 2> leshape31 {4, 0};
-
-	//npy::SaveArrayAsNumpy("out11.npy", false, leshape11.size(), leshape11.data(), data1);
-	//npy::SaveArrayAsNumpy("out12.npy", false, leshape12.size(), leshape12.data(), data1);
-
-	//npy::SaveArrayAsNumpy("out21.npy", false, leshape21.size(), leshape21.data(), data2);
-	//npy::SaveArrayAsNumpy("out22.npy", false, leshape22.size(), leshape22.data(), data2);
-
-	//npy::SaveArrayAsNumpy("out31.npy", false, leshape31.size(), leshape31.data(), data3.data());
-
-	//std::vector<unsigned long> sh {};
-	//std::vector<int> vctD;
-	//bool bf = false;
-	//npy::LoadArrayFromNumpy("out12.npy", sh, bf, vctD);
-
-	//int n = 5;  // Specify the length of the array
-	//int iarr[] = { 1, 2, 3, 4, 9 };  // Your one-dimensional integer array
-
-	//// Create a std::vector from the integer array
-	//std::vector<int> v(iarr, iarr + n);
-	//-------------------------------------------
-//--------------------------------------------------------------------------------------------------------------
+{	
 //--------------------------------------------------------------------------------------------------------------
 //------------------- prepare to work -------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
@@ -198,37 +165,34 @@ int main(int argc, char** argv)
 
 	int* d_arr_dT_RI = 0;
 	cudaMalloc(&d_arr_dT_RI, IImgrows * (IDeltaT + 1) * sizeof(int));
-	
-
 
 	// 2. calculations	
-	//clock_t start = clock();	
+	
+	int num = 1000;
 	auto start = std::chrono::high_resolution_clock::now();
 
+	for (int i = 0; i < num; ++i)
+	{
+		fncFdmt_cu_v0(piarrImage  // input image
+			, d_piarrImage
+			, IImgrows, IImgcols // dimensions of input image 	
+			, d_piarrState0		// auxillary allocated buffer of mrmory in device
+			, d_piarrState1		// auxillary allocated buffer of mrmory in device
+			, IDeltaT
+			, I_F
+			, VAl_dF
+			, d_arr_val0 		 // auxillary allocated buffer of mrmory in device
+			, d_arr_val1			// auxillary allocated buffer of mrmory in device
+			, d_arr_deltaTLocal	 // auxillary allocated buffer of mrmory in device
+			, d_arr_dT_MI			// auxillary allocated buffer of mrmory in device
+			, d_arr_dT_ML			// auxillary allocated buffer of mrmory in device
+			, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
+			, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
+	}
 	
-	fncFdmt_cu_v0(piarrImage  // input image
-		, d_piarrImage 
-		, IImgrows, IImgcols // dimensions of input image 	
-		, d_piarrState0		// auxillary allocated buffer of mrmory in device
-		, d_piarrState1		// auxillary allocated buffer of mrmory in device
-		, IDeltaT
-		, I_F
-		, VAl_dF
-		, d_arr_val0 		 // auxillary allocated buffer of mrmory in device
-		, d_arr_val1			// auxillary allocated buffer of mrmory in device
-		, d_arr_deltaTLocal	 // auxillary allocated buffer of mrmory in device
-		, d_arr_dT_MI			// auxillary allocated buffer of mrmory in device
-		, d_arr_dT_ML			// auxillary allocated buffer of mrmory in device
-		, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
-		, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
-	
-	auto end = std::chrono::high_resolution_clock::now();
-
-	// Вычисляем разницу времени
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
-
-	// Выводим время выполнения в микросекундах
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() << " milliseconds" << std::endl;
+	auto end = std::chrono::high_resolution_clock::now();	
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);	
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() /((double)num)<< " microseconds" << std::endl;
 	// !2
 	
 	// output in .npy:IImgcols * IMaxDT * sizeof(int));
@@ -255,7 +219,14 @@ int main(int argc, char** argv)
 	{
 		if (iImRows == 1024)
 		{
-			flops = GFLPS_1024;
+			if (BDIM_512_1024)
+			{
+				flops = GFLPS_512_1024;
+			}
+			else
+			{
+				flops = GFLPS_1024;
+			}
 		}
 		else
 		{
@@ -263,7 +234,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / 10.) * 1000. << "  GFP" << endl;
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / ((double)num)) * 1.0e6  << endl;
 
 	free(piarr);
 	cudaFree(d_piarrImage);

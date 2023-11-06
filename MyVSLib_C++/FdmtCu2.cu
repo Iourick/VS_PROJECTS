@@ -227,7 +227,7 @@ void fncFdmtIteration_v2(int* d_piarrInp, const float val_dF, const int IDim0, c
 	// !1
 
 	// 2. set zeros in output array
-	cudaMemset(d_piarrOut, 0, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(int));
+	//cudaMemset(d_piarrOut, 0, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(int));
 	// !2
 
 	// 3. constants calculation
@@ -253,10 +253,10 @@ void fncFdmtIteration_v2(int* d_piarrInp, const float val_dF, const int IDim0, c
 	//------------  KERNEL 3D kernel3D_shift_and_sum_v21  -----------------------------------
 	//-----------  COALESCED + NOT SHARED MEMORY +  calc3AuxillaryVars ---------------------------------------------------------------------- 
 	//----------- TIME = 104 /14 ms ----------------------------------	
-	/*const dim3 blockSize1 = dim3(64, 1, 1);
+	/*const dim3 blockSize1 = dim3(1024, 1, 1);
 	const dim3 gridSize1 = dim3((IDim2 + blockSize1.x - 1) / blockSize1.x, iOutPutDim1, iOutPutDim0);
-	size_t smemsize = 32;
-	kernel3D_shift_and_sum_v21 << < gridSize1, blockSize1, smemsize >> > (d_piarrInp
+	size_t smemsize = 44;
+	kernel3D_shift_and_sum_v2 << < gridSize1, blockSize1, smemsize >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
 	cudaDeviceSynchronize();*/
@@ -286,7 +286,7 @@ void kernel3D_shift_and_sum_v2(int* d_piarrInp, const int IDim0, const int IDim1
 	, const int IOutPutDim0, const int IOutPutDim1
 	, int* d_piarrOut)
 {
-	__shared__ int shared_iarr[8];
+	extern __shared__ int shared_iarr[11];
 
 	int i_F = blockIdx.y ;
 	int i_dT = blockIdx.z ;
@@ -297,6 +297,10 @@ void kernel3D_shift_and_sum_v2(int* d_piarrInp, const int IDim0, const int IDim1
 	shared_iarr[7] = IDim1 * IDim2;
 	calc3AuxillaryVars(d_iarr_deltaTLocal[i_F], i_dT, i_F, d_arr_val0[i_F]
 		, d_arr_val1[i_F], shared_iarr[2], shared_iarr[4], shared_iarr[3]);
+	shared_iarr[8] = shared_iarr[0] * shared_iarr[6] + shared_iarr[5] * IDim2;
+	shared_iarr[9] = shared_iarr[2] * shared_iarr[7] + 2 * shared_iarr[5] * IDim2;
+	shared_iarr[10] = shared_iarr[3] * shared_iarr[7] + (1 + 2 * shared_iarr[5]) * IDim2;
+	
 	__syncthreads();
 
 	if (shared_iarr[0] > shared_iarr[1])
@@ -307,22 +311,16 @@ void kernel3D_shift_and_sum_v2(int* d_piarrInp, const int IDim0, const int IDim1
 	if (numCol > IDim2)
 	{
 		return;
-	}
-
-	int numElem = shared_iarr[0] * shared_iarr[6] + shared_iarr[5] * IDim2 + numCol;
-
-	int numInpElem0 = shared_iarr[2] * shared_iarr[7] + 2 * shared_iarr[5] * IDim2 + numCol;
-
-	int numInpElem1 = shared_iarr[3] * shared_iarr[7] + (1 + 2 * shared_iarr[5]) * IDim2 + numCol;
+	}	
 	// 	
 	if (numCol >= shared_iarr[4])
 
 	{
-		d_piarrOut[numElem] = d_piarrInp[numInpElem0] + d_piarrInp[numInpElem1 - shared_iarr[4]];
+		d_piarrOut[shared_iarr[8] + numCol] = d_piarrInp[shared_iarr[9] + numCol] + d_piarrInp[shared_iarr[10] + numCol - shared_iarr[4]];
 	}
 	else
 	{
-		d_piarrOut[numElem] = d_piarrInp[numInpElem0];
+		d_piarrOut[shared_iarr[8] + numCol] = d_piarrInp[shared_iarr[9] + numCol];
 	}
 
 }

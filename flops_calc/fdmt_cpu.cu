@@ -30,7 +30,7 @@ extern int quantFlops = 0;
 using namespace std;
 char strInpFolder[] = "..//FDMT_TESTS//2048";
 char strPathOutImageNpyFile[] = "out_image_CPU.npy";
-
+const bool BDIM_512_1024 = false;
 
 
 int main(int argc, char** argv)
@@ -71,6 +71,16 @@ int main(int argc, char** argv)
 		cout << "Happened something extraordinary! Oooops..." << std::endl;
 		break;
 	}
+
+	// 5.1
+	if ((iImRows == 1024) && (BDIM_512_1024))
+	{
+		iImRows = 512;
+		iMaxDT = 512;
+		piarr = (int*)realloc(piarr, iImRows * iImCols * sizeof(int));
+
+	}
+	// ! 5.1
 
 	// declare constants
 	const int IMaxDT = iMaxDT;
@@ -122,7 +132,14 @@ int main(int argc, char** argv)
 	{
 		if (iImRows == 1024)
 		{
-			flops = GFLPS_1024;
+			if (BDIM_512_1024)
+			{
+				flops = GFLPS_512_1024;
+			}
+			else
+			{
+				flops = GFLPS_1024;
+			}
 		}
 		else
 		{
@@ -130,7 +147,7 @@ int main(int argc, char** argv)
 		}
 	}
 	cout << "GFLP = " << flops << "  GFP" << endl;
-	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000.  << "  GFP" << endl;
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration) * 1000.  << endl;
 	cout << "duration = " << duration << endl;
 	cout << "FLOPS = " << quantFlops << endl;
 

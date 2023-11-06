@@ -33,10 +33,10 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//2048";
+char strInpFolder[] = "..//FDMT_TESTS//1024";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
-
+const bool BDIM_512_1024 = true;
 
 
 //extern int IROWS = 0;
@@ -213,6 +213,16 @@ int main(int argc, char** argv)
 	}
 	// !5
 
+	// 5.1
+	if ((iImRows == 1024) && (BDIM_512_1024))
+	{
+		iImRows = 512;
+		iMaxDT = 512;
+		piarr = (int*)realloc(piarr, iImRows * iImCols * sizeof(int));
+
+	}
+	// ! 5.1
+
 	// 6. declare constants
 	const int IMaxDT = iMaxDT;
 	const int IImgrows = iImRows;
@@ -340,14 +350,20 @@ int main(int argc, char** argv)
 	{
 		if (iImRows == 1024)
 		{
-			flops = GFLPS_1024;
+			if (BDIM_512_1024)
+			{
+				flops = GFLPS_512_1024;
+			}
+			else
+			{
+				flops = GFLPS_1024;
+			}
 		}
 		else
 		{
 			flops = GFLPS_2048;
 		}
 	}
-	
 	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / 10.) * 1000. << "  GFP" << endl;
 	
 	free(piarrImOut);

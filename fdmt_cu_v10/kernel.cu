@@ -33,11 +33,11 @@
 //#include "FdmtCuKeith.cuh"
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//2048";
+char strInpFolder[] = "..//FDMT_TESTS//512";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 
-const bool BDIM_512_1024 = false;
+const bool BDIM_512_1024 = true;
 
 
 //--------------------------------------------------------------------------------------
@@ -399,6 +399,7 @@ int main(int argc, char** argv)
 	//-------------------  drawing of output image for cuda -------------------------------------------------------------------------------------------
 	
 	float flops = 0;
+	
 	if (iImRows == 512)
 	{
 		flops = GFLPS_512;
@@ -407,7 +408,14 @@ int main(int argc, char** argv)
 	{
 		if (iImRows == 1024)
 		{
-			flops = GFLPS_1024;
+			if (BDIM_512_1024)
+			{
+				flops = GFLPS_512_1024;
+			}
+			else
+			{
+				flops = GFLPS_1024;
+			}
 		}
 		else
 		{

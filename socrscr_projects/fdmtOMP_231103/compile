@@ -1,0 +1,1 @@
+nvcc -ccbin /usr/bin/g++-10 *cu *cpp -o run
