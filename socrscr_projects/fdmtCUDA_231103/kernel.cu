@@ -17,7 +17,7 @@
 #include "kernel.cuh"
 #include <chrono>
 #include "fileInput.h"
-
+#include "DrawImg.h"
 #include "Constants.h"
 
 
@@ -26,21 +26,33 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//1024";
+char strInpFolder[] = "..//FDMT_TESTS//512";
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
 const bool BDIM_512_1024 = true;
 
 
-
+void printDeviceInfo()
+{
+	int deviceId;
+	int numberOfSMs;
+	cudaGetDevice(&deviceId);
+	cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId);
+	cudaDeviceProp deviceProps;
+	cudaGetDeviceProperties(&deviceProps, deviceId);
+	std::string deviceName = deviceProps.name;
+	std::cout << "Device Name: " << deviceName << std::endl;
+	std::cout << "Number of SM: " << numberOfSMs << std::endl;
+}
 
 //--------------------------------------------------------------------------------------
 
 int main(int argc, char** argv)
 {
-	//--------------------------------------------------------------------------------------------------------------
-	//------------------- prepare to work -------------------------------------------------------------------------------------------
-	//--------------------------------------------------------------------------------------------------------------
-	// initiate pointer to input image
+	printDeviceInfo();
+//--------------------------------------------------------------------------------------------------------------
+//------------------- prepare to work -------------------------------------------------------------------------------------------
+//--------------------------------------------------------------------------------------------------------------
+// initiate pointer to input image
 	int* piarr = (int*)malloc(sizeof(int));
 
 	// initiate 2-pointer to input image, in order to realloc memory to satisfy arbitrary dimensions
@@ -93,14 +105,14 @@ int main(int argc, char** argv)
 	// handy pointer to input image
 	int* piarrImage = *ppiarrImage;
 
-
+	
 
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of prepare ------------------------------------------------------------------------------------------
 	//------------------- begin to calculate cuda var -------------------------------------------------------------------------------------------
 	//--------------------------------------------------------------------------------------------------------------
 	// 1. allocate memory for device array
-
+	
 
 	int* u_piarrImOut = 0;
 	cudaMallocManaged(&u_piarrImOut, IImgcols * IMaxDT * sizeof(int));
@@ -109,7 +121,7 @@ int main(int argc, char** argv)
 	//cudaMallocManaged(&d_piarrImage, IImgcols * IImgrows * sizeof(int));
 	cudaMalloc(&d_piarrImage, IImgcols * IImgrows * sizeof(int));
 
-
+	
 	// !1
 
 
@@ -127,27 +139,27 @@ int main(int argc, char** argv)
 
 
 	// 3. declare pointers to device arrays
-
+	
 	int* d_piarrState0 = 0;
 	int* d_piarrState1 = 0;
-
+	
 	// !3
 
 	// 4. allocate memory to device arrays
-
+	
 	cudaMalloc(&d_piarrState0, IImgrows * (IDeltaT + 1) * IImgcols * sizeof(int));
 	cudaMalloc(&d_piarrState1, IImgrows * (IDeltaT + 1) * IImgcols * sizeof(int));
-
+	
 	// !4
-
+	
 	// 5  Initialize the device arrays with zeros
-
+	
 	cudaMemset(d_piarrState0, 0, IImgrows * (IDeltaT + 1) * IImgcols * sizeof(int));
 	cudaMemset(d_piarrState1, 0, IImgrows * (IDeltaT + 1) / 2 * IImgcols * sizeof(int));
 	// !5
 
 	// 6. allocate memory to device  auxiliary arrays
-
+	
 	float* d_arr_val0 = 0;
 	cudaMalloc(&d_arr_val0, IImgrows / 2 * sizeof(float));
 
@@ -167,8 +179,8 @@ int main(int argc, char** argv)
 	cudaMalloc(&d_arr_dT_RI, IImgrows * (IDeltaT + 1) * sizeof(int));
 
 	// 2. calculations	
-
-	int num = 1;
+	
+	int num = 1000;
 	auto start = std::chrono::high_resolution_clock::now();
 
 	for (int i = 0; i < num; ++i)
@@ -189,27 +201,27 @@ int main(int argc, char** argv)
 			, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
 			, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
 	}
-
-	auto end = std::chrono::high_resolution_clock::now();
-	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() / ((double)num) << " microseconds" << std::endl;
+	
+	auto end = std::chrono::high_resolution_clock::now();	
+	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);	
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() /((double)num)<< " microseconds" << std::endl;
 	// !2
-
+	
 	// output in .npy:IImgcols * IMaxDT * sizeof(int));
-	int* piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
-	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols * IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
+	int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
+	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
 	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
-	std::array<long unsigned, 2> leshape101 {IImgcols, IMaxDT};
+	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
 
 	npy::SaveArrayAsNumpy(strPathOutImageNpyFile_gpu, false, leshape101.size(), leshape101.data(), v1);
 
-
-
+	
+	
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//------------------- begin to draw output image for cuda -------------------------------------------------------------------------------------------
-
+	
 	float flops = 0;
 	if (iImRows == 512)
 	{
@@ -233,32 +245,20 @@ int main(int argc, char** argv)
 			flops = GFLPS_2048;
 		}
 	}
-	/*std::string gpu_name;
-	FILE* fp = popen("lspci | grep VGA | cut -d ':' -f 3", "r");
-	char buffer[128];
-	if (fp) {
-		while (fgets(buffer, sizeof(buffer), fp) != NULL) {
-			gpu_name += buffer;
-		}
-		pclose(fp);
-	}
 
-	// Get CPU name
-	std::string cpu_name;
-	fp = popen("lscpu | grep 'Model name' | cut -d ':' -f 2", "r");
-	if (fp) {
-		if (fgets(buffer, sizeof(buffer), fp) != NULL) {
-			cpu_name = buffer;
-		}
-		pclose(fp);
-	}
+	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / ((double)num)) * 1.0e6  << endl;
 
-	std::cout << "GPU Name: " << gpu_name;
-	std::cout << "CPU Name: " << cpu_name;*/
+	/*int deviceId;
+	int numberOfSMs;	
+	cudaGetDevice(&deviceId);
+	cudaDeviceGetAttribute(&numberOfSMs, cudaDevAttrMultiProcessorCount, deviceId);
+	cudaDeviceProp deviceProps;
+	cudaGetDeviceProperties(&deviceProps, deviceId);
+	std::string deviceName = deviceProps.name;
+	std::cout << "Device Name: " << deviceName << std::endl;
+	std::cout << "Number of SM: " << numberOfSMs << std::endl;*/
 
-	cout << "TEST DIMENSIONS " << IImgrows << " x "<< IImgcols<< endl;
 
-	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / num) * 1000000.  << endl;
 
 	free(piarr);
 	cudaFree(d_piarrImage);
@@ -272,7 +272,8 @@ int main(int argc, char** argv)
 	cudaFree(d_arr_dT_RI);
 	free(piarrImOut);
 
-	
+	//char filename_cpu[] = "image_cpu.png";
+	//createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
+
 	return 0;
 }
-

@@ -2,10 +2,12 @@
 //
 
 #include <iostream>
-
+#include "SigprocFile.h"
 int main()
 {
-    std::cout << "Hello World!\n";
+    //std::cout << "Hello World!\n";
+    SigprocFile SgprFile("D://weizmann//2019-10-0TelescData.24.fil");
+    int ii = 0;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

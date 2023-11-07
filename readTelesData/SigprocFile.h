@@ -4,7 +4,7 @@
  *  Created on: 27 Oct 2016
  *      Author: ban115
  */
-
+ #define _CRT_SECURE_NO_WARNINGS
 #ifndef SIGPROCFILE_H_
 #define SIGPROCFILE_H_
 
@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include "DataSource.h"
 #include <fcntl.h>
-#include <unistd.h>
+//#include <unistd.h>
 
 const size_t MAX_HDR_SIZE = 4096;
 
@@ -24,14 +24,15 @@ const size_t MAX_HDR_SIZE = 4096;
  *
  * @see http://sigproc.sourceforge.net/sigproc.pdf
  */
-class SigprocFile : public fdmt::DataSource {
+class SigprocFile //: public fdmt::DataSource
+{
 public:
 	SigprocFile(const char* filename);
 	virtual ~SigprocFile();
 	const char* header_find(const char* hname) const;
 	int header_int(const char* hname) const;
 	double header_double(const char* hname) const;
-	size_t read_samples_uint8(size_t nt, uint8_t* output);
+	//size_t read_samples_uint8(size_t nt, uint8_t* output);
 	double last_sample_elapsed_seconds();
 	double last_sample_mjd();
 	float dm_of_idt(int idt);
@@ -71,7 +72,7 @@ public:
 		return m_filename;
 	}
 
-	void advise_block(off_t nt);
+	//void advise_block(off_t nt);
 
 	size_t seek_sample(size_t t);
 
