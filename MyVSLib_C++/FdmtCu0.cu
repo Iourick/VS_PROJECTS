@@ -510,7 +510,7 @@ void kernel_init_fdmt0(int* d_piarrImg, const int IImgrows, const int IImgcols
 	int  itemp = d_piarrImg[numInpElemPos];
 	d_piarrOut[numOutElemPos] = itemp;
 
-	for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
+	/*for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
 	{
 		numOutElemPos += IImgcols;
 		if (i_dT <= numOutElemInRow)
@@ -518,15 +518,44 @@ void kernel_init_fdmt0(int* d_piarrImg, const int IImgrows, const int IImgcols
 			itemp = itemp + d_piarrImg[i_F * IImgcols + numOutElemInRow - i_dT];
 			d_piarrOut[numOutElemPos] = itemp;
 		}
-			
+
 		else
 		{
 			d_piarrOut[numOutElemPos] = 0;
-		}		
+		}
+	}*/
+
+	for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
+	{
+		numOutElemPos += IImgcols;
+		if (i_dT <= numOutElemInRow)
+		{
+			itemp = itemp * i_dT + (int)(((float)d_piarrImg[i_F * IImgcols + numOutElemInRow - i_dT]) / ((float)(i_dT + 1.)));
+			d_piarrOut[numOutElemPos] = itemp;
+		}
+
+		else
+		{
+			d_piarrOut[numOutElemPos] = 0;
+		}
 	}
+
+	
 }
 
 //---------------------------------------------------------------------------
 
 
-
+//fdmt_dtype c1 = (fdmt_dtype(idt));
+//fdmt_dtype c2 = (fdmt_dtype(idt + 1));
+////c1 = 1.;
+////c2 = 1.;
+//while (t < nt) {
+//	if (count) {
+//		state[outidx + t] = fdmt_dtype(idt + 1);
+//	}
+//	else {
+//		state[outidx + t] = (state[iidx + t] * c1 + indata[imidx + t]) / c2;
+//	}
+//	t += tblock;
+//}
