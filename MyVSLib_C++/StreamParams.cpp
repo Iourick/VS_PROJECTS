@@ -2,9 +2,10 @@
 #include <fstream>
 #include <iostream>
 
+
 CStreamParams::~CStreamParams()
 {
-    fclose(m_file);
+    fclose(m_stream);
 
 }
 //---------------------------------------------------------------------------
@@ -21,7 +22,7 @@ CStreamParams::CStreamParams()
     m_lenChunk = 0;
     m_numCurChunk = 0;
     m_D_max = 0.;
-    m_file = nullptr;
+    m_stream = nullptr;
 }
 
 
@@ -41,7 +42,7 @@ CStreamParams::CStreamParams(const  CStreamParams& R)
     m_lenChunk = R.m_lenChunk;
     m_numCurChunk = R.m_numCurChunk;
     m_D_max = R.m_D_max;
-    m_file = R.m_file;
+    m_stream = R.m_stream;
 }
 
 // оператор присваивания
@@ -62,7 +63,7 @@ CStreamParams& CStreamParams::operator=(const CStreamParams& R)
     m_lenChunk = R.m_lenChunk;
     m_numCurChunk = R.m_numCurChunk;
     m_D_max = R.m_D_max;
-    m_file = R.m_file;
+    m_stream = R.m_stream;
     return *this;
 }
 
@@ -73,14 +74,14 @@ CStreamParams& CStreamParams::operator=(const CStreamParams& R)
 CStreamParams::CStreamParams(char* chInpFilePass, const unsigned int numBegin, const unsigned int numEnd
     , const unsigned int lenChunk)
 {
-    m_file = fopen(chInpFilePass, "rb");  
+    m_stream = fopen(chInpFilePass, "rb");  
     
-    fread(&m_lenarr, sizeof(int), 1, m_file);
-    fread(&m_n_p, sizeof(int), 1, m_file);    
-    fread(& m_D_max, sizeof(float), 1, m_file);
-    fread(& m_f_min, sizeof(float), 1, m_file);
-    fread(& m_f_max, sizeof(float), 1, m_file);
-    fread(& m_SigmaBound, sizeof(float), 1, m_file);
+    fread(&m_lenarr, sizeof(int), 1, m_stream);
+    fread(&m_n_p, sizeof(int), 1, m_stream);    
+    fread(& m_D_max, sizeof(float), 1, m_stream);
+    fread(& m_f_min, sizeof(float), 1, m_stream);
+    fread(& m_f_max, sizeof(float), 1, m_stream);
+    fread(& m_SigmaBound, sizeof(float), 1, m_stream);
     m_numBegin = numBegin;
     m_numEnd = numEnd;
     m_lenChunk = lenChunk;

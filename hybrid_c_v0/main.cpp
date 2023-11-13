@@ -6,6 +6,22 @@
 #include "HybridC_v0.h"
 #include "utilites.h"
 #include "StreamParams.h"
+
+#include <array>
+#include <iostream>
+#include <string>
+
+#include <vector>
+#include <cstdlib> // For random value generation
+#include <ctime>   // For seeding the random number generator
+#include "npy.hpp"
+#include <algorithm> 
+
+#include <chrono>
+#include "fileInput.h"
+#include "DrawImg.h"
+#include "Constants.h"
+
 #define _CRT_SECURE_NO_WARNINGS
 using namespace std;
 
@@ -60,48 +76,84 @@ int main(int argc, char** argv)
     cout << "Header's information:" << endl;
     cout << "Length of time serie = " << lenarr << endl;
 
-    
+    cout << "If you want go on by default print Y, otherwise print any symbol: ";
+    cin.getline(userInput, 200);
     int numBegin = 0, numEnd = 0, lenChunk = 0;
-    for (int i = 0; i < 4; ++i)
-    {
-        cout << "Print begin number of time serie: ";
-        std::cin >> numBegin;
+    if (strcmp(userInput, "Y")!=0)
+    {       
 
-        cout << "Print end number of time serie: ";
-        std::cin >> numEnd;
-
-        cout << "Print chunk's length: ";
-        std::cin >> lenChunk;
-
-        if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
+        for (int i = 0; i < 4; ++i)
         {
-            cout << "Check up parametres" << endl;
-            ++numAttemptions;
-            if (numAttemptions == 4)
+            cout << "Print begin number of time serie: ";
+            std::cin >> numBegin;
+
+            cout << "Print end number of time serie: ";
+            std::cin >> numEnd;
+
+            cout << "Print chunk's length: ";
+            std::cin >> lenChunk;
+
+            if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
             {
-                return 0;
+                cout << "Check up parametres" << endl;
+                ++numAttemptions;
+                if (numAttemptions == 4)
+                {
+                    return 0;
+                }
             }
-        }
-        else
-        {
-            break;
+            else
+            {
+                break;
+            }
         }
     }
 
     // ZAGLUSHKA !!~!
     numBegin = 0;
-    numEnd = lenarr;
+    numEnd = lenarr -1;
     lenChunk = lenarr;
     // !
 
     CStreamParams StreamPars(chInpFilePass,  numBegin, numEnd, lenChunk);
-    int* piNumSucessfulChunks = (int*)malloc(sizeof(int) *(1 + (numEnd - numBegin)/ lenChunk));
+    int* piarrNumSucessfulChunks = (int*)malloc(sizeof(int) *(1 + (numEnd - numBegin)/ lenChunk));
+    float* parrCoherent_d = (float*)malloc(sizeof(float) * (1 + (numEnd - numBegin) / lenChunk));
     int quantOfSuccessfulChunks = 0;
-    int irez = fncHybridScan(piNumSucessfulChunks, quantOfSuccessfulChunks, &StreamPars);
+    int irez = fncHybridScan(piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, &StreamPars);
+
+    // create output numpy files with images
+    // calc dimensions:
+    int it = (StreamPars.m_lenChunk / StreamPars.m_n_p);
+    float*  outputImage = (float*)malloc((StreamPars.m_n_p) * (StreamPars.m_lenChunk / StreamPars.m_n_p)
+            * sizeof(float));
+    float* outputPartImage = (float*)malloc((StreamPars.m_n_p) * (StreamPars.m_n_p) * sizeof(float));
+
+    for (int i = 0; i < quantOfSuccessfulChunks; ++i)
+    { 
+        createOutImageForFixedNumberChunk(outputImage, &StreamPars, piarrNumSucessfulChunks[i]);
+        for (int j = 0; j < StreamPars.m_n_p; ++j)
+        {
+            memcpy(&outputPartImage[j * StreamPars.m_n_p], &outputImage[ j * (StreamPars.m_lenChunk / StreamPars.m_n_p)]
+                , (StreamPars.m_n_p) * sizeof(float));
+        }
+
+
+
+        
+        std::vector<float> v1(outputPartImage, outputPartImage + (StreamPars.m_n_p) * (StreamPars.m_n_p));
+
+        std::array<long unsigned, 2> leshape101 {StreamPars.m_n_p, (StreamPars.m_n_p)};
+
+        npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), v1);
+        
+    }
         
     
 
-    free(piNumSucessfulChunks);
+    free(piarrNumSucessfulChunks);
+    free(outputImage);
+    free(outputPartImage);
+    free(parrCoherent_d);
     //free(pOutIm);
     return 0;
 

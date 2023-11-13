@@ -151,13 +151,17 @@ copy "$(SolutionDir)Dependencies\freeglut\bin\$(Platform)" "$(OutDir)"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\MyVSLib_C++\FdmtCpuF_omp .cpp" />
     <ClCompile Include="..\MyVSLib_C++\HybridC_v0.cpp" />
     <ClCompile Include="..\MyVSLib_C++\StreamParams.cpp" />
     <ClCompile Include="..\MyVSLib_C++\utilites.cpp" />
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\MyVSLib_C++\Constants.h" />
+    <ClInclude Include="..\MyVSLib_C++\FdmtCpuF_omp.h" />
     <ClInclude Include="..\MyVSLib_C++\HybridC_v0.h" />
+    <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
     <ClInclude Include="..\MyVSLib_C++\StreamParams.h" />
     <ClInclude Include="..\MyVSLib_C++\utilites.h" />
     <ClInclude Include="Dependencies\fftw\fftw3.h" />

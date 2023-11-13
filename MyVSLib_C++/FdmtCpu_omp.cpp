@@ -48,7 +48,7 @@ void fncFdmt_cpu_v0(int* piarrImgInp, const int IImgrows, const int IImgcols
 	fnc_init_cpu( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
 	clock_t end = clock() * 1000.;
 	double duration = double(end - start) / CLOCKS_PER_SEC;
-	std::cout << "Time taken by fnc_init_cpu: " << duration << " miliseconds" << std::endl;
+	//std::cout << "Time taken by fnc_init_cpu: " << duration << " miliseconds" << std::endl;
 	// !6
 	
 	// 7.pointers fixing

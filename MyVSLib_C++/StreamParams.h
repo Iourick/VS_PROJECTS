@@ -1,5 +1,6 @@
 #pragma once
 #include <fstream>
+
 class CStreamParams
 {
 public:
@@ -25,7 +26,7 @@ public:
     unsigned int m_numEnd;
     unsigned int m_lenChunk;
     unsigned int m_numCurChunk;
-    FILE* m_file;         
+    FILE* m_stream;         
         
 };
 

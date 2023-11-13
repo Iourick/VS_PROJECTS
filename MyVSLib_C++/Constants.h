@@ -5,3 +5,6 @@ const float GFLPS_512 = 0.00320386;
 const float GFLPS_1024 = 0.0137001;
 const float GFLPS_2048 = 0.0586616;
 const float GFLPS_512_1024 = 0.006518622;
+
+//---------------------------------------------
+#define  DISPERSION_CONSTANT  4.148808 * 1.E9 // Mhz* pc ^ -1 * cm ^ 3

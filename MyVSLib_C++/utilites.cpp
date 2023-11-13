@@ -23,3 +23,4 @@ int readHeader(char* chInpFilePass, unsigned int &lenarr, unsigned int& n_p
     fread(&valSigmaBound_, sizeof(float), 1, file);    
     fclose(file);
 }
+//------------------------------------------------------------------
