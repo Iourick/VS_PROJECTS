@@ -83,14 +83,17 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 	// !1
 
 		// 2. create fdmt ones
-		float* parr_fdmt_ones = (float*)malloc(LEnChunk * N_p * sizeof(float));
-		memset(parr_fdmt_ones, 1., sizeof(float) * LEnChunk * N_p);
+		float* parr_fdmt_ones = (float*)malloc(LEnChunk  * sizeof(float));
+		for (int i = 0; i < LEnChunk; ++i)
+		{
+			parr_fdmt_ones[i] = 1.;
+		}
 		int IMaxDT = N_p;
-		float* piarrImNormalize = (float*)malloc(N_p * IMaxDT * sizeof(float));
+		float* piarrImNormalize = (float*)malloc(N_p * (LEnChunk/ N_p) * sizeof(float));
 
 		
 
-		fncFdmt_cpuF_v0(parr_fdmt_ones, N_p, LEnChunk
+		fncFdmt_cpuF_v0(parr_fdmt_ones, N_p, LEnChunk/N_p
 			, VAlFmin, VAlFmax, IMaxDT, piarrImNormalize);
 		free(parr_fdmt_ones);
 		// !2
@@ -131,7 +134,7 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 			}
 
 			
-			fncFdmt_cpuF_v0(parr_fdmt_inp, N_p, LEnChunk
+			fncFdmt_cpuF_v0(parr_fdmt_inp, N_p, LEnChunk/ N_p
 				, VAlFmin, VAlFmax, IMaxDT, parr_fdmt_out);
 			float val_V = 0., val_mean1 = 0.;
 			fncDisp(parr_fdmt_inp, len, val_mean1,val_V);
@@ -207,17 +210,17 @@ void fncCoherentDedispersion(complex<float>* pcarrCD_Out, complex<float>* pcarrf
 	, const unsigned int LEnChunk, const float VAl_practicalD, const float VAlFmin, const float VAlFmax)
 {
 
-	complex<float>* pcarrH = (complex<float>*)malloc(LEnChunk * sizeof(float));
+	complex<float>* pcarrH = (complex<float>*)malloc(LEnChunk * sizeof(complex<float>));
 	float step = (VAlFmax - VAlFmin) / ((float)LEnChunk);
 	complex <float> cmp_temp = complex < float>(2. * M_PI * VAl_practicalD, 0) * complex<float>(0, 1);
 	float val_fcur = 0.;
 	for (int i = 0; i < LEnChunk; ++i)
 	{
-		pcarrH[i] = exp(cmp_temp / (VAlFmin + val_fcur) + cmp_temp * val_fcur / (VAlFmax * VAlFmax));
+		pcarrH[i] = exp(cmp_temp / complex < float>(VAlFmin + val_fcur, 0) + cmp_temp * complex < float>(val_fcur / (VAlFmax * VAlFmax), 0.) );
 		val_fcur += step;
 	}
 
-	complex<float>* pcarrTemp = (complex<float>*)malloc(LEnChunk * sizeof(float));
+	complex<float>* pcarrTemp = (complex<float>*)malloc(LEnChunk * sizeof(complex<float>));
 	for (int i = 0; i < LEnChunk; ++i)
 	{
 		pcarrTemp[i] = pcarrH[i] * pcarrffted_rowsignal[i];
