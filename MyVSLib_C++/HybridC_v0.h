@@ -25,7 +25,8 @@ void fncElementWiseModSq(float* parrOut, complex<float>* pcarrInp, unsigned int 
 void fncCoherentDedispersion(complex<float>* pcarrCD_Out, complex<float>* pcarrffted_rowsignal
 	, const unsigned int LEnChunk, const float VAl_practicalD, const float VAlFmin, const float VAlFmax);
 
-float fnsStdDev(float* parr_fdmt_inp, float mean, unsigned int len);
+template <typename T>
+float fnsStdDev(T* parr_fdmt_inp, const float mean, unsigned int len);
 
 template <typename T>
 void fncFdmt_cpuT_v1(T* piarrImg, const int iImgrows

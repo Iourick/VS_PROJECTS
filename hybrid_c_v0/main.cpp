@@ -45,6 +45,62 @@ void display() {
 int numAttemptions = 0;
 int main(int argc, char** argv)
 {  
+    //int N = 8; // Number of data points
+    //std::complex<float>* in = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
+    //std::complex<float>* out = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
+    //fftwf_complex* fftw_in = reinterpret_cast<fftwf_complex*>(in);
+    //fftwf_complex* fftw_out = reinterpret_cast<fftwf_complex*>(out);
+    ////fftwf_complex* out = (fftwf_complex*)fftw_malloc(sizeof(fftwf_complex) * N);
+
+    //// Initialize 'in' with complex numbers using std::complex<float>
+    //for (int i = 0; i < N; ++i) {
+    //    in[i] = std::complex<float>(i + 1, i + 1); // Real and imaginary parts
+    //}
+
+    //// Create the FFT plan
+    //fftwf_plan plan = fftwf_plan_dft_1d(N, fftw_in, fftw_out, FFTW_FORWARD, FFTW_ESTIMATE);
+
+    //// Execute the FFT
+    //fftwf_execute(plan);
+
+    //// Output the FFT result
+    //std::cout << "FFT Result fftw_out:" << std::endl;
+    //for (int i = 0; i < N; ++i) {
+    //    std::cout << "Element " << i << ": "
+    //        << fftw_out[i][0] << " + " << fftw_out[i][1] << "i" << std::endl;
+    //}
+
+    //std::cout << "FFT Result out:" << std::endl;
+    //for (int i = 0; i < N; ++i) {
+    //    std::cout << "Element " << i << ": "
+    //        << out[i] << std::endl;
+    //}
+
+    //// Destroy the plan and free allocated memory
+    //fftwf_destroy_plan(plan);
+
+
+    //std::complex<float>* in1 = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
+    //fftwf_complex* fftw_in1 = reinterpret_cast<fftwf_complex*>(in1);
+    //plan = fftwf_plan_dft_1d(N, fftw_out, fftw_in1, FFTW_BACKWARD, FFTW_ESTIMATE);
+    //fftwf_execute(plan);
+    //std::cout << "FFT Result in1:" << std::endl;
+    //for (int i = 0; i < N; ++i) {
+    //    std::cout << "Element " << i << ": "
+    //        << in1[i] << std::endl;
+    //}
+    //fftwf_destroy_plan(plan);
+
+
+    ////fftw_free(fftw_out);
+    //free(in);
+    //free(out);
+    //free(in1);
+
+    //return 0;
+
+
+
     cout << "By default input file is  \"D://MyVSprojPy//hybrid//info.bin\"" << endl;
     cout << "if you want to use one of your own, enter the pass  with double quotation marks \"..\"" << endl;
     cout<<"if you don't want, print n" << endl;
