@@ -412,29 +412,3 @@ void fnc_init_cpuF(float* piarrImg, const int IImgrows, const int IImgcols
 }
 
 
-////-------------------------------------------------------------------------------------------------------------------------------
-//void fncCalcDimensionsOfOutputArrays(std::vector<int>* pivctOutDim0, std::vector<int>* pivctOutDim1
-//	, std::vector<int>* pivctOutDim2, const int IDim0, const int IDim1
-//	, const int IDim2, const int IMaxDT, const float VAlFmin
-//	, const float VAlFmax)
-//{
-//	float val_dF = (VAlFmax - VAlFmin) / ((float)((*pivctOutDim0)[0]));
-//
-//
-//
-//	for (int it = 1; it < pivctOutDim0->size(); ++it)
-//	{
-//		float valDeltaF = pow(2., it) * val_dF;
-//		float temp0 = 1. / (VAlFmin * VAlFmin) -
-//			1. / ((VAlFmin + valDeltaF) * (VAlFmin + valDeltaF));
-//		const float VAlTemp1 = 1. / (VAlFmin * VAlFmin) -
-//			1. / (VAlFmax * VAlFmax);
-//		int ideltaT = (int)(ceil(((float)IMaxDT - 1.0) * temp0 / VAlTemp1));
-//		(*pivctOutDim1)[it] = ideltaT + 1;
-//		(*pivctOutDim0)[it] = (*pivctOutDim0)[it - 1] / 2;
-//		(*pivctOutDim2)[it] = (*pivctOutDim2)[it - 1];
-//
-//
-//	}
-//}
-

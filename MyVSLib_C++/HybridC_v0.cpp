@@ -11,16 +11,22 @@
 #include <iostream>
 
 
+#include <array>
+#include <vector>
+
+#include "npy.hpp"
+
+
+
+
 #define _USE_MATH_DEFINES
 #include <cmath>
 #ifndef M_PI
-#define M_PI (3.14159265358979323846)
+#define M_PI 3.14159265358979323846
 #endif
 
 
-/// <summary>
-/// 
-/// </summary>
+
 
 using namespace std;
 
@@ -65,12 +71,7 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 	, const float VAlD_max, const float VAlFmin, const float VAlFmax, float &valSigmaBound, float &coherent_d )
 {
 	coherent_d = -1.;
-	/*ConversionConst = DispersionConstant * (1. / f_min * *2 - 1. / f_max * *2) * (f_max - f_min)
-		N_d = D_max * ConversionConst
-
-		n_coherent = int(np.ceil(N_d / (N_p * *2)))
-		print("number of coherent iterations:", n_coherent)
-		ffted_signal = np.fft.fft(raw_signal)*/
+	
 	// 1. create FFT
 		complex<float>* pffted_rowsignal = (complex<float>*)malloc(sizeof(complex<float>) * LEnChunk);
 		fftwf_complex* fftw_out = reinterpret_cast<fftwf_complex*>(pffted_rowsignal);
@@ -81,6 +82,16 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 		// Execute the FFT
 		fftwf_execute(plan);
 		fftwf_destroy_plan(plan);
+
+
+		// !!!
+		std::vector<complex<float>> v2(pffted_rowsignal, pffted_rowsignal + LEnChunk);
+
+		std::array<long unsigned, 1> leshape2{ LEnChunk};
+
+		npy::SaveArrayAsNumpy("rowfft.npy", false, leshape2.size(), leshape2.data(), v2);
+
+		int ijt = 0;
 	// !1
 
 		// 2. create fdmt ones
@@ -90,16 +101,12 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 			parr_fdmt_ones[i] = 1.;
 		}
 		int IMaxDT = N_p;
-		float* piarrImNormalize = (float*)malloc(N_p * (LEnChunk/ N_p) * sizeof(float));
-
-		
+		float* piarrImNormalize = (float*)malloc(N_p * (LEnChunk/ N_p) * sizeof(float));		
 
 		fncFdmt_cpuF_v0(parr_fdmt_ones, N_p, LEnChunk/N_p
-			, VAlFmin, VAlFmax, IMaxDT, piarrImNormalize);
-		/*for (int i = 0; i < 10; ++i)
-		{
-			cout << piarrImNormalize[i] << "  ";
-		}*/
+			, VAlFmin, VAlFmax, IMaxDT, piarrImNormalize);		
+
+
 		free(parr_fdmt_ones);
 		// !2
 
@@ -107,6 +114,8 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 		float valConversionConst = DISPERSION_CONSTANT * (1. / (VAlFmin * VAlFmin) - 1. / (VAlFmax * VAlFmax)) * (VAlFmax - VAlFmin);
 		float valN_d = VAlD_max * valConversionConst;
 		int n_coherent = int(ceil(valN_d / (N_p * N_p)));
+		cout << "n_coherent = " << n_coherent << endl;
+		
 		// !3
 
 		//4.
@@ -115,21 +124,45 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 		float* parr_fdmt_inp = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
 		float* parr_fdmt_out = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
 		for (int iouter_d = 0; iouter_d < n_coherent; ++iouter_d)
+		//for (int iouter_d = 31; iouter_d < 32; ++iouter_d)
 		{
-			float valcur_coherent_d = iouter_d * (VAlD_max / ((float)n_coherent));
-			/*cout << "ffted row signal" << endl;
-			for (int ijj = 0; ijj < 10; ++ijj)
-			{
-				cout << pffted_rowsignal[ijj] << endl;
-			}*/
+			cout <<	"coherent iteration " << iouter_d << endl;
+			
+			long double valcur_coherent_d = ((long double)iouter_d) * ((long double)VAlD_max / ((long double)n_coherent));
+			cout << "cur_coherent_d = " << valcur_coherent_d << endl;
+
+			// !!!
+			std::vector<complex<float>> v6(pffted_rowsignal, pffted_rowsignal + LEnChunk);
+
+			std::array<long unsigned, 1> leshape6{ LEnChunk};
+
+			npy::SaveArrayAsNumpy("ffted.npy", false, leshape6.size(), leshape6.data(), v6);
+			int ijt1 = 0;
+
 			fncCoherentDedispersion(pcarrCD_Out, pffted_rowsignal
 				, LEnChunk, DISPERSION_CONSTANT * valcur_coherent_d, VAlFmin, VAlFmax);
-			/*for (int ijj = 0; ijj < 10; ++ijj)
-			{
-				cout << pcarrCD_Out[ijj] << endl;
-			}*/
+
+			
+			// !!!
+			std::vector<complex<float>> v3(pcarrCD_Out, pcarrCD_Out + LEnChunk);
+
+			std::array<long unsigned, 1> leshape3{ LEnChunk};
+
+			npy::SaveArrayAsNumpy("CoherentDedispersion.npy", false, leshape3.size(), leshape3.data(), v3);
+
+			int ijt6 = 0;
 
 			fncSTFT(pcarrTemp, pcarrCD_Out, LEnChunk, N_p);
+
+			// !!!
+			std::vector<complex<float>> v4(pcarrTemp, pcarrTemp + LEnChunk);
+
+			std::array<long unsigned, 2> leshape4{N_p, LEnChunk / N_p};
+
+			npy::SaveArrayAsNumpy("STFT.npy", false, leshape4.size(), leshape4.data(), v4);
+
+			int ijt2 = 0;
+
 			
 			float sum = 0.;
 			int len = (LEnChunk / N_p) * N_p;
@@ -141,7 +174,14 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 				parr_fdmt_inp[j] = temp;
 			}
 
-			
+			// !!!
+			std::vector<complex<float>> v5(parr_fdmt_inp, parr_fdmt_inp + len);
+
+			std::array<long unsigned, 2> leshape5{N_p, LEnChunk / N_p};
+
+			npy::SaveArrayAsNumpy("inp0.npy", false, leshape5.size(), leshape5.data(), v5);
+
+			int ijt3 = 0;
 
 			float val_mean = sum / ((float)len);
 			float valStdDev = fnsStdDev(parr_fdmt_inp, val_mean, len);
@@ -150,16 +190,32 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 			{
 				parr_fdmt_inp[j] = (parr_fdmt_inp[j] - val_mean) / (0.25 * valStdDev);
 			}
-			/*cout << "parr_fdmt_inp[ijj]" << endl;
-			for (int ijj = 0; ijj < 10; ++ijj)
-			{
-				cout << parr_fdmt_inp[ijj] << endl;
-			}*/
+			
+
+
+			// !!!
+			std::vector<float> v1(parr_fdmt_inp, parr_fdmt_inp + N_p * (LEnChunk / N_p));
+
+			std::array<long unsigned, 2> leshape1{N_p, LEnChunk / N_p};
+
+			npy::SaveArrayAsNumpy("inp.npy", false, leshape1.size(), leshape1.data(), v1);
+
+			int ij = 0;
 			
 			fncFdmt_cpuF_v0(parr_fdmt_inp, N_p, LEnChunk/ N_p
 				, VAlFmin, VAlFmax, IMaxDT, parr_fdmt_out);
+
+			// !!!
+			std::vector<float> v0(parr_fdmt_out, parr_fdmt_out + N_p * (LEnChunk / N_p));
+
+			std::array<long unsigned, 2> leshape0{N_p, LEnChunk / N_p};
+
+			npy::SaveArrayAsNumpy("new.npy", false, leshape0.size(), leshape0.data(), v0);
+
+			int ii = 0;
 			
-			float* pmaxElement0 = std::max_element(parr_fdmt_out, parr_fdmt_out + len);
+			float* pmaxElement0 = std::max_element(parr_fdmt_out, parr_fdmt_out + N_p * (LEnChunk / N_p));
+			float maxElem0 = *pmaxElement0;
 
 			float val_V = 0., val_mean1 = 0.;
 			fncDisp(parr_fdmt_inp, len, val_mean1,val_V);
@@ -172,20 +228,13 @@ int fncHybridDedispersion(float *poutImage, complex<float>* pRawSignalCur, const
 				++pn;
 			}
 			
-			/*cout << "parr_fdmt_out" << endl;
-			for (int ijj = 0; ijj < 10; ++ijj)
+			float* pmaxElement1 = std::max_element(parr_fdmt_out, parr_fdmt_out + N_p * (LEnChunk / N_p));
+			float maxElem1 = *pmaxElement1;
+			if (maxElem1 > valSigmaBound)
 			{
-				cout << parr_fdmt_out[ijj] << endl;
-			}*/
-
-
-
-			float* pmaxElement1 = std::max_element(parr_fdmt_out, parr_fdmt_out + len);
-			if ((*pmaxElement1) > valSigmaBound)
-			{
-				valSigmaBound = (*pmaxElement0);
+				valSigmaBound = maxElem0;
 				coherent_d = valcur_coherent_d;
-				cout <<"achieved score with " << valSigmaBound << endl;
+				cout <<"!!!!!!! achieved score with " << valSigmaBound <<"!!!!!!!"<< endl;
 				if (nullptr != poutImage)
 				{
 					memcpy(poutImage, parr_fdmt_out, len * sizeof(float));
@@ -217,67 +266,86 @@ void fncSTFT(complex<float>* pcarrOut, complex<float>* pRawSignalCur,  const uns
 		fftwf_destroy_plan(plan);
 		
 	}
-
-	
-
 	
 
 	fncMtrxTranspose(pcarrOut, pcarrS0, qRows, block_size);
 	
 	free(pcarrS0);	
 }
-//def STFT :
-//	"""
-//	Raw signal will be devided to blocks, each block will be fourier transformed
-//	Input :
-//raw_signal - raw antenna voltage time series
-//block_size - number of bins in each block
-//Output :
-//frequency vs.time matrix
-//Note : absolute value squared is not performed!
-//"""
-//S = np.transpose(raw_signal[:int(len(raw_signal)//block_size) * block_size].reshape([int(len(raw_signal)//block_size),block_size]))
-//	return np.fft.fft(S, axis = 0)
 
-
-//N_total = len(raw_signal)
-//practicalD = DispersionConstant * d
-//f = np.arange(0, f_max - f_min, float(f_max - f_min) / N_total)
-//
-//# The added linear term makes the arrival times of the highest frequencies be 0
-//H = np.e * *(-(2 * np.pi * complex(0, 1) * practicalD / (f_min + f) + 2 * np.pi * complex(0, 1) * practicalD * f / (f_max * *2)))
-//if not alreadyFFTed:
-//CD = np.fft.ifft(np.fft.fft(raw_signal) * H)
-//else :
-//CD = np.fft.ifft(raw_signal * H)
-//return CD
 //---------------------------------------------------------------------------------
 void fncCoherentDedispersion(complex<float>* pcarrCD_Out, complex<float>* pcarrffted_rowsignal
-	, const unsigned int LEnChunk, const float VAl_practicalD, const float VAlFmin, const float VAlFmax)
+	, const unsigned int LEnChunk, const long double VAl_practicalD, const float VAlFmin, const float VAlFmax)
 {
-
-	complex<float>* pcarrH = (complex<float>*)malloc(LEnChunk * sizeof(complex<float>));
-	float step = (VAlFmax - VAlFmin) / ((float)LEnChunk);
-	complex <float> cmp_temp (0.,   2. * M_PI * VAl_practicalD) ;
-	float val_fcur = 0.;
+	long double * pcarrf = (long double*)malloc(LEnChunk * sizeof(long double));
+	long double step = ((long double)VAlFmax - (long double)VAlFmin) / ((long double)LEnChunk);
 	for (int i = 0; i < LEnChunk; ++i)
 	{
-		pcarrH[i] = exp(-cmp_temp / complex < float>(VAlFmin + val_fcur, 0) - cmp_temp * complex < float>(val_fcur / (VAlFmax * VAlFmax), 0.) );
-		val_fcur += step;
+		pcarrf[i] = ((long double)i) * step;
+		
 	}
-	/*cout << "pcarrH = " << endl;
 
-	for (int i = 0; i < 5; ++i)
+	// !!!
+	std::vector<long double> v3(pcarrf, pcarrf + LEnChunk);
+
+	std::array<long unsigned, 1> leshape3{ LEnChunk};
+
+	npy::SaveArrayAsNumpy("f.npy", false, leshape3.size(), leshape3.data(), v3);
+
+
+	complex<long double>* pcarrH = (complex<long double>*)malloc(LEnChunk * sizeof(complex<long double>));
+	
+	complex <float> cmp_temp (0.,   -2. * M_PI * VAl_practicalD) ;
+	//float val_fcur = 0.;
+	//H = np.e * *(-(2 * np.pi * complex(0, 1) * practicalD / (f_min + f) + 2 * np.pi * complex(0, 1) * practicalD * f / (f_max * *2)))
+	for (int i = 0; i < LEnChunk; ++i)
 	{
-		cout << pcarrH[i * 1000] << endl;
-	}*/
+		if (739823 == i)
+		{
+			int hghghgh = 0;
+		}
+		//float valt0 = -VAl_practicalD / (VAlFmin + pcarrf[i]) * 2.* M_PI;
+		//float valt1 = -VAl_practicalD / (VAlFmax * VAlFmax) * pcarrf[i] * 2. * M_PI;
+		long double t0 = fmodl((VAl_practicalD / ((long double)VAlFmin + (long double)pcarrf[i]) + VAl_practicalD / ((long double)VAlFmax * (long double)VAlFmax) * (long double)pcarrf[i]) * 2. * M_PI
+			, 2. * M_PI); 
+
+		//long double fractionalPart = t0 - floor(t0);
+
+		//complex <double> cmp_temp1(0., -fractionalPart * 2. * M_PI);
+		//	cmp_temp / complex < float>(VAl_practicalD, 0) + cmp_temp * complex < float>(pcarrf[i] / (VAlFmax * VAlFmax), 0.);
+		complex<long double> t1(0., -t0);
+		long double t3 = (VAl_practicalD / ((long double)VAlFmin + (long double)pcarrf[i])
+			+ VAl_practicalD / ((long double)VAlFmax * (long double)VAlFmax) * (long double)pcarrf[i]) * 2. * M_PI;
+		complex<long double> t2(0., -t3);
+		pcarrH[i] = exp(t2);
+		//val_fcur += step;
+	}
+
+	// !!!
+	std::vector<complex<long double>> v1(pcarrH, pcarrH + LEnChunk);
+
+	std::array<long unsigned, 1> leshape1{ LEnChunk};
+
+	npy::SaveArrayAsNumpy("H.npy", false, leshape1.size(), leshape1.data(), v1);
+
+	
 	complex<float>* pcarrTemp = (complex<float>*)malloc(LEnChunk * sizeof(complex<float>));
 	for (int i = 0; i < LEnChunk; ++i)
 	{
-		pcarrTemp[i] = pcarrH[i] * pcarrffted_rowsignal[i];
+		pcarrTemp[i] = (complex<float>)pcarrH[i] * pcarrffted_rowsignal[i];
 	}
 	free(pcarrH);
+	free(pcarrf);
 
+
+	// !!!
+	std::vector<complex<float>> v0(pcarrTemp, pcarrTemp + LEnChunk);
+
+	std::array<long unsigned, 1> leshape0{ LEnChunk};
+
+	npy::SaveArrayAsNumpy("xx.npy", false, leshape0.size(), leshape0.data(), v0);
+
+	int ii = 0;
 
 	fftwf_complex* fftw_in = reinterpret_cast<fftwf_complex*>(pcarrTemp);
 	fftwf_complex* fftw_out = reinterpret_cast<fftwf_complex*>(pcarrCD_Out);
@@ -287,44 +355,15 @@ void fncCoherentDedispersion(complex<float>* pcarrCD_Out, complex<float>* pcarrf
 	
 	// Execute the FFT
 	fftwf_execute(plan);
-	complex<float> cmp_temp1(LEnChunk, 0.);
+	complex<float> cmp_temp1((float)LEnChunk, 0.);
 	for (int i = 0; i < LEnChunk; ++i)
 	{
 		pcarrCD_Out[i] = pcarrCD_Out[i] / cmp_temp1;
 	}
-	//cout << "fftw_out" << endl;
-	/*for (int i = 0; i < 5; ++i)
-	{
-		cout << pcarrCD_Out[i] << endl;
-	}*/
+	
 	fftwf_destroy_plan(plan);
 	free(pcarrTemp);
 
-	//def CoherentDedispersion(raw_signal, d, f_min, f_max, alreadyFFTed = False) :
-	//	"""
-	//	Will perform coherent dedispersion.
-	//	raw signal - is assumed to be a one domensional signal
-	//	d - is the dispersion measure.units : pc * cm ^ -3
-	//	f_min - the minimum freq, given in Mhz
-	//	f_max - the maximum freq, given in Mhz
-	//	alreadyFFTed - to reduce complexity, insert fft(raw_signal) instead of raw_signal, and indicate by this flag
-	//
-	//	For future improvements :
-	//1) Signal partition to chunks of length N_d is not applied, and maybe it should be.
-	//2) No use of packing is done, though it is obvious it should be done(either in the coherent stage(and take special care of the abs()** 2 operation done by other functions) or in the incoherent stage)
-	//
-	//"""
-	//N_total = len(raw_signal)
-	//practicalD = DispersionConstant * d
-	//f = np.arange(0, f_max - f_min, float(f_max - f_min) / N_total)
-	//
-	//# The added linear term makes the arrival times of the highest frequencies be 0
-	//H = np.e * *(-(2 * np.pi * complex(0, 1) * practicalD / (f_min + f) + 2 * np.pi * complex(0, 1) * practicalD * f / (f_max * *2)))
-	//if not alreadyFFTed:
-	//CD = np.fft.ifft(np.fft.fft(raw_signal) * H)
-	//else :
-	//CD = np.fft.ifft(raw_signal * H)
-	//return CD
 }
 //-------------------------------------------------------------
 void createOutImageForFixedNumberChunk(float* outputImage, CStreamParams* pStreamPars
