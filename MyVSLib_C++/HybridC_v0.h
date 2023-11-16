@@ -5,13 +5,13 @@
 using namespace std;
 
 class CStreamParams;
-int fncHybridScan(int* piNumSuccessfulChunks, float* parrCoherent_d, int& quantOfSuccessfulChunks, CStreamParams* pStreamPars);
+int fncHybridScan(float* parrSucessImagesBuff, int* piNumSuccessfulChunks, float* parrCoherent_d, int& quantOfSuccessfulChunks, CStreamParams* pStreamPars);
 
-int fncHybridDedispersion(float* poutImage, std::complex<float>* pRawSignalCur, const unsigned int LEnChunk, const unsigned int N_p
+int fncSearchForHybridDedispersion(float* poutImage, std::complex<float>* pRawSignalCur, const unsigned int LEnChunk, const unsigned int N_p
 	, const float VAlD_max, const float VAlf_min, const float VAlf_max,  float &VAlSigmaBound, float& coherent_d);
 
 void createOutImageForFixedNumberChunk(float* outputImage, CStreamParams* pStreamPars
-	, const int numChunk);
+	, const int numChunk, const float valCoherent_d);
 
 template <typename T>
 void fncMtrxTranspose(T* pArrout, T* pArrinp, const int QRowsInp, const int QColsInp);
@@ -35,3 +35,10 @@ void fncFdmt_cpuT_v1(T* piarrImg, const int iImgrows
 
 template <typename T>
 void fncDisp(T* parr_fdmt_inp, unsigned int len, T& val_mean, T& val_V);
+
+int createOutputFDMT(float* parr_fdmt_out, complex<float>* pffted_rowsignal, complex<float>* pcarrCD_Out, complex<float>* pcarrTemp
+	, const unsigned int LEnChunk, const unsigned int N_p, float* parr_fdmt_inp, const unsigned int IMaxDT
+	, const long double VAlLong_coherent_d, const float VAlD_max, const float VAlFmin, const float VAlFmax);
+
+void fncMaxSignalDetection(float* parr_fdmt_out, float* parrImNormalize, const unsigned int qRows, const unsigned int qCols
+	, float* pmaxElement0, float* pmaxElement1);
