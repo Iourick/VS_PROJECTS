@@ -21,90 +21,35 @@
 #include "fileInput.h"
 #include "DrawImg.h"
 #include "Constants.h"
+#include "read_and_write_log.h"
 
 #define _CRT_SECURE_NO_WARNINGS
 using namespace std;
 
 class StreamParams;
 
-void display() {
-    glClear(GL_COLOR_BUFFER_BIT); // Очистка буфера цвета
-
-    glBegin(GL_TRIANGLES); // Начало рисования треугольника
-    glColor3f(1.0, 0.0, 0.0); // Установка цвета (красный)
-    glVertex2f(0.0, 0.5); // Вершина 1
-    glColor3f(0.0, 1.0, 0.0); // Установка цвета (зеленый)
-    glVertex2f(-0.5, -0.5); // Вершина 2
-    glColor3f(0.0, 0.0, 1.0); // Установка цвета (синий)
-    glVertex2f(0.5, -0.5); // Вершина 3
-    glEnd(); // Завершение рисования треугольника
-
-    glFlush(); // Отправка рисунка на экран
-}
+//void display() {
+//    glClear(GL_COLOR_BUFFER_BIT); // Очистка буфера цвета
+//
+//    glBegin(GL_TRIANGLES); // Начало рисования треугольника
+//    glColor3f(1.0, 0.0, 0.0); // Установка цвета (красный)
+//    glVertex2f(0.0, 0.5); // Вершина 1
+//    glColor3f(0.0, 1.0, 0.0); // Установка цвета (зеленый)
+//    glVertex2f(-0.5, -0.5); // Вершина 2
+//    glColor3f(0.0, 0.0, 1.0); // Установка цвета (синий)
+//    glVertex2f(0.5, -0.5); // Вершина 3
+//    glEnd(); // Завершение рисования треугольника
+//
+//    glFlush(); // Отправка рисунка на экран
+//}
 
 int numAttemptions = 0;
 int main(int argc, char** argv)
 {  
-    //int N = 8; // Number of data points
-    //std::complex<float>* in = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
-    //std::complex<float>* out = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
-    //fftwf_complex* fftw_in = reinterpret_cast<fftwf_complex*>(in);
-    //fftwf_complex* fftw_out = reinterpret_cast<fftwf_complex*>(out);
-    ////fftwf_complex* out = (fftwf_complex*)fftw_malloc(sizeof(fftwf_complex) * N);
-
-    //// Initialize 'in' with complex numbers using std::complex<float>
-    //for (int i = 0; i < N; ++i) {
-    //    in[i] = std::complex<float>(i + 1, i + 1); // Real and imaginary parts
-    //}
-
-    //// Create the FFT plan
-    //fftwf_plan plan = fftwf_plan_dft_1d(N, fftw_in, fftw_out, FFTW_FORWARD, FFTW_ESTIMATE);
-
-    //// Execute the FFT
-    //fftwf_execute(plan);
-
-    //// Output the FFT result
-    //std::cout << "FFT Result fftw_out:" << std::endl;
-    //for (int i = 0; i < N; ++i) {
-    //    std::cout << "Element " << i << ": "
-    //        << fftw_out[i][0] << " + " << fftw_out[i][1] << "i" << std::endl;
-    //}
-
-    //std::cout << "FFT Result out:" << std::endl;
-    //for (int i = 0; i < N; ++i) {
-    //    std::cout << "Element " << i << ": "
-    //        << out[i] << std::endl;
-    //}
-
-    //// Destroy the plan and free allocated memory
-    //fftwf_destroy_plan(plan);
-
-
-    //std::complex<float>* in1 = (std::complex<float>*)malloc(sizeof(std::complex<float>) * N);
-    //fftwf_complex* fftw_in1 = reinterpret_cast<fftwf_complex*>(in1);
-    //plan = fftwf_plan_dft_1d(N, fftw_out, fftw_in1, FFTW_BACKWARD, FFTW_ESTIMATE);
-    //fftwf_execute(plan);
-    //std::cout << "FFT Result in1:" << std::endl;
-    //for (int i = 0; i < N; ++i) {
-    //    std::cout << "Element " << i << ": "
-    //        << in1[i] << std::endl;
-    //}
-    //fftwf_destroy_plan(plan);
-
-
-    ////fftw_free(fftw_out);
-    //free(in);
-    //free(out);
-    //free(in1);
-
-    //return 0;
-
-
-
-    cout << "By default input file is  \"D://MyVSprojPy//hybrid//info.bin\"" << endl;
-    cout << "if you want to use one of your own, enter the pass  with double quotation marks \"..\"" << endl;
-    cout<<"if you don't want, print n" << endl;
-    cout << "if you  want to quit, print q" << endl;
+    std::cout << "By default input file is  \"D://MyVSprojPy//hybrid//info.bin\"" << endl;
+    std::cout << "if you want to use one of your own, enter the pass  with double quotation marks \"..\"" << endl;
+    std::cout<<"if you don't want, print n" << endl;
+    std::cout << "if you  want to quit, print q" << endl;
 
     char userInput[200];
     char chInpFilePass[200] = { 0 };
@@ -112,7 +57,7 @@ int main(int argc, char** argv)
 
     
     cin.getline(userInput,200);
-    cout << userInput<< endl;
+    //std::cout << userInput<< endl;
 
 
     if (strchr(userInput, '"') != nullptr)
@@ -123,35 +68,41 @@ int main(int argc, char** argv)
     
     unsigned int lenarr = 0, n_p = 0;
     float valD_max = 0., valf_min = 0., valf_max = 0., valSigmaBound = 0.;
+
     if (readHeader(chInpFilePass, lenarr, n_p
         , valD_max, valf_min, valf_max, valSigmaBound) == 1)
     {
         std::cerr << "Error opening file." << std::endl;
         return 1;
     }
-    cout << "Header's information:" << endl;
-    cout << "Length of time serie = " << lenarr << endl;
+    std::cout << "Header's information:" << endl;
+    std::cout << "Length of time serie = " << lenarr << endl;
 
-    cout << "If you want go on by default print Y, otherwise print any symbol: ";
+    std::cout << "If you want go on by default print y, otherwise print any symbol: ";
     cin.getline(userInput, 200);
     int numBegin = 0, numEnd = 0, lenChunk = 0;
-    if (strcmp(userInput, "Y")!=0)
+    // ZAGLUSHKA !!~!
+    numBegin = 0;
+    numEnd = lenarr -1;
+    lenChunk = pow(2,20);
+    // !
+    if (strcmp(userInput, "y")!=0)
     {       
 
         for (int i = 0; i < 4; ++i)
         {
-            cout << "Print begin number of time serie: ";
+            std::cout << "Print begin number of time serie: ";
             std::cin >> numBegin;
 
-            cout << "Print end number of time serie: ";
+            std::cout << "Print end number of time serie: ";
             std::cin >> numEnd;
 
-            cout << "Print chunk's length: ";
+            std::cout << "Print chunk's length: ";
             std::cin >> lenChunk;
 
             if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
             {
-                cout << "Check up parametres" << endl;
+                std::cout << "Check up parametres" << endl;
                 ++numAttemptions;
                 if (numAttemptions == 4)
                 {
@@ -165,55 +116,118 @@ int main(int argc, char** argv)
         }
     }
 
-    // ZAGLUSHKA !!~!
-    numBegin = 0;
-    numEnd = lenarr -1;
-    lenChunk = lenarr;
-    // !
-
-    CStreamParams StreamPars(chInpFilePass,  numBegin, numEnd, lenChunk);
+    
+    CStreamParams* pStreamPars = new CStreamParams(chInpFilePass, numBegin, numEnd, lenChunk);
+    //CStreamParams StreamPars(chInpFilePass,  numBegin, numEnd, lenChunk);
     int* piarrNumSucessfulChunks = (int*)malloc(sizeof(int) *(1 + (numEnd - numBegin)/ lenChunk));
     float* parrCoherent_d = (float*)malloc(sizeof(float) * (1 + (numEnd - numBegin) / lenChunk));
     int quantOfSuccessfulChunks = 0;    
 
-    const int IMaxQuantChunks = (numEnd - numBegin + lenChunk - 1) / lenChunk;  
-    float* parrSuccessImagesBuff = (float*)malloc(sizeof(float) * (n_p * (lenChunk / n_p) * IMaxQuantChunks));
+   
+   
+
+    
+    //int irez = fncHybridScan(nullptr, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, &StreamPars);
+    int irez = fncHybridScan(nullptr, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, pStreamPars);
+
+    fncWriteLog_("info.log", chInpFilePass, "hybrid dedispersion, C++ implementation"
+        , lenChunk, quantOfSuccessfulChunks, piarrNumSucessfulChunks, parrCoherent_d,0);
 
 
-    int irez = fncHybridScan(parrSuccessImagesBuff, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, &StreamPars);
-
-    // create output numpy files with images
-    // calc dimensions:
-    int it = (StreamPars.m_lenChunk / StreamPars.m_n_p);
-    float*  outputImage = (float*)malloc((StreamPars.m_n_p) * (StreamPars.m_lenChunk / StreamPars.m_n_p)
-            * sizeof(float));
-    float* outputPartImage = (float*)malloc((StreamPars.m_n_p) * (StreamPars.m_n_p) * sizeof(float));
-
+    
+    
+    std::cout << "------------ Calculations completed successfully -------------" << endl;
+    std::cout << "Pass to Data File : " << chInpFilePass << endl;
+    std::cout << "Successful Chunks Number : " << quantOfSuccessfulChunks<< endl;
+    std::cout << "Chunk Num., Coh. Disp. : " << endl;
     for (int i = 0; i < quantOfSuccessfulChunks; ++i)
-    { 
-        createOutImageForFixedNumberChunk(outputImage, &StreamPars, piarrNumSucessfulChunks[i], parrCoherent_d[i]);
-        for (int j = 0; j < StreamPars.m_n_p; ++j)
-        {
-            memcpy(&outputPartImage[j * StreamPars.m_n_p], &parrSuccessImagesBuff[ j * (StreamPars.m_lenChunk / StreamPars.m_n_p)]
-                , (StreamPars.m_n_p) * sizeof(float));
-        }
-        
-        std::vector<float> v1(outputPartImage, outputPartImage + (StreamPars.m_n_p) * (StreamPars.m_n_p));
+    {
+        std::cout << piarrNumSucessfulChunks [i]<<" ; " << parrCoherent_d[i] << endl;
+    }
 
-        std::array<long unsigned, 2> leshape101 {StreamPars.m_n_p, (StreamPars.m_n_p)};
-
-        npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), v1);
-        
-    }     
-    
     free(piarrNumSucessfulChunks);
-    free(outputImage);
-    free(outputPartImage);
     free(parrCoherent_d);
-    free(parrSuccessImagesBuff);
+    //fclose(StreamPars.m_stream);
+    delete pStreamPars;
+
+    std::cout << "Running Time = " << 0. << "ms"<<endl;
+    std::cout << "---------------------------------------------------------" << endl;
 
 
-
-    return 0;
     
+    char chInp[200] = { 0 };
+    std::cout << "if you  want to quit, print q" << endl;
+    std::cout << "if you want to proceed, print y " << endl;
+    cin.getline(chInp, 200);
+    if (chInp == "q")
+    {
+        return 0;
+    }
+    std::cout << "print number of chunk: " << endl;
+    int numOrder = -1;
+    cin >> numOrder;
+    
+
+    // SECOND PART
+
+
+
+    char strPassLog[] = "info.log";
+    int lengthOfChunk = 0, quantChunks = 0;
+    int arrChunks[1000] = { 0 };
+    float arrCohD[1000] = { 0. };
+    char strPassDataFile[200] = { 0 };
+    
+    fncReadLog_(strPassLog, strPassDataFile, &lengthOfChunk, &quantChunks, arrChunks, arrCohD);
+    unsigned int lenarr1 = 0, n_p1 = 0;
+    float valD_max1 = 0., valf_min1 = 0., valf_max1 = 0., valSigmaBound1 = 0.;
+
+    if (readHeader(strPassDataFile, lenarr1, n_p1
+        , valD_max1, valf_min1, valf_max1, valSigmaBound1) == 1)
+    {
+        std::cerr << "Error opening file." << std::endl;
+        return 1;
+    }
+    const int NUmChunk = arrChunks[numOrder];
+    const float VAlCohD = arrCohD[numOrder];
+    CStreamParams StreamPars1(strPassDataFile, NUmChunk * lengthOfChunk, (NUmChunk + 1) * lengthOfChunk,
+        lengthOfChunk);
+    
+    // create output numpy files with images
+   
+    
+    float*  poutputImage = (float*)malloc((StreamPars1.m_n_p) * (StreamPars1.m_lenChunk / StreamPars1.m_n_p)
+            * sizeof(float));
+    float* poutputPartImage = (float*)malloc( sizeof(float));
+    float** ppoutputPartImage = &poutputPartImage;   
+
+
+    int  iargmaxCol = -1, iargmaxRow = -1;
+    float valSNR = -1;
+    int quantRowsPartImage = -1;
+    createOutImageForFixedNumberChunk(poutputImage,&iargmaxRow, &iargmaxCol, &valSNR, ppoutputPartImage,&quantRowsPartImage, &StreamPars1, NUmChunk, VAlCohD); 
+
+    std::cout << "OUTPUT DATA: " << endl;
+    std::cout << "CHUNK NUMBER = " << NUmChunk <<endl;
+    std::cout << "SNR = " << valSNR << endl;
+    std::cout << "ROW = " << iargmaxRow << endl;
+    std::cout << "COLUMN  = " << iargmaxCol << endl;
+        
+    std::vector<float> v1(poutputPartImage, poutputPartImage + quantRowsPartImage * quantRowsPartImage);
+
+    std::array<long unsigned, 2> leshape101 { quantRowsPartImage, quantRowsPartImage };
+
+    npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), v1);    
+         
+    ppoutputPartImage = nullptr;
+    
+    free(poutputImage);
+    free(poutputPartImage);
+    
+   
+
+    char filename_cpu[] = "image_cpu.png";
+    createImg_(argc, argv, v1, quantRowsPartImage, quantRowsPartImage, filename_cpu);
+
+    return 0;    
 }

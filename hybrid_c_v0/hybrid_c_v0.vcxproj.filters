@@ -27,7 +27,13 @@
     <ClCompile Include="..\MyVSLib_C++\StreamParams.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\MyVSLib_C++\FdmtCpuF_omp .cpp">
+    <ClCompile Include="..\MyVSLib_C++\read_and_write_log.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MyVSLib_C++\FdmtCpuT_omp.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\MyVSLib_C++\DrawImg.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -50,7 +56,13 @@
     <ClInclude Include="..\MyVSLib_C++\Constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\MyVSLib_C++\FdmtCpuF_omp.h">
+    <ClInclude Include="..\MyVSLib_C++\read_and_write_log.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MyVSLib_C++\FdmtCpuT_omp.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\MyVSLib_C++\DrawImg.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

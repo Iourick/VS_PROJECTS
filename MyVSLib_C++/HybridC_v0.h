@@ -7,11 +7,11 @@ using namespace std;
 class CStreamParams;
 int fncHybridScan(float* parrSucessImagesBuff, int* piNumSuccessfulChunks, float* parrCoherent_d, int& quantOfSuccessfulChunks, CStreamParams* pStreamPars);
 
-int fncSearchForHybridDedispersion(float* poutImage, std::complex<float>* pRawSignalCur, const unsigned int LEnChunk, const unsigned int N_p
+bool fncSearchForHybridDedispersion(float* poutImage, std::complex<float>* pRawSignalCur, const unsigned int LEnChunk, const unsigned int N_p
 	, const float VAlD_max, const float VAlf_min, const float VAlf_max,  float &VAlSigmaBound, float& coherent_d);
 
-void createOutImageForFixedNumberChunk(float* outputImage, CStreamParams* pStreamPars
-	, const int numChunk, const float valCoherent_d);
+bool createOutImageForFixedNumberChunk(float* poutputImage, int* pargmaxRow, int* pargmaxCol, float* pvalSNR
+	, float** pparrOutSubImage, int* piQuantRowsPartImage, CStreamParams* pStreamPars, const int numChunk, const float VAlCoherent_d);
 
 template <typename T>
 void fncMtrxTranspose(T* pArrout, T* pArrinp, const int QRowsInp, const int QColsInp);
@@ -41,4 +41,7 @@ int createOutputFDMT(float* parr_fdmt_out, complex<float>* pffted_rowsignal, com
 	, const long double VAlLong_coherent_d, const float VAlD_max, const float VAlFmin, const float VAlFmax);
 
 void fncMaxSignalDetection(float* parr_fdmt_out, float* parrImNormalize, const unsigned int qRows, const unsigned int qCols
-	, float* pmaxElement0, float* pmaxElement1);
+	, float* pmaxElement, int* argmax);
+
+void cutQuadraticSubImage(float** pparrOutImage, int* piQuantRowsOutImage, float* InpImage, const int QInpImageRows, const int QInpImageCols
+	, const int NUmCentralElemRow, const int NUmCentralElemCol);

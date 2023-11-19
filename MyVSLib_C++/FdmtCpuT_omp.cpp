@@ -6,11 +6,13 @@
 #include <algorithm> 
 #include <stdlib.h>
 
+
+
 using namespace std;
 //-------------------------------------------------------------------------
-template <typename T>
-void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
-	, const float VAlFmin, const  float VAlFmax, const int IMaxDT, T* piarrImgOut)
+
+void fncFdmt_cpuT_v0(DTYPE* piarrImgInp, const int IImgrows, const int IImgcols
+	, const float VAlFmin, const  float VAlFmax, const int IMaxDT, DTYPE* piarrImgOut)
 {
 	// 1. quant iteration's calculation
 	const int I_F = (int)(log2((double)(IImgrows)));
@@ -25,28 +27,28 @@ void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
 	// !2
 
 	// 3. declare pointers 
-	int*  p0 = 0;
-	int*  p1 = 0;
-	int*  piarrOut_0 = 0;
-	int*  piarrOut_1 = 0;	
+	DTYPE *  p0 = 0;
+	DTYPE *  p1 = 0;
+	DTYPE *  piarrOut_0 = 0;
+	DTYPE *  piarrOut_1 = 0;
 	// !3
 
 	// 4. allocate memory 
 	
-	piarrOut_0 = (T*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(T));
-	piarrOut_1 = (T*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(T));
+	piarrOut_0 = (DTYPE*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(DTYPE));
+	piarrOut_1 = (DTYPE*)calloc(IImgrows * (ideltaT + 1) * IImgcols, sizeof(DTYPE));
 	// !4
 	
 
 	// 5  Initialize the arrays with zeros
 	
-	memset( piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(T));
-	memset( piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(T));
+	memset( piarrOut_0, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(DTYPE));
+	memset( piarrOut_1, 0, IImgrows * (ideltaT + 1) * IImgcols * sizeof(DTYPE));
 	// !5
 	
 	// 6. call initialization func
 	clock_t start = clock() * 1000.;
-	fnc_init_cpuT<T>( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
+	fnc_init_cpuT( piarrImgInp, IImgrows, IImgcols, ideltaT,  piarrOut_0);
 	clock_t end = clock() * 1000.;
 	double duration = double(end - start) / CLOCKS_PER_SEC;
 	//std::cout << "Time taken by fnc_init_cpu: " << duration << " miliseconds" << std::endl;
@@ -105,7 +107,7 @@ void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
 	// 10. calculations
 	for (int iit = 1; iit < (I_F + 1); ++iit)
 	{
-		fncFdmtIteration_cpuT<T>( p0, val_dF, iInp0, iInp1
+		fncFdmtIteration_cpuT( p0, val_dF, iInp0, iInp1
 			, IImgcols, IMaxDT, VAlFmin
 			, VAlFmax, iit,  arr_val0
 			,  arr_val1,  arr_deltaTLocal
@@ -113,7 +115,7 @@ void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
 			,  p1, iOut0, iOut1);
 		
 		// exchange order of pointers
-		T*  pt =  p0;
+		DTYPE *  pt =  p0;
 		 p0 =  p1;
 		 p1 =  pt;
 		iInp0 = iOut0;
@@ -123,7 +125,7 @@ void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
 	}
 	// !10
 
-	memcpy(piarrImgOut,  p0, IImgcols * IMaxDT* sizeof(T));
+	memcpy(piarrImgOut,  p0, IImgcols * IMaxDT* sizeof(DTYPE));
 	start = clock();
 	free( arr_val0);
 	free( arr_val1);
@@ -163,13 +165,13 @@ void fncFdmt_cpuT_v0(T* piarrImgInp, const int IImgrows, const int IImgcols
 // IDim1: changes 
 // IDim2: this is iImgcols - quantity of cols of input power image, this is T 
 
-template <typename T>
-void fncFdmtIteration_cpuT(T*  piarrInp, const float val_dF, const int IDim0, const int IDim1
+
+void fncFdmtIteration_cpuT(DTYPE*  piarrInp, const float val_dF, const int IDim0, const int IDim1
 	, const int IDim2, const int IMaxDT, const float VAlFmin
 	, const float VAlFmax, const int ITerNum, float*  arr_val0
 	, float*  arr_val1, int*  iarr_deltaTLocal
 	, int*  iarr_dT_MI, int*  iarr_dT_ML, int*  iarr_dT_RI
-	, T*  piarrOut, int& iOutPutDim0, int& iOutPutDim1)
+	, DTYPE *  piarrOut, int& iOutPutDim0, int& iOutPutDim1)
 {
 
 	float valDeltaF = pow(2., ITerNum) * val_dF;
@@ -184,7 +186,7 @@ void fncFdmtIteration_cpuT(T*  piarrInp, const float val_dF, const int IDim0, co
 
 
 	// set zeros in output array
-	memset( piarrOut, 0, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(T));
+	memset( piarrOut, 0, iOutPutDim0 * iOutPutDim1 * IDim2 * sizeof(DTYPE));
 	// !
 
 	float val_correction = 0;
@@ -246,7 +248,7 @@ void fncFdmtIteration_cpuT(T*  piarrInp, const float val_dF, const int IDim0, co
 
 	// 13. 
 	
-	shift_and_sum_cpuT<T>( piarrInp
+	shift_and_sum_cpuT( piarrInp
 		, IDim0, IDim1, IDim2,  iarr_deltaTLocal,  iarr_dT_MI,  iarr_dT_ML,  iarr_dT_RI
 		, iOutPutDim0, iOutPutDim1,  piarrOut);
 	/*shift_and_sum_cpu_v1 ( piarrInp
@@ -257,11 +259,11 @@ void fncFdmtIteration_cpuT(T*  piarrInp, const float val_dF, const int IDim0, co
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
-template <typename T>
-void shift_and_sum_cpuT_v1(T*  piarrInp, const int IDim0, const int IDim1
+
+void shift_and_sum_cpuT_v1(DTYPE *  piarrInp, const int IDim0, const int IDim1
 	, const int IDim2, int*  iarr_deltaTLocal, int*  iarr_dT_MI
 	, int*  iarr_dT_ML, int*  iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, T*  piarrOut)
+	, DTYPE *  piarrOut)
 {
 	int iw = IOutPutDim1 * IDim2;
 #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
@@ -301,11 +303,11 @@ void shift_and_sum_cpuT_v1(T*  piarrInp, const int IDim0, const int IDim1
 }
 
 //-----------------------------------------------------------------------------------------------------------------------
-template <typename T>
-void shift_and_sum_cpuT(T*  piarrInp, const int IDim0, const int IDim1
+
+void shift_and_sum_cpuT(DTYPE *  piarrInp, const int IDim0, const int IDim1
 	, const int IDim2, int*  iarr_deltaTLocal, int*  iarr_dT_MI
 	, int*  iarr_dT_ML, int*  iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, T*  piarrOut)
+	, DTYPE *  piarrOut)
 {
 #pragma omp parallel // OMP (Если не указывать количество потоков nt, то по умолчанию будет использовано максимальное количество потоков)
 	{ // OMP (начало блока, который выполняется в нескольких потоках	
@@ -377,9 +379,9 @@ void create_2d_arrays_cpu(const int IDim0, const int IDim1
 	}	
 }
 //--------------------------------------------------------------------------------------
-template <typename T>
-void fnc_init_cpuT(T*  piarrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaT, T*  piarrOut)
+
+void fnc_init_cpuT(DTYPE *  piarrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, DTYPE *  piarrOut)
 {
 	
 	memset( piarrOut, 0, IImgrows * IImgcols * (IDeltaT + 1) * sizeof(int));
@@ -389,7 +391,7 @@ void fnc_init_cpuT(T*  piarrImg, const int IImgrows, const int IImgcols
 		{
 			{
 				memcpy(&piarrOut[i * (IDeltaT + 1) * IImgcols], &piarrImg[i * IImgcols]
-					, IImgcols * sizeof(T));
+					, IImgcols * sizeof(DTYPE));
 			}
 		}
 	}
@@ -399,9 +401,9 @@ void fnc_init_cpuT(T*  piarrImg, const int IImgrows, const int IImgcols
 		for (int i_dT = 1; i_dT < (IDeltaT + 1); ++i_dT)
 			for (int iF = 0; iF < IImgrows; ++iF)
 			{
-				int* result = &piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
-				int* arg0 = &piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
-				int* arg1 = &piarrImg[iF * IImgcols];
+				DTYPE * result = &piarrOut[iF * (IDeltaT + 1) * IImgcols + i_dT * IImgcols + i_dT];
+				DTYPE * arg0 = &piarrOut[iF * (IDeltaT + 1) * IImgcols + (i_dT - 1) * IImgcols + i_dT];
+				DTYPE * arg1 = &piarrImg[iF * IImgcols];
 				for (int j = 0; j < (IImgcols - i_dT); ++j)
 				{
 					result[j] = arg0[j] + arg1[j];

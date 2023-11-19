@@ -5,7 +5,10 @@
 
 CStreamParams::~CStreamParams()
 {
-    fclose(m_stream);
+    if (m_stream)
+    {
+        fclose(m_stream);
+    }
 
 }
 //---------------------------------------------------------------------------

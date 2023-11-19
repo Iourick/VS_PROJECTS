@@ -155,7 +155,7 @@ void createImg_(int argc, char** argv, std::vector<int>& vctOut1D
     IROWS = IRows;
     ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0));
     int imax = fabs(vctOut1D[0]);
-    
+
     for (int i = 0; i < IROWS; ++i)
     {
         for (int j = 0; j < ICOLS; ++j)
@@ -165,7 +165,7 @@ void createImg_(int argc, char** argv, std::vector<int>& vctOut1D
             if (fabs(t) > imax)
             {
                 imax = t;
-            }            
+            }
         }
     }
     /*std::swap(ivctOut[2], ivctOut[3]);
@@ -184,7 +184,132 @@ void createImg_(int argc, char** argv, std::vector<int>& vctOut1D
     /*int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
     int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);*/
     float coeff = 255. / (double(imax));
-     // Initialize with your data
+    // Initialize with your data
+    for (int i = 0; i < IROWS; ++i)
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            ivctOut[i][j] = (int)(coeff * ivctOut[i][j]);
+            //ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
+
+        }
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(ICOLS, IROWS);
+    glutCreateWindow(filename);
+
+    glutDisplayFunc(display);
+    // After displaying the image, save it as filename 
+    saveImage(filename);
+
+    // Set up other GLUT callbacks as needed (e.g., keyboard input)
+
+    glutMainLoop();
+
+
+    return;
+}
+//--------------------------------------------------------------
+template <typename T>
+void createImg__(int argc, char** argv, std::vector<T>& vctOut1D
+    , const int IRows, const int ICols, const char* filename)
+{
+    ICOLS = ICols;
+    IROWS = IRows;
+    ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0));
+    int imax = fabs(vctOut1D[0]);
+
+    for (int i = 0; i < IROWS; ++i)
+    {
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            int t = vctOut1D[i * ICOLS + j];
+            ivctOut[i][j] = t;
+            if (fabs(t) > imax)
+            {
+                imax = t;
+            }
+        }
+    }
+    /*std::swap(ivctOut[2], ivctOut[3]);
+    int* pi = new int[ICOLS];*/
+
+    int num = IROWS / 2;
+
+    for (int i = 0; i < num; ++i)
+    {
+        std::swap(ivctOut[i], ivctOut[IROWS - 1 - i]);
+        /*memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));*/
+    }
+    //delete[]pi;
+    /*int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);*/
+    float coeff = 255. / (double(imax));
+    // Initialize with your data
+    for (int i = 0; i < IROWS; ++i)
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            ivctOut[i][j] = (int)(coeff * ivctOut[i][j]);
+            //ivctOut[i][j] = (int)piarrImOut[i * ICOLS + j];
+
+        }
+
+    glutInit(&argc, argv);
+    glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+    glutInitWindowSize(ICOLS, IROWS);
+    glutCreateWindow(filename);
+
+    glutDisplayFunc(display);
+    // After displaying the image, save it as filename 
+    saveImage(filename);
+
+    // Set up other GLUT callbacks as needed (e.g., keyboard input)
+
+    glutMainLoop();
+
+
+    return;
+}
+//---------------------------------------------
+void createImg_(int argc, char** argv, std::vector<float>& vctOut1D
+    , const int IRows, const int ICols, const char* filename)
+{
+    ICOLS = ICols;
+    IROWS = IRows;
+    ivctOut = std::vector<std::vector<int>>(IROWS, std::vector<int>(ICOLS, 0));
+    int imax = fabs(vctOut1D[0]);
+
+    for (int i = 0; i < IROWS; ++i)
+    {
+        for (int j = 0; j < ICOLS; ++j)
+        {
+            int t = vctOut1D[i * ICOLS + j];
+            ivctOut[i][j] = t;
+            if (fabs(t) > imax)
+            {
+                imax = t;
+            }
+        }
+    }
+    /*std::swap(ivctOut[2], ivctOut[3]);
+    int* pi = new int[ICOLS];*/
+
+    int num = IROWS / 2;
+
+    for (int i = 0; i < num; ++i)
+    {
+        std::swap(ivctOut[i], ivctOut[IROWS - 1 - i]);
+        /*memcpy(pi, &piarrImOut[i * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[i * ICOLS], &piarrImOut[(IROWS - 1 - i) * ICOLS], ICOLS * sizeof(int));
+        memcpy(&piarrImOut[(IROWS - 1 - i) * ICOLS], pi, ICOLS * sizeof(int));*/
+    }
+    //delete[]pi;
+    /*int imax = *std::max_element(piarrImOut, piarrImOut + ICOLS * IROWS);
+    int imin = *std::min_element(piarrImOut, piarrImOut + ICOLS * IROWS);*/
+    float coeff = 255. / (double(imax));
+    // Initialize with your data
     for (int i = 0; i < IROWS; ++i)
         for (int j = 0; j < ICOLS; ++j)
         {

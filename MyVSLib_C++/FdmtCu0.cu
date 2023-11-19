@@ -14,7 +14,7 @@
 #include <ctime>   // For seeding the random number generator
 
 #include <algorithm> 
-#include "kernel.cuh"
+
 #include <chrono>
 #include "npy.hpp"
 
@@ -545,17 +545,3 @@ void kernel_init_fdmt0(int* d_piarrImg, const int IImgrows, const int IImgcols
 
 //---------------------------------------------------------------------------
 
-
-//fdmt_dtype c1 = (fdmt_dtype(idt));
-//fdmt_dtype c2 = (fdmt_dtype(idt + 1));
-////c1 = 1.;
-////c2 = 1.;
-//while (t < nt) {
-//	if (count) {
-//		state[outidx + t] = fdmt_dtype(idt + 1);
-//	}
-//	else {
-//		state[outidx + t] = (state[iidx + t] * c1 + indata[imidx + t]) / c2;
-//	}
-//	t += tblock;
-//}

@@ -11,8 +11,7 @@
 
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "FdmtCu2.cuh"
-#include <math.h>
+//#include <math.h>
 #include <stdio.h>
 #include <array>
 #include <iostream>
@@ -34,10 +33,9 @@
 
 using namespace std;
 
-char strInpFolder[] = "..//FDMT_TESTS//1024";
+char strInpFolder[] = "..//FDMT_TESTS//512";
 
 char strPathOutImageNpyFile_gpu[] = "out_image_GPU.npy";
-
 const bool BDIM_512_1024 = true;
 
 
@@ -197,8 +195,6 @@ int main(int argc, char** argv)
 		&val_fmin, &val_fmax);
 	// !4
 
-	// 
-
 	// 5. analysis output of reading function
 	switch (ireturn)
 	{
@@ -223,9 +219,9 @@ int main(int argc, char** argv)
 		iImRows = 512;
 		iMaxDT = 512;
 		piarr = (int*)realloc(piarr, iImRows * iImCols * sizeof(int));
-		
+
 	}
-	
+	// ! 5.1
 
 	// 6. declare constants
 	const int IMaxDT = iMaxDT;
@@ -324,22 +320,24 @@ int main(int argc, char** argv)
 			, d_arr_dT_RI			// auxillary allocated buffer of mrmory in device
 			, VAlFmin, VAlFmax, IMaxDT, u_piarrImOut);
 	}
-	auto end = std::chrono::high_resolution_clock::now();	
-	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);	
-	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() / ((double)num)<< " milliseconds" << std::endl;
+	auto end = std::chrono::high_resolution_clock::now();
+
+	auto duration = std::chrono::duration_cast<std::chrono::milliseconds>(end - start);
+
+	std::cout << "Time taken by function fncFdmt_cu_v0: " << duration.count() / ((double)num) << " milliseconds" << std::endl;
 	// !8
-	
+
 	// 9. output in .npy:IImgcols * IMaxDT * sizeof(int));
-	int * piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
-	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols* IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
+	int* piarrImOut = (int*)malloc(IImgcols * IMaxDT * sizeof(int));
+	cudaMemcpy(piarrImOut, u_piarrImOut, IImgcols * IMaxDT * sizeof(int), cudaMemcpyDeviceToHost);
 	std::vector<int> v1(piarrImOut, piarrImOut + IImgcols * IMaxDT);
 
-	std::array<long unsigned, 2> leshape101 {IImgcols , IMaxDT};
+	std::array<long unsigned, 2> leshape101{ IImgcols , IMaxDT };
 
 	npy::SaveArrayAsNumpy(strPathOutImageNpyFile_gpu, false, leshape101.size(), leshape101.data(), v1);
 	// !9
-	
-	
+
+
 	//--------------------------------------------------------------------------------------------------------------
 	//-------------------- end of calculations ------------------------------------------------------------------------------------------
 	//-------------------  drawing of output image for cuda -------------------------------------------------------------------------------------------
@@ -352,16 +350,22 @@ int main(int argc, char** argv)
 	{
 		if (iImRows == 1024)
 		{
-			flops = GFLPS_1024;
+			if (BDIM_512_1024)
+			{
+				flops = GFLPS_512_1024;
+			}
+			else
+			{
+				flops = GFLPS_1024;
+			}
 		}
 		else
 		{
 			flops = GFLPS_2048;
 		}
 	}
-	
 	cout << "GFLP/sec = " << ((double)flops) / ((double)duration.count() / 10.) * 1000. << "  GFP" << endl;
-	
+
 	free(piarrImOut);
 	free(piarr);
 	cudaFree(d_piarrImage);
@@ -372,12 +376,16 @@ int main(int argc, char** argv)
 	cudaFree(d_arr_deltaTLocal);
 	cudaFree(d_arr_dT_MI);
 	cudaFree(d_arr_dT_ML);
-	cudaFree(d_arr_dT_RI);	
-	cudaFree(u_piarrImOut);	
+	cudaFree(d_arr_dT_RI);
+	cudaFree(u_piarrImOut);
+
+
 
 	char filename_cpu[] = "image_cpu.png";
 
 	createImg_(argc, argv, v1, IImgcols, IMaxDT, filename_cpu);
+
+
 
 	return 0;
 }

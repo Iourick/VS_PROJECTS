@@ -20,7 +20,8 @@ int downloadInputData(char* strFolder,  int* iMaxDT, int** ppiarrImage
 	char chpath0[100] = { 0 };
 	strcpy(chpath0, strFolder);
 	strcat(chpath0, arrch0);
-	npy::LoadArrayFromNumpy(chpath0, shape, fortran_order, imaxDT);
+	npy::LoadArrayFromNumpy_(chpath0, shape, fortran_order, imaxDT);
+	//npy::LoadArrayFromNumpy(chpath0, shape,  imaxDT);
 	*iMaxDT = imaxDT[0];
 	// !1
 
@@ -31,7 +32,8 @@ int downloadInputData(char* strFolder,  int* iMaxDT, int** ppiarrImage
 	strcat(chpath1, arrch1);
 	std::vector<unsigned long> shape1 {};
 	std::vector<int> vctXX;
-	npy::LoadArrayFromNumpy(chpath1, shape1, fortran_order, vctXX);
+	npy::LoadArrayFromNumpy_(chpath1, shape1, fortran_order, vctXX);
+	//npy::LoadArrayFromNumpy(chpath1, shape1,  vctXX);
 	// !2
 
 	// 3. loading shape
@@ -41,7 +43,8 @@ int downloadInputData(char* strFolder,  int* iMaxDT, int** ppiarrImage
 	strcat(chpath2, arrch2);
 	std::vector<unsigned long> shape0 {};
 	std::vector<int> ivctImShape;
-	npy::LoadArrayFromNumpy(chpath2, shape0, fortran_order, ivctImShape);
+	npy::LoadArrayFromNumpy_(chpath2, shape0, fortran_order, ivctImShape);
+	//npy::LoadArrayFromNumpy(chpath2, shape0,  ivctImShape);
 	*iImRows = ivctImShape[0];
 	*iImCols = ivctImShape[1];
 	// !3
@@ -53,7 +56,8 @@ int downloadInputData(char* strFolder,  int* iMaxDT, int** ppiarrImage
 	strcat(chpath3, arrch3);
 	std::vector<unsigned long> shape2 {};
 	std::vector<float> vctfmin_max;
-	npy::LoadArrayFromNumpy(chpath3, shape2, fortran_order, vctfmin_max);
+	npy::LoadArrayFromNumpy_(chpath3, shape2, fortran_order, vctfmin_max);
+	//npy::LoadArrayFromNumpy(chpath3, shape2,  vctfmin_max);
 	*val_fmin = vctfmin_max[0];
 	*val_fmax = vctfmin_max[1];
 	// ! 4
