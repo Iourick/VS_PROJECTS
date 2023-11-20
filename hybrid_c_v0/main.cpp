@@ -1,3 +1,4 @@
+#include "main.h"
 #include <iostream>
 #include <complex>
 #include <fftw3.h>
@@ -16,97 +17,94 @@
 #include <ctime>   // For seeding the random number generator
 #include "npy.hpp"
 #include <algorithm> 
-
+#include "read_and_write_log.h"
 #include <chrono>
 #include "fileInput.h"
 #include "DrawImg.h"
 #include "Constants.h"
-#include "read_and_write_log.h"
+
 
 #define _CRT_SECURE_NO_WARNINGS
 using namespace std;
 
 class StreamParams;
 
-//void display() {
-//    glClear(GL_COLOR_BUFFER_BIT); // Очистка буфера цвета
-//
-//    glBegin(GL_TRIANGLES); // Начало рисования треугольника
-//    glColor3f(1.0, 0.0, 0.0); // Установка цвета (красный)
-//    glVertex2f(0.0, 0.5); // Вершина 1
-//    glColor3f(0.0, 1.0, 0.0); // Установка цвета (зеленый)
-//    glVertex2f(-0.5, -0.5); // Вершина 2
-//    glColor3f(0.0, 0.0, 1.0); // Установка цвета (синий)
-//    glVertex2f(0.5, -0.5); // Вершина 3
-//    glEnd(); // Завершение рисования треугольника
-//
-//    glFlush(); // Отправка рисунка на экран
-//}
 
+const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data.bin";
+//const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data3.bin";
 int numAttemptions = 0;
-int main(int argc, char** argv)
-{  
-    std::cout << "By default input file is  \"D://MyVSprojPy//hybrid//info.bin\"" << endl;
-    std::cout << "if you want to use one of your own, enter the pass  with double quotation marks \"..\"" << endl;
-    std::cout<<"if you don't want, print n" << endl;
-    std::cout << "if you  want to quit, print q" << endl;
 
-    char userInput[200];
-    char chInpFilePass[200] = { 0 };
-    strcpy(chInpFilePass,"D://MyVSprojPy//hybrid//info.bin");
-
+int dialIntroducing()
+{
+    // 1. define path to data file with complex time serie
+    std::cout << "By default input file is  " << chStrDefaultInputPass << endl;//  \"D://MyVSprojPy//hybrid//data.bin\"" << endl;
+    std::cout << "if you want default, print y, otherwise n" << endl;
+    char userInput[200] = { 0 };
+    char ch = std::cin.get();
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+   
     
-    cin.getline(userInput,200);
-    //std::cout << userInput<< endl;
-
-
-    if (strchr(userInput, '"') != nullptr)
-    {
-        memcpy(chInpFilePass, &userInput[1], (strlen(userInput) - 2) * sizeof(char));
-        //strcpy(chInpFilePass, userInput);       
+    if (ch == 'y')
+    {       
+        strcpy(mchInpFilePass, chStrDefaultInputPass);
     }
-    
-    unsigned int lenarr = 0, n_p = 0;
-    float valD_max = 0., valf_min = 0., valf_max = 0., valSigmaBound = 0.;
+    else
+    {
+        std::cout << "Enter the pass:" << endl;//  with double quotation marks \"..\"" << endl;
+        std::cin.getline(userInput, 200);
+        strcpy(mchInpFilePass, userInput);
+    }
+    // 1!
 
-    if (readHeader(chInpFilePass, lenarr, n_p
-        , valD_max, valf_min, valf_max, valSigmaBound) == 1)
+
+    // 2. reading header of input file
+   
+
+    if (readHeader(mchInpFilePass, mlenarr, m_n_p
+        , mvalD_max, mvalf_min, mvalf_max, mvalSigmaBound) == 1)
     {
         std::cerr << "Error opening file." << std::endl;
         return 1;
     }
+    // 2 !
+
+    // 3. printing header's info
     std::cout << "Header's information:" << endl;
-    std::cout << "Length of time serie = " << lenarr << endl;
+    std::cout << "Length of time serie = " << mlenarr << endl;
+    // 3!
 
-    std::cout << "If you want go on by default print y, otherwise print any symbol: ";
-    cin.getline(userInput, 200);
-    int numBegin = 0, numEnd = 0, lenChunk = 0;
-    // ZAGLUSHKA !!~!
-    numBegin = 0;
-    numEnd = lenarr -1;
-    lenChunk = pow(2,20);
-    // !
-    if (strcmp(userInput, "y")!=0)
-    {       
-
+    // 4. default parametres
+    
+    mnumBegin = 1;
+    mnumEnd = mlenarr ;
+    mlenChunk = pow(2, 20);
+    std::cout << "By default parametres:" << endl;
+    std::cout << "Length of chunk( 2 **20 ) = " << mlenChunk << endl;
+    std::cout << "Number of first elem =  " << mnumBegin << endl;
+    std::cout << "Number of last elem =  " << mnumEnd << endl;
+    std::cout << "If you want go on by default print y, otherwise print n " << endl;
+    
+    char ch1 = std::cin.get();
+    if (ch1 != 'y')
+    {
         for (int i = 0; i < 4; ++i)
         {
             std::cout << "Print begin number of time serie: ";
-            std::cin >> numBegin;
+            std::cin >> mnumBegin;
 
             std::cout << "Print end number of time serie: ";
-            std::cin >> numEnd;
+            std::cin >> mnumEnd;
 
             std::cout << "Print chunk's length: ";
-            std::cin >> lenChunk;
+            std::cin >> mlenChunk;
 
-            if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
+            if ((mnumBegin < 1) || (mnumEnd > mlenarr) || (mlenChunk > (mnumEnd - mnumBegin)))
             {
                 std::cout << "Check up parametres" << endl;
                 ++numAttemptions;
                 if (numAttemptions == 4)
                 {
-                    return 0;
+                    return 2;
                 }
             }
             else
@@ -115,29 +113,116 @@ int main(int argc, char** argv)
             }
         }
     }
+    // 4!
+    mnumBegin -= 1;
+    mnumEnd -= 1;
+    return 0;
+}
 
+int main(int argc, char** argv)
+{  
+    //// 1. define path to data file with complex time serie
+    //std::cout << "By default input file is" << chStrDefaultInputPass << endl;//  \"D://MyVSprojPy//hybrid//data.bin\"" << endl;
+    //std::cout << "if you want default, print y, otherwise n" << endl;
+    //char userInput[200] = { 0 };
+    //char ch = std::cin.get();
+    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    ////cin.getline(userInput, 200);
+    //char chInpFilePass[200] = { 0 };
+    //if (ch == 'y')
+    //{
+    //    //memcpy(chInpFilePass, &userInput[1], (strlen(userInput) - 2) * sizeof(char));
+    //    strcpy(chInpFilePass, chStrDefaultInputPass);
+    //}
+    //else
+    //{
+    //    std::cout << "Enter the pass:" << endl;//  with double quotation marks \"..\"" << endl;
+    //    std::cin.getline(userInput, 200);
+    //    strcpy(chInpFilePass, userInput);
+    //}    
+    //// 1!
+    //
+    //
+    //// 2. reading header of input file
+    //unsigned int lenarr = 0, n_p = 0;
+    //float valD_max = 0., valf_min = 0., valf_max = 0., valSigmaBound = 0.;
+
+    //if (readHeader(chInpFilePass, lenarr, n_p
+    //    , valD_max, valf_min, valf_max, valSigmaBound) == 1)
+    //{
+    //    std::cerr << "Error opening file." << std::endl;
+    //    return 1;
+    //}
+    //// 2 !
+
+    //// 3. printing header's info
+    //std::cout << "Header's information:" << endl;
+    //std::cout << "Length of time serie = " << lenarr << endl;
+    //// 3!
+
+    //// 4. default parametres
+    //int numBegin = 0, numEnd = 0, lenChunk = 0;
+    //numBegin = 0;
+    //numEnd = lenarr - 1;
+    //lenChunk = pow(2, 20);
+    //std::cout << "By default parametres:" <<  endl;
+    //std::cout << "Length of chunk( 2 **20 ) = " << lenChunk << endl;
+    //std::cout << "Number of first elem =  " << numBegin << endl;
+    //std::cout << "Number of last elem =  " << numEnd << endl;
+    //std::cout << "If you want go on by default print y, otherwise print n "<<endl;
+    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    //ch = std::cin.get();
+    //if (ch != 'y') 
+    //{
+    //    for (int i = 0; i < 4; ++i)
+    //    {
+    //        std::cout << "Print begin number of time serie: ";
+    //        std::cin >> numBegin;
+
+    //        std::cout << "Print end number of time serie: ";
+    //        std::cin >> numEnd;
+
+    //        std::cout << "Print chunk's length: ";
+    //        std::cin >> lenChunk;
+
+    //        if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
+    //        {
+    //            std::cout << "Check up parametres" << endl;
+    //            ++numAttemptions;
+    //            if (numAttemptions == 4)
+    //            {
+    //                return 0;
+    //            }
+    //        }
+    //        else
+    //        {
+    //            break;
+    //        }
+    //    }
+    //}
+    //// 4!
+    dialIntroducing();
+    // 5. Create member of class CStreamParams
+    CStreamParams* pStreamPars = new CStreamParams(mchInpFilePass, mnumBegin, mnumEnd, mlenChunk);
+    // 5!
     
-    CStreamParams* pStreamPars = new CStreamParams(chInpFilePass, numBegin, numEnd, lenChunk);
-    //CStreamParams StreamPars(chInpFilePass,  numBegin, numEnd, lenChunk);
-    int* piarrNumSucessfulChunks = (int*)malloc(sizeof(int) *(1 + (numEnd - numBegin)/ lenChunk));
-    float* parrCoherent_d = (float*)malloc(sizeof(float) * (1 + (numEnd - numBegin) / lenChunk));
+    // 6. memory allocation for output information 
+    int* piarrNumSucessfulChunks = (int*)malloc(sizeof(int) *(1 + (mnumEnd - mnumBegin)/ mlenChunk));
+    float* parrCoherent_d = (float*)malloc(sizeof(float) * (1 + (mnumEnd - mnumBegin) / mlenChunk));
     int quantOfSuccessfulChunks = 0;    
-
+    // 6 !
    
-   
-
-    
-    //int irez = fncHybridScan(nullptr, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, &StreamPars);
+    // 7. call function processing the stream    
     int irez = fncHybridScan(nullptr, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, pStreamPars);
 
-    fncWriteLog_("info.log", chInpFilePass, "hybrid dedispersion, C++ implementation"
-        , lenChunk, quantOfSuccessfulChunks, piarrNumSucessfulChunks, parrCoherent_d,0);
+    fncWriteLog_("info.log", mchInpFilePass, "hybrid dedispersion, C++ implementation"
+        , mlenChunk, quantOfSuccessfulChunks, piarrNumSucessfulChunks, parrCoherent_d,0);
 
-
+    // 7!
     
-    
+    // 8. report
     std::cout << "------------ Calculations completed successfully -------------" << endl;
-    std::cout << "Pass to Data File : " << chInpFilePass << endl;
+    std::cout << "Pass to Data File : " << mchInpFilePass << endl;
     std::cout << "Successful Chunks Number : " << quantOfSuccessfulChunks<< endl;
     std::cout << "Chunk Num., Coh. Disp. : " << endl;
     for (int i = 0; i < quantOfSuccessfulChunks; ++i)
@@ -146,32 +231,29 @@ int main(int argc, char** argv)
     }
 
     free(piarrNumSucessfulChunks);
-    free(parrCoherent_d);
-    //fclose(StreamPars.m_stream);
+    free(parrCoherent_d);    
     delete pStreamPars;
 
     std::cout << "Running Time = " << 0. << "ms"<<endl;
-    std::cout << "---------------------------------------------------------" << endl;
-
-
+    std::cout << "---------------------------------------------------------" << endl;   
     
     char chInp[200] = { 0 };
     std::cout << "if you  want to quit, print q" << endl;
     std::cout << "if you want to proceed, print y " << endl;
-    cin.getline(chInp, 200);
-    if (chInp == "q")
+
+    std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+    char ch0 = std::cin.get();
+    if (ch0 == 'q')
     {
         return 0;
     }
+//----------------------------------------------------------------------------------------------------
+    // SECOND PART
+//----------------------------------------------------------------------------------------------------
     std::cout << "print number of chunk: " << endl;
     int numOrder = -1;
-    cin >> numOrder;
-    
-
-    // SECOND PART
-
-
-
+    std::cin >> numOrder;
+    --numOrder;
     char strPassLog[] = "info.log";
     int lengthOfChunk = 0, quantChunks = 0;
     int arrChunks[1000] = { 0 };
@@ -222,8 +304,7 @@ int main(int argc, char** argv)
     ppoutputPartImage = nullptr;
     
     free(poutputImage);
-    free(poutputPartImage);
-    
+    free(poutputPartImage);   
    
 
     char filename_cpu[] = "image_cpu.png";

@@ -28,6 +28,7 @@
 #include "fileInput.h"
 #include "DrawImg.h"
 #include "Constants.h"
+#include <cufft.h>
 
 
 
@@ -48,130 +49,8 @@ const bool BDIM_512_1024 = true;
 
 int main(int argc, char** argv)
 {
-	//// test init
-	//int n = 4;
-	//int* iarrin = (int*)malloc(n * n * sizeof(int));
+	
 
-	//int* d_iarrin = 0;
-	//cudaMalloc(&d_iarrin, n * n * sizeof(int));
-
-	//for (int i = 0; i < n * n; ++i)
-	//{
-	//	iarrin[i] = i;
-	//}
-	//cudaMemcpy(d_iarrin, iarrin, n * n * sizeof(int), cudaMemcpyHostToDevice);
-	//
-	//int* d_out =0;
-	//cudaMalloc(&d_out, n * n * 100*sizeof(int));
-	//int IDeltaT0 = 2;
-
-
-	//fnc_init_fdmt(d_iarrin, n, n, IDeltaT0, d_out);
-
-
-	//int *out =  (int*)malloc(n * n * 100*sizeof(int));
-	//cudaMemcpy(out, d_out, n * n * (IDeltaT0 +1)*sizeof(int), cudaMemcpyDeviceToHost);
-	//int in = 0;
-	//for (int i = 0; i < (IDeltaT0 + 1); ++i)
-	//{
-	//	for (int j = 0; j < n; ++j)
-	//	{
-	//		for (int k = 0; k < n; ++k)
-
-	//		{
-	//			std::cout << out[in]<< ";";
-	//			++in;
-	//		}
-	//		std::cout << std::endl;
-	//	}
-	//	std::cout << std::endl;
-	//	std::cout << "------------------" << std::endl;
-
-	//}
-	//free(iarrin);
-	//free(out);
-	//
-	//cudaFree(d_iarrin);
-	//cudaFree(d_out);
-	//int uuy = 0;
-	//---------------------------------------------------------
-
-
-	/*const int IDim0 = 5;
-	const int IDim1 = 100;
-	const int IDim2 = 200;*/
-
-	/*const int IDim0 = 5;
-	const int IDim1 = 256;
-	const int IDim2 = 512;*/
-
-	/*const int IDim0 = 4;
-	const int IDim1 = 2;
-	const int IDim2 = 1024;*/
-
-
-	/*int* iarr = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
-
-	int* iarrout = (int*)malloc(IDim0 * IDim1 * IDim2 * sizeof(int));
-
-	for (int i = 0; i < IDim0 * IDim1 * IDim2; ++i)
-	{
-		iarr[i] = 0;
-	}
-
-	int* d_iarr = 0;
-	cudaMallocManaged(&d_iarr, IDim0 * IDim1 * IDim2 * sizeof(int));
-	cudaMemcpy(d_iarr, iarr, IDim0 * IDim1 * IDim2 * sizeof(int), cudaMemcpyHostToDevice);
-	const dim3 blockSize1 = dim3(1, 1, 64);
-
-	const dim3 gridSize1 = dim3(IDim0, IDim1, (IDim2 + blockSize1.z - 1) / blockSize1.z);
-
-
-
-	kernel_0<<< gridSize1, blockSize1>>>( d_iarr, IDim0, IDim1,  IDim2);
-
-	cudaMemcpy(iarrout, d_iarr, IDim0 * IDim1 * IDim2 * sizeof(int), cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
-	for (int i = 0; i < IDim0 * IDim1 * IDim2; ++i)
-	{
-		std::cout <<"arr["<< i << "]" << "=  " << iarrout[i] << std::endl;
-	}
-
-	free(iarr);
-	free(iarrout);
-	cudaFree(d_iarr);
-
-	int iend = 0;*/
-	//const std::vector<int> data1 {1, 2, 3, 4, 5, 6};
-	//std::array<long unsigned, 2> leshape11 {2, 3};
-	//std::array<long unsigned, 1> leshape12 {6};
-
-	//const double data2[]{ 7 };
-	//std::array<long unsigned, 3> leshape21 {1, 1, 1};
-	//std::array<long unsigned, 0> leshape22 {};
-
-	//const std::array<double, 0> data3;
-	//std::array<long unsigned, 2> leshape31 {4, 0};
-
-	//npy::SaveArrayAsNumpy("out11.npy", false, leshape11.size(), leshape11.data(), data1);
-	//npy::SaveArrayAsNumpy("out12.npy", false, leshape12.size(), leshape12.data(), data1);
-
-	//npy::SaveArrayAsNumpy("out21.npy", false, leshape21.size(), leshape21.data(), data2);
-	//npy::SaveArrayAsNumpy("out22.npy", false, leshape22.size(), leshape22.data(), data2);
-
-	//npy::SaveArrayAsNumpy("out31.npy", false, leshape31.size(), leshape31.data(), data3.data());
-
-	//std::vector<unsigned long> sh {};
-	//std::vector<int> vctD;
-	//bool bf = false;
-	//npy::LoadArrayFromNumpy("out12.npy", sh, bf, vctD);
-
-	//int n = 5;  // Specify the length of the array
-	//int iarr[] = { 1, 2, 3, 4, 9 };  // Your one-dimensional integer array
-
-	//// Create a std::vector from the integer array
-	//std::vector<int> v(iarr, iarr + n);
-	//-------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
 //--------------------------------------------------------------------------------------------------------------
 //------------------- prepare to work -------------------------------------------------------------------------------------------

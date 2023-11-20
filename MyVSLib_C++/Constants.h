@@ -9,3 +9,6 @@ const float GFLPS_512_1024 = 0.006518622;
 //---------------------------------------------
 //#define  DISPERSION_CONSTANT  4.148808*10**9 // Mhz* pc ^ -1 * cm ^ 3
 const long double  DISPERSION_CONSTANT = 4148808000.0;// Mhz* pc ^ -1 * cm ^ 3
+
+
+#define fdmt_type_ float

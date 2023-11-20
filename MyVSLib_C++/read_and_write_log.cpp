@@ -128,7 +128,7 @@ int fncReadLog_(const char* filename, char* passDatafile, int* lengthOfChunk, in
             {
                 if (line.find("Numbers of Successful Chunks: [") != std::string::npos)
                 {
-                    std::stringstream ss(line.substr(31, line.length() - 33));
+                    std::stringstream ss(line.substr(31, line.length() - 1));
                     int value;
                     int index = 0;
                     while (ss >> value && index < *lengthOfChunk)
@@ -142,8 +142,9 @@ int fncReadLog_(const char* filename, char* passDatafile, int* lengthOfChunk, in
                 {
                     if (line.find("Successfull coherentD Array: [") != std::string::npos)
                     {
-                        std::stringstream ss(line.substr(30, line.length() - 33));
-                        int value;
+                        //std::stringstream ss(line.substr(30, line.length() - 33));
+                        std::stringstream ss(line.substr(30, line.length()-1));
+                        float value;
                         int index = 0;
                         while (ss >> value && index < *lengthOfChunk)
                         {

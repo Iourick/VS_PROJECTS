@@ -77,7 +77,7 @@ bool createOutImageForFixedNumberChunk(float* poutputImage, int* pargmaxRow, int
 	
 	complex<float>* pRawSignalCur = new complex<float>[lengthChunk];
 
-	fseek(pStreamPars->m_stream, numChunk * pStreamPars->m_lenChunk* sizeof(float), SEEK_CUR);
+	fseek(pStreamPars->m_stream, numChunk * pStreamPars->m_lenChunk* sizeof(complex<float>), SEEK_CUR);
 	fread(pRawSignalCur, sizeof(complex<float>), lengthChunk, pStreamPars->m_stream);
 
 	bool bres = false;
@@ -307,9 +307,7 @@ void fncCoherentDedispersion(complex<float>* pcarrCD_Out, complex<float>* pcarrf
 		complex<long double> t2(0., -t3);
 		pcarrH[i] = exp(t2);
 		//val_fcur += step;
-	}
-
-	
+	}	
 
 	
 	complex<float>* pcarrTemp = (complex<float>*)malloc(LEnChunk * sizeof(complex<float>));
@@ -396,6 +394,7 @@ bool fncSearchForHybridDedispersion(float* poutImage, complex<float>* pRawSignal
 	complex<float>* pcarrTemp = (complex<float>*)malloc(sizeof(complex<float>) * (LEnChunk / N_p) * N_p);
 	float* parr_fdmt_inp = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
 	float* parr_fdmt_out = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
+	
 	for (int iouter_d = 31; iouter_d < 32; ++iouter_d)
 		//for (int iouter_d = 0; iouter_d < n_coherent; ++iouter_d)
 	{
@@ -424,6 +423,10 @@ bool fncSearchForHybridDedispersion(float* poutImage, complex<float>* pRawSignal
 			{
 				memcpy(poutImage, parr_fdmt_out, len * sizeof(float));
 			}
+			std::cout << "SNR = " << maxSig << endl;
+			std::cout << "NUM ARGMAX = " << iargmax << endl;
+			std::cout << "ROW ARGMAX = " << (int)(iargmax/(LEnChunk / N_p)) << endl;
+			std::cout << "COLUMN ARGMAX = " << (int)(iargmax %(LEnChunk / N_p)) << endl;
 
 		}
 	}

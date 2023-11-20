@@ -169,6 +169,7 @@ copy "$(SolutionDir)Dependencies\freeglut\bin\$(Platform)" "$(OutDir)"</Command>
     <ClInclude Include="..\MyVSLib_C++\StreamParams.h" />
     <ClInclude Include="..\MyVSLib_C++\utilites.h" />
     <ClInclude Include="Dependencies\fftw\fftw3.h" />
+    <ClInclude Include="main.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
