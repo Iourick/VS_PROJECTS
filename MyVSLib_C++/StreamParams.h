@@ -26,6 +26,7 @@ public:
     unsigned int m_numEnd;
     unsigned int m_lenChunk;
     unsigned int m_numCurChunk;
+    unsigned int m_IMaxDT;
     FILE* m_stream;         
         
 };

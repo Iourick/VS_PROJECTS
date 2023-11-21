@@ -25,13 +25,6 @@
 #include "read_and_write_log.h"
 #include "HybridDedispersionStream_gpu.cuh"
 
-
-
-
-
-
-
-
 using namespace std;
 
 class StreamParams;
@@ -52,128 +45,43 @@ void printDeviceInfo()
 	std::cout << "Number of SM: " << numberOfSMs << std::endl;
 }
 
-int dialIntroducing()
-{
-	// 1. define path to data file with complex time serie
-	std::cout << "By default input file is  " << chStrDefaultInputPass << endl;//  \"D://MyVSprojPy//hybrid//data.bin\"" << endl;
-	std::cout << "if you want default, print y, otherwise n" << endl;
-	char userInput[200] = { 0 };
-	char ch = std::cin.get();
-	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-
-
-	if (ch == 'y')
-	{
-		strcpy(mchInpFilePass, chStrDefaultInputPass);
-	}
-	else
-	{
-		std::cout << "Enter the pass:" << endl;//  with double quotation marks \"..\"" << endl;
-		std::cin.getline(userInput, 200);
-		strcpy(mchInpFilePass, userInput);
-	}
-	// 1!
-
-
-	// 2. reading header of input file
-
-
-	if (readHeader(mchInpFilePass, mlenarr, m_n_p
-		, mvalD_max, mvalf_min, mvalf_max, mvalSigmaBound) == 1)
-	{
-		std::cerr << "Error opening file." << std::endl;
-		return 1;
-	}
-	// 2 !
-
-	// 3. printing header's info
-	std::cout << "Header's information:" << endl;
-	std::cout << "Length of time serie = " << mlenarr << endl;
-	// 3!
-
-	// 4. default parametres
-
-	mnumBegin = 1;
-	mnumEnd = mlenarr;
-	mlenChunk = pow(2, 20);
-	std::cout << "By default parametres:" << endl;
-	std::cout << "Length of chunk( 2 **20 ) = " << mlenChunk << endl;
-	std::cout << "Number of first elem =  " << mnumBegin << endl;
-	std::cout << "Number of last elem =  " << mnumEnd << endl;
-	std::cout << "If you want go on by default print y, otherwise print n " << endl;
-
-	char ch1 = std::cin.get();
-	if (ch1 != 'y')
-	{
-		for (int i = 0; i < 4; ++i)
-		{
-			std::cout << "Print begin number of time serie: ";
-			std::cin >> mnumBegin;
-
-			std::cout << "Print end number of time serie: ";
-			std::cin >> mnumEnd;
-
-			std::cout << "Print chunk's length: ";
-			std::cin >> mlenChunk;
-
-			if ((mnumBegin < 1) || (mnumEnd > mlenarr) || (mlenChunk > (mnumEnd - mnumBegin)))
-			{
-				std::cout << "Check up parametres" << endl;
-				++numAttemptions;
-				if (numAttemptions == 4)
-				{
-					return 2;
-				}
-			}
-			else
-			{
-				break;
-			}
-		}
-	}
-	// 4!
-	mnumBegin -= 1;
-	mnumEnd -= 1;
-	return 0;
-}
-
 //---------------------------------------
 
 int main(int argc, char** argv)
 {
-	constexpr int size = 5; // Define the size of your arrays
+	//constexpr int size = 5; // Define the size of your arrays
 
-	float arrA[size] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f };
-	float arrB[size] = { 5.0f, 4.0f, 3.0f, 2.0f, 1.0f };
-	float result[size];
+	//float arrA[size] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f };
+	//float arrB[size] = { 5.0f, 4.0f, 3.0f, 2.0f, 1.0f };
+	//float result[size];
 
-	float* d_a, * d_b, * d_c;
+	//float* d_a, * d_b, * d_c;
 
-	cudaMalloc((void**)&d_a, size * sizeof(float));
-	cudaMalloc((void**)&d_b, size * sizeof(float));
-	cudaMalloc((void**)&d_c, size * sizeof(float));
+	//cudaMalloc((void**)&d_a, size * sizeof(float));
+	//cudaMalloc((void**)&d_b, size * sizeof(float));
+	//cudaMalloc((void**)&d_c, size * sizeof(float));
 
-	cudaMemcpy(d_a, arrA, size * sizeof(float), cudaMemcpyHostToDevice);
-	cudaMemcpy(d_b, arrB, size * sizeof(float), cudaMemcpyHostToDevice);
+	//cudaMemcpy(d_a, arrA, size * sizeof(float), cudaMemcpyHostToDevice);
+	//cudaMemcpy(d_b, arrB, size * sizeof(float), cudaMemcpyHostToDevice);
 
-	constexpr int blockSize = 256;
-	int gridSize = (size + blockSize - 1) / blockSize;
+	//constexpr int blockSize = 256;
+	//int gridSize = (size + blockSize - 1) / blockSize;
 
-	vectorAdd << <gridSize, blockSize >> > (d_a, d_b, d_c, size);
+	//vectorAdd << <gridSize, blockSize >> > (d_a, d_b, d_c, size);
 
-	cudaMemcpy(result, d_c, size * sizeof(float), cudaMemcpyDeviceToHost);
+	//cudaMemcpy(result, d_c, size * sizeof(float), cudaMemcpyDeviceToHost);
 
-	cudaFree(d_a);
-	cudaFree(d_b);
-	cudaFree(d_c);
+	//cudaFree(d_a);
+	//cudaFree(d_b);
+	//cudaFree(d_c);
 
-	std::cout << "Resultant array after addition: ";
-	for (int i = 0; i < size; ++i) {
-		std::cout << result[i] << " ";
-	}
-	std::cout << std::endl;
+	//std::cout << "Resultant array after addition: ";
+	//for (int i = 0; i < size; ++i) {
+	//	std::cout << result[i] << " ";
+	//}
+	//std::cout << std::endl;
 
-	return 0;
+	//return 0;
 
 
 
@@ -190,7 +98,7 @@ int main(int argc, char** argv)
 	// 6 !
 
 	// 7. call function processing the stream    
-	//int irez = fncHybridScan(nullptr, piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, pStreamPars);
+	
 	int irez = fncHybridDedispersionStream(piarrNumSucessfulChunks, parrCoherent_d, quantOfSuccessfulChunks, pStreamPars);
 
 	fncWriteLog_("info.log", mchInpFilePass, "hybrid dedispersion, C++ implementation"
@@ -497,6 +405,93 @@ int main(int argc, char** argv)
 
 	return 0;
 }
+//---------------------------------------------------------------------------
+
+int dialIntroducing()
+{
+	// 1. define path to data file with complex time serie
+	std::cout << "By default input file is  " << chStrDefaultInputPass << endl;//  \"D://MyVSprojPy//hybrid//data.bin\"" << endl;
+	std::cout << "if you want default, print y, otherwise n" << endl;
+	char userInput[200] = { 0 };
+	char ch = std::cin.get();
+	std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
+
+
+	if (ch == 'y')
+	{
+		strcpy(mchInpFilePass, chStrDefaultInputPass);
+	}
+	else
+	{
+		std::cout << "Enter the pass:" << endl;//  with double quotation marks \"..\"" << endl;
+		std::cin.getline(userInput, 200);
+		strcpy(mchInpFilePass, userInput);
+	}
+	// 1!
+
+
+	// 2. reading header of input file
+
+
+	if (readHeader(mchInpFilePass, mlenarr, m_n_p
+		, mvalD_max, mvalf_min, mvalf_max, mvalSigmaBound) == 1)
+	{
+		std::cerr << "Error opening file." << std::endl;
+		return 1;
+	}
+	// 2 !
+
+	// 3. printing header's info
+	std::cout << "Header's information:" << endl;
+	std::cout << "Length of time serie = " << mlenarr << endl;
+	// 3!
+
+	// 4. default parametres
+
+	mnumBegin = 1;
+	mnumEnd = mlenarr;
+	mlenChunk = pow(2, 20);
+	std::cout << "By default parametres:" << endl;
+	std::cout << "Length of chunk( 2 **20 ) = " << mlenChunk << endl;
+	std::cout << "Number of first elem =  " << mnumBegin << endl;
+	std::cout << "Number of last elem =  " << mnumEnd << endl;
+	std::cout << "If you want go on by default print y, otherwise print n " << endl;
+
+	char ch1 = std::cin.get();
+	if (ch1 != 'y')
+	{
+		for (int i = 0; i < 4; ++i)
+		{
+			std::cout << "Print begin number of time serie: ";
+			std::cin >> mnumBegin;
+
+			std::cout << "Print end number of time serie: ";
+			std::cin >> mnumEnd;
+
+			std::cout << "Print chunk's length: ";
+			std::cin >> mlenChunk;
+
+			if ((mnumBegin < 1) || (mnumEnd > mlenarr) || (mlenChunk > (mnumEnd - mnumBegin)))
+			{
+				std::cout << "Check up parametres" << endl;
+				++numAttemptions;
+				if (numAttemptions == 4)
+				{
+					return 2;
+				}
+			}
+			else
+			{
+				break;
+			}
+		}
+	}
+	// 4!
+	mnumBegin -= 1;
+	mnumEnd -= 1;
+	return 0;
+}
+
 template <typename T>
 __global__ void vectorAdd(const T* a, const T* b, T* c, int size) {
 	int i = blockIdx.x * blockDim.x + threadIdx.x;

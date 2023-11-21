@@ -106,7 +106,6 @@
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
     <ClInclude Include="..\MyVSLib_C++\fdmtU_cu.cuh" />
     <ClInclude Include="..\MyVSLib_C++\fileInput.h" />
-    <ClInclude Include="..\MyVSLib_C++\Header.cuh" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
     <ClInclude Include="Dependencies\freeglut\include\GL\freeglut.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\glut.h" />

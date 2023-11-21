@@ -395,8 +395,8 @@ bool fncSearchForHybridDedispersion(float* poutImage, complex<float>* pRawSignal
 	float* parr_fdmt_inp = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
 	float* parr_fdmt_out = (float*)malloc(sizeof(float) * (LEnChunk / N_p) * N_p);
 	
-	for (int iouter_d = 31; iouter_d < 32; ++iouter_d)
-		//for (int iouter_d = 0; iouter_d < n_coherent; ++iouter_d)
+	
+	for (int iouter_d = 0; iouter_d < n_coherent; ++iouter_d)
 	{
 		cout << "coherent iteration " << iouter_d << endl;
 

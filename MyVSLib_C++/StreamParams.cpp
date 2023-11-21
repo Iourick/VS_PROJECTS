@@ -25,6 +25,7 @@ CStreamParams::CStreamParams()
     m_lenChunk = 0;
     m_numCurChunk = 0;
     m_D_max = 0.;
+    m_IMaxDT = 0;
     m_stream = nullptr;
 }
 
@@ -46,6 +47,7 @@ CStreamParams::CStreamParams(const  CStreamParams& R)
     m_numCurChunk = R.m_numCurChunk;
     m_D_max = R.m_D_max;
     m_stream = R.m_stream;
+    m_IMaxDT = R.m_IMaxDT;
 }
 
 // оператор присваивания
@@ -67,6 +69,7 @@ CStreamParams& CStreamParams::operator=(const CStreamParams& R)
     m_numCurChunk = R.m_numCurChunk;
     m_D_max = R.m_D_max;
     m_stream = R.m_stream;
+    m_IMaxDT = R.m_IMaxDT;
     return *this;
 }
 
@@ -85,6 +88,7 @@ CStreamParams::CStreamParams(char* chInpFilePass, const unsigned int numBegin, c
     fread(& m_f_min, sizeof(float), 1, m_stream);
     fread(& m_f_max, sizeof(float), 1, m_stream);
     fread(& m_SigmaBound, sizeof(float), 1, m_stream);
+    fread(&m_IMaxDT, sizeof(int), 1, m_stream);
     m_numBegin = numBegin;
     m_numEnd = numEnd;
     m_lenChunk = lenChunk;

@@ -102,7 +102,7 @@
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <CudaCompile Include="..\MyVSLib_C++\FdmtCu0.cu" />
+    <CudaCompile Include="..\MyVSLib_C++\fdmtU_cu.cu" />
     <CudaCompile Include="..\MyVSLib_C++\HybridDedispersionStream_gpu.cu" />
     <CudaCompile Include="File.cu" />
     <CudaCompile Include="kernel.cu" />
@@ -110,13 +110,12 @@
   <ItemGroup>
     <ClInclude Include="..\MyVSLib_C++\Constants.h" />
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
-    <ClInclude Include="..\MyVSLib_C++\FdmtCu0.cuh" />
+    <ClInclude Include="..\MyVSLib_C++\fdmtU_cu.cuh" />
     <ClInclude Include="..\MyVSLib_C++\fileInput.h" />
     <ClInclude Include="..\MyVSLib_C++\HybridDedispersionStream_gpu.cuh" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
     <ClInclude Include="..\MyVSLib_C++\read_and_write_log.h" />
     <ClInclude Include="..\MyVSLib_C++\StreamParams.h" />
-    <ClInclude Include="..\MyVSLib_C++\utilites.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\freeglut.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\glut.h" />
     <ClInclude Include="Dependencies\freeglut\include\IL\devil_internal_exports.h" />
@@ -127,7 +126,6 @@
     <ClCompile Include="..\MyVSLib_C++\fileInput.cpp" />
     <ClCompile Include="..\MyVSLib_C++\read_and_write_log.cpp" />
     <ClCompile Include="..\MyVSLib_C++\StreamParams.cpp" />
-    <ClCompile Include="..\MyVSLib_C++\utilites.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
