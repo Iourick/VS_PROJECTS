@@ -1,6 +1,6 @@
 
 #include <iostream>
-#include "add.h"
+#include "add.hpp"
 using namespace std;
 //template <typename T>
 //void fncAdd(const T a, const T b, T* c)
@@ -10,7 +10,7 @@ using namespace std;
 int main()
 {    
     int a = 1, b = 2, c = -1;
-    fncAdd<int>(a, b, &c);
+    fncAdd(a, b, &c);
     std::cout << "c = " << c << endl;
 }
 

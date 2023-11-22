@@ -44,11 +44,31 @@ void printDeviceInfo()
 	std::cout << "Device Name: " << deviceName << std::endl;
 	std::cout << "Number of SM: " << numberOfSMs << std::endl;
 }
+//--------------------------------------------------------------------
+void deviceQuery()
+{
+	int deviceCount;
+	cudaGetDeviceCount(&deviceCount);
 
+	printf("CUDA Device Query:\n");
+	printf("Detected %d CUDA capable device(s)\n\n", deviceCount);
+
+	for (int dev = 0; dev < deviceCount; ++dev)
+	{
+		cudaDeviceProp deviceProp;
+		cudaGetDeviceProperties(&deviceProp, dev);
+
+		printf("Device %d: %s\n", dev, deviceProp.name);
+		printf("  Compute capability: %d.%d\n", deviceProp.major, deviceProp.minor);
+		printf("  Total global memory: %lu bytes\n\n", deviceProp.totalGlobalMem);
+	}
+}
 //---------------------------------------
 
 int main(int argc, char** argv)
 {
+	deviceQuery();
+	printDeviceInfo();
 	//constexpr int size = 5; // Define the size of your arrays
 
 	//float arrA[size] = { 1.0f, 2.0f, 3.0f, 4.0f, 5.0f };

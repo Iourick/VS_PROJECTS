@@ -524,6 +524,7 @@ size_t   calcSizeAuxBuff_fdmt(const unsigned int IImrows, const unsigned int IIm
 	size_t sxAux = IImrows * sizeof(float) + IImrows / 2 * sizeof(int) + 3 * IImrows * (IDeltaT + 1) * sizeof(int);
 	return szTwoStates + sxAux;
 }
+//--------------------------------------------------------
 
 //-------------------------------------------------------------------------
 
