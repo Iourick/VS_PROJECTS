@@ -30,7 +30,7 @@ using namespace std;
 class StreamParams;
 
 
-const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data.bin";
+const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data3.bin";
 //const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data3.bin";
 int numAttemptions = 0;
 
@@ -121,86 +121,6 @@ int dialIntroducing()
 
 int main(int argc, char** argv)
 {  
-    //// 1. define path to data file with complex time serie
-    //std::cout << "By default input file is" << chStrDefaultInputPass << endl;//  \"D://MyVSprojPy//hybrid//data.bin\"" << endl;
-    //std::cout << "if you want default, print y, otherwise n" << endl;
-    //char userInput[200] = { 0 };
-    //char ch = std::cin.get();
-    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    ////cin.getline(userInput, 200);
-    //char chInpFilePass[200] = { 0 };
-    //if (ch == 'y')
-    //{
-    //    //memcpy(chInpFilePass, &userInput[1], (strlen(userInput) - 2) * sizeof(char));
-    //    strcpy(chInpFilePass, chStrDefaultInputPass);
-    //}
-    //else
-    //{
-    //    std::cout << "Enter the pass:" << endl;//  with double quotation marks \"..\"" << endl;
-    //    std::cin.getline(userInput, 200);
-    //    strcpy(chInpFilePass, userInput);
-    //}    
-    //// 1!
-    //
-    //
-    //// 2. reading header of input file
-    //unsigned int lenarr = 0, n_p = 0;
-    //float valD_max = 0., valf_min = 0., valf_max = 0., valSigmaBound = 0.;
-
-    //if (readHeader(chInpFilePass, lenarr, n_p
-    //    , valD_max, valf_min, valf_max, valSigmaBound) == 1)
-    //{
-    //    std::cerr << "Error opening file." << std::endl;
-    //    return 1;
-    //}
-    //// 2 !
-
-    //// 3. printing header's info
-    //std::cout << "Header's information:" << endl;
-    //std::cout << "Length of time serie = " << lenarr << endl;
-    //// 3!
-
-    //// 4. default parametres
-    //int numBegin = 0, numEnd = 0, lenChunk = 0;
-    //numBegin = 0;
-    //numEnd = lenarr - 1;
-    //lenChunk = pow(2, 20);
-    //std::cout << "By default parametres:" <<  endl;
-    //std::cout << "Length of chunk( 2 **20 ) = " << lenChunk << endl;
-    //std::cout << "Number of first elem =  " << numBegin << endl;
-    //std::cout << "Number of last elem =  " << numEnd << endl;
-    //std::cout << "If you want go on by default print y, otherwise print n "<<endl;
-    //std::cin.ignore(std::numeric_limits<std::streamsize>::max(), '\n');
-    //ch = std::cin.get();
-    //if (ch != 'y') 
-    //{
-    //    for (int i = 0; i < 4; ++i)
-    //    {
-    //        std::cout << "Print begin number of time serie: ";
-    //        std::cin >> numBegin;
-
-    //        std::cout << "Print end number of time serie: ";
-    //        std::cin >> numEnd;
-
-    //        std::cout << "Print chunk's length: ";
-    //        std::cin >> lenChunk;
-
-    //        if ((numBegin < 1) || (numEnd > lenarr) || (lenChunk > (numEnd - numBegin)))
-    //        {
-    //            std::cout << "Check up parametres" << endl;
-    //            ++numAttemptions;
-    //            if (numAttemptions == 4)
-    //            {
-    //                return 0;
-    //            }
-    //        }
-    //        else
-    //        {
-    //            break;
-    //        }
-    //    }
-    //}
-    //// 4!
     dialIntroducing();
     // 5. Create member of class CStreamParams
     CStreamParams* pStreamPars = new CStreamParams(mchInpFilePass, mnumBegin, mnumEnd, mlenChunk);
@@ -227,7 +147,7 @@ int main(int argc, char** argv)
     std::cout << "Chunk Num., Coh. Disp. : " << endl;
     for (int i = 0; i < quantOfSuccessfulChunks; ++i)
     {
-        std::cout << piarrNumSucessfulChunks [i]<<" ; " << parrCoherent_d[i] << endl;
+        std::cout <<i +1<<") : "<< piarrNumSucessfulChunks[i] << " ; " << parrCoherent_d[i] << endl;
     }
 
     free(piarrNumSucessfulChunks);
