@@ -253,24 +253,24 @@ void fncFdmtIteration_v2(int* d_piarrInp, const float val_dF, const int IDim0, c
 	//------------  KERNEL 3D kernel3D_shift_and_sum_v21  -----------------------------------
 	//-----------  COALESCED + NOT SHARED MEMORY +  calc3AuxillaryVars ---------------------------------------------------------------------- 
 	//----------- TIME = 104 /14 ms ----------------------------------	
-	/*const dim3 blockSize1 = dim3(1024, 1, 1);
+	const dim3 blockSize1 = dim3(1024, 1, 1);
 	const dim3 gridSize1 = dim3((IDim2 + blockSize1.x - 1) / blockSize1.x, iOutPutDim1, iOutPutDim0);
 	size_t smemsize = 44;
 	kernel3D_shift_and_sum_v2 << < gridSize1, blockSize1, smemsize >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
 		, iOutPutDim0, iOutPutDim1, d_piarrOut);
-	cudaDeviceSynchronize();*/
+	cudaDeviceSynchronize();
 
 	//------------  KERNEL 3D kernel3D_shift_and_sum_v2  -----------------------------------
 	//-----------  COALESCED + SHARED MEMORY +  calc3AuxillaryVars ---------------------------------------------------------------------- 
 	//----------- TIME = 100 /14 ms ----------------------------------	
-	const dim3 blockSize1 = dim3(64, 1, 1);
-	const dim3 gridSize1 = dim3((IDim2 + blockSize1.x - 1) / blockSize1.x, iOutPutDim1, iOutPutDim0);
-	size_t smemsize = 32;
-	kernel3D_shift_and_sum_v2 << < gridSize1, blockSize1, smemsize >> > (d_piarrInp
-		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
-		, iOutPutDim0, iOutPutDim1, d_piarrOut);
-	cudaDeviceSynchronize();	
+	//const dim3 blockSize1 = dim3(64, 1, 1);
+	//const dim3 gridSize1 = dim3((IDim2 + blockSize1.x - 1) / blockSize1.x, iOutPutDim1, iOutPutDim0);
+	//size_t smemsize = 32;
+	//kernel3D_shift_and_sum_v2 << < gridSize1, blockSize1, smemsize >> > (d_piarrInp
+		//, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
+		//, iOutPutDim0, iOutPutDim1, d_piarrOut);
+	//cudaDeviceSynchronize();	
 
 }
 //-----------------------------------------------------------------------------------------------------------------------

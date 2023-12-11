@@ -25,17 +25,17 @@ __global__
 void kernel3D_Main_012_v1(fdmt_type_* d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
 	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, fdmt_type_* d_parrOut, const bool b_ones);
+	, fdmt_type_* d_parrOut);
 
 __global__
 void kernel3D_Main_012_v2(fdmt_type_* d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, float* d_arr_val0, float* d_arr_val1
-	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_* d_parrOut, const bool b_ones);
+	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_* d_parrOut);
 
 __global__
 void kernel3D_Main_012_v3(fdmt_type_* d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, float* d_arr_val0, float* d_arr_val1
-	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_* d_parrOut, const bool b_ones);
+	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_* d_parrOut);
 
 __host__ __device__
 void calc3AuxillaryVars(int& ideltaTLocal, int& i_dT, int& iF, float& val0
@@ -71,6 +71,10 @@ inline int calc_IDeltaT(const int IImgrows, const float VAlFmin,  const float VA
 
 size_t   calcSizeAuxBuff_fdmt(const unsigned int IImrows, const unsigned int IImgcols, const  float VAlFmin
 	, const  float VAlFmax, const int IMaxDT);
+
+__global__
+void kernel_init_fdmt0_(fdmt_type_* d_parrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, fdmt_type_* d_parrOut, const bool b_ones);
 
 //void fncFdmtU_cu_old(fdmt_type_* parrImage // input image
 //	, fdmt_type_* d_parrImage       // on-device auxiliary memory buffer

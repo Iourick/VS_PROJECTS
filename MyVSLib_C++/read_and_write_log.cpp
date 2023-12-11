@@ -4,6 +4,7 @@
 #include <sstream>
 #include <vector>
 #include <string>
+#include <cstring>
 
 
 #ifdef _WIN32 // For Windows
@@ -103,7 +104,7 @@ int fncReadLog_(const char* filename, char* passDatafile, int* lengthOfChunk, in
     {
         std::string extractedString = fullString.substr(startPos + searchString.length());      
         
-        std::strcpy(passDatafile, extractedString.c_str());       
+        strcpy(passDatafile, extractedString.c_str());       
     }
     else
     {

@@ -1,7 +1,7 @@
 #include "fdmtU_cu.cuh"
 //#include "cuda_runtime.h"
 //#include "device_launch_parameters.h"
-#include "FdmtCu0.cuh"
+
 
 #include <math.h>
 #include <stdio.h>
@@ -27,7 +27,8 @@ using namespace std;
 
 void fncFdmtU_cu( fdmt_type_* d_parrImage       // on-device input image
 	, void * pAuxBuff_fdmt
-	, const int IImgrows, const int IImgcols // dimensions of input image 	
+	, const int IImgrows
+	, const int IImgcols // dimensions of input image 	
 	, const int IDeltaT		
 	, const  float VAlFmin
 	, const  float VAlFmax
@@ -35,44 +36,52 @@ void fncFdmtU_cu( fdmt_type_* d_parrImage       // on-device input image
 	, fdmt_type_* u_parrImOut	// OUTPUT image, dim = IDeltaT x IImgcols
 	, const bool b_ones
 )
-{
-	
-	
+{	
 	// installation of pointers	
+	char* charPtr = (char*)pAuxBuff_fdmt;
 	fdmt_type_* d_parrState0 = (fdmt_type_*)pAuxBuff_fdmt;		// on-device auxiliary memory buffer
 	size_t sz0 = IImgrows * (IDeltaT + 1) * IImgcols * sizeof(fdmt_type_);
-	fdmt_type_* d_parrState1 = (fdmt_type_ * )((char*)pAuxBuff_fdmt + sz0);
-	size_t sz1 = 2 * sz0;
-	float* d_arr_val0 = (float*)((char*)pAuxBuff_fdmt + sz1);
-	size_t sz2 = sz1 + IImgrows / 2 * sizeof(float);
-	float* d_arr_val1 = (float*)((char*)pAuxBuff_fdmt + sz2);
-	size_t sz3 = sz2 + IImgrows / 2 * sizeof(float);
-	int* d_arr_deltaTLocal = (int*)((char*)pAuxBuff_fdmt + sz3);
-	size_t sz4 = sz3 + IImgrows / 2 * sizeof(int);
-	int* d_arr_dT_MI = (int*)((char*)pAuxBuff_fdmt + sz4);
-	size_t sz5 = sz4 + IImgrows * (IDeltaT + 1) * sizeof(int);
-	int* d_arr_dT_ML = (int*)((char*)pAuxBuff_fdmt + sz5);
-	size_t sz6 = sz5 + IImgrows * (IDeltaT + 1) * sizeof(int);
-	int* d_arr_dT_RI = (int*)((char*)pAuxBuff_fdmt + sz6);
 	
+	fdmt_type_* d_parrState1 = (fdmt_type_ * )(charPtr + sz0);
+	size_t sz1 = 2 * sz0;
+	float* d_arr_val0 = (float*)(charPtr + sz1);
+	size_t sz2 = sz1 + IImgrows / 2 * sizeof(float);
+	float* d_arr_val1 = (float*)(charPtr + sz2);
+	size_t sz3 = sz2 + IImgrows / 2 * sizeof(float);
+	int* d_arr_deltaTLocal = (int*)(charPtr + sz3);
+	size_t sz4 = sz3 + IImgrows / 2 * sizeof(int);
+	int* d_arr_dT_MI = (int*)(charPtr + sz4);
+	size_t sz5 = sz4 + IImgrows * (IDeltaT + 1) * sizeof(int);
+	int* d_arr_dT_ML = (int*)(charPtr + sz5);
+	size_t sz6 = sz5 + IImgrows * (IDeltaT + 1) * sizeof(int);
+	int* d_arr_dT_RI = (int*)(charPtr + sz6);
+	int itempii = (char*)d_arr_dT_RI - (char*)d_parrState0 + IImgrows * (IDeltaT + 1) * sizeof(int);
 	// 1. quant iteration's calculation
 	const int I_F = (int)(log2((double)(IImgrows)));
 	// 2. temp variables calculations
 	const float VAl_dF = (VAlFmax - VAlFmin) / ((float)(IImgrows));
-	// !1	
-	/*if (!b_ones)
-	{
-		cudaMemcpy(d_parrImage, parrImage, IImgcols * IImgrows * sizeof(fdmt_type_), cudaMemcpyHostToDevice);
-	}*/
-	// 1. call initialization func	
+	
 
 	auto start = std::chrono::high_resolution_clock::now();
 	const dim3 blockSize = dim3(1024, 1);
 	const dim3 gridSize = dim3((IImgcols + blockSize.x - 1) / blockSize.x, IImgrows);
 	kernel_init_fdmt0 << < gridSize, blockSize >> > (d_parrImage, IImgrows, IImgcols, IDeltaT, d_parrState0, b_ones);
+	cudaDeviceSynchronize();
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	//std::cout << "Time taken by function kernel_init_fdmt0: " << duration.count() << " microseconds" << std::endl;
+
+
+	/*float* parr1 = (float*)malloc(IImgrows * IImgcols*(1 + IDeltaT) * sizeof(float));
+	cudaMemcpy(parr1, d_parrState0, IImgrows * IImgcols * (1 + IDeltaT) * sizeof(float)
+		, cudaMemcpyDeviceToHost);
+	std::vector<float> v7(parr1, parr1 + IImgrows * IImgcols * (1 + IDeltaT) );
+
+	std::array<long unsigned, 3> leshape127 { IImgrows, IImgcols, 1 + IDeltaT };
+
+	npy::SaveArrayAsNumpy("gpu_init.npy", false, leshape127.size(), leshape127.data(), v7);
+	free(parr1);
+	int ii = 0;*/
 
 	// !1
 
@@ -97,7 +106,7 @@ void fncFdmtU_cu( fdmt_type_* d_parrImage       // on-device input image
 			, VAlFmax, iit, d_arr_val0
 			, d_arr_val1, d_arr_deltaTLocal
 			, d_arr_dT_MI, d_arr_dT_ML, d_arr_dT_RI
-			, d_p1, iOut0, iOut1, b_ones);
+			, d_p1, iOut0, iOut1, false);
 		if (iit == I_F)
 		{
 			break;
@@ -206,7 +215,8 @@ void fncFdmtIteration(fdmt_type_ * d_parrInp, const float val_dF, const int IDim
 	numberOfBlocks = (quantEl + threadsPerBlock - 1) / threadsPerBlock;
 	kernel_shift_and_sum << <numberOfBlocks, threadsPerBlock >> > (d_piarrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
-		, iOutPutDim0, iOutPutDim1, d_piarrOut);*/
+		, iOutPutDim0, iOutPutDim1, d_piarrOut);
+		cudaDeviceSynchronize();*/
 
 		// 2024 x 2024 takes 8.65 millisec
 	const dim3 blockSize = dim3(1024, 1, 1);
@@ -214,21 +224,22 @@ void fncFdmtIteration(fdmt_type_ * d_parrInp, const float val_dF, const int IDim
 
 	kernel3D_Main_012_v1 << <gridSize, blockSize >> > (d_parrInp
 		, IDim0, IDim1, IDim2, d_iarr_deltaTLocal, d_iarr_dT_MI, d_iarr_dT_ML, d_iarr_dT_RI
-		, iOutPutDim0, iOutPutDim1, d_parrOut,  b_ones);
-
+		, iOutPutDim0, iOutPutDim1, d_parrOut);
+	cudaDeviceSynchronize();
 	// 2024 x 2024 takes 8.43 millisec
 	/*size_t smemsize = 40;
 	kernel3D_Main_012_v2 << <gridSize, blockSize, smemsize >> > (d_parrInp, IDim0, IDim1
 	, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
-	, iOutPutDim0, iOutPutDim1, d_parrOut);*/
-
-
-	// 2024 x 2024 takes 8.55 millisec
-	/*size_t smemsize = 24;
-	kernel3D_Main_012_v3 << <gridSize, blockSize, smemsize >> > (d_parrInp, IDim0, IDim1
-		, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
-		, iOutPutDim0, iOutPutDim1, d_parrOut);
+	, iOutPutDim0, iOutPutDim1, d_parrOut);
 	cudaDeviceSynchronize();*/
+
+
+	//// 2024 x 2024 takes 8.55 millisec
+	///*size_t smemsize = 24;
+	//kernel3D_Main_012_v3 << <gridSize, blockSize, smemsize >> > (d_parrInp, IDim0, IDim1
+	//	, IDim2, d_iarr_deltaTLocal, d_arr_val0, d_arr_val1
+	//	, iOutPutDim0, iOutPutDim1, d_parrOut);
+	//cudaDeviceSynchronize();*/
 
 }
 //-----------------------------------------------------------------------------------------------------------------------
@@ -237,7 +248,7 @@ __global__
 void kernel3D_Main_012_v1(fdmt_type_ * d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
 	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, fdmt_type_ * d_parrOut, const bool b_ones)
+	, fdmt_type_ * d_parrOut)
 {
 
 	int numElemInRow = blockIdx.x * blockDim.x + threadIdx.x;
@@ -253,21 +264,14 @@ void kernel3D_Main_012_v1(fdmt_type_ * d_parrInp, const int IDim0, const int IDi
 	}
 	int indAux = i_F * IOutPutDim1 + i_dT;
 	int indElem = i_F * IOutPutDim1 * IDim2 + i_dT * IDim2 + numElemInRow;	
-	d_parrOut[indElem] = (b_ones) ? (fdmt_type_ )1 : d_parrInp[2 * i_F * IDim1 * IDim2 + d_iarr_dT_MI[indAux] * IDim2 + numElemInRow];
+	d_parrOut[indElem] =  d_parrInp[2 * i_F * IDim1 * IDim2 + d_iarr_dT_MI[indAux] * IDim2 + numElemInRow];
 
 	if (numElemInRow >= d_iarr_dT_ML[indAux])
 	{
-		if (b_ones)
-		{
-			d_parrOut[indElem] += (fdmt_type_)1;
-		}
-		else
-		{
-			int numRow = d_iarr_dT_RI[indAux];
-			int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + numElemInRow - d_iarr_dT_ML[indAux];
+		int numRow = d_iarr_dT_RI[indAux];
+		int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + numElemInRow - d_iarr_dT_ML[indAux];
 
-			d_parrOut[indElem] += d_parrInp[indInpMtrx];
-		}
+		d_parrOut[indElem] += d_parrInp[indInpMtrx];
 	}
 
 }
@@ -277,7 +281,7 @@ void kernel3D_Main_012_v1(fdmt_type_ * d_parrInp, const int IDim0, const int IDi
 __global__
 void kernel3D_Main_012_v2(fdmt_type_* d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, float* d_arr_val0, float* d_arr_val1
-	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_ * d_parrOut, const bool b_ones)
+	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_ * d_parrOut)
 {
 	extern __shared__ int shared_iarr[10];
 
@@ -307,12 +311,12 @@ void kernel3D_Main_012_v2(fdmt_type_* d_parrInp, const int IDim0, const int IDim
 	}
 
 	int indElem = shared_iarr[5] * shared_iarr[6] + shared_iarr[0] * IDim2 + numElemInRow;
-	d_parrOut[indElem] = (b_ones)?(fdmt_type_ )1: d_parrInp[shared_iarr[8] + numElemInRow];
+	d_parrOut[indElem] =  d_parrInp[shared_iarr[8] + numElemInRow];
 
 	if (numElemInRow >= shared_iarr[4])
 	{
 
-		d_parrOut[indElem] += (b_ones) ? (fdmt_type_ )1 : d_parrInp[shared_iarr[9] + numElemInRow];
+		d_parrOut[indElem] +=  d_parrInp[shared_iarr[9] + numElemInRow];
 	}
 
 }
@@ -321,7 +325,7 @@ void kernel3D_Main_012_v2(fdmt_type_* d_parrInp, const int IDim0, const int IDim
 __global__
 void kernel3D_Main_012_v3(fdmt_type_ * d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, float* d_arr_val0, float* d_arr_val1
-	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_ * d_parrOut, const bool b_ones)
+	, const int IOutPutDim0, const int IOutPutDim1, fdmt_type_ * d_parrOut)
 {
 	extern __shared__ int sh_iarr[6];
 
@@ -351,12 +355,12 @@ void kernel3D_Main_012_v3(fdmt_type_ * d_parrInp, const int IDim0, const int IDi
 	}
 
 	int indElem = sh_iarr[2] + numElemInRow;
-	d_parrOut[indElem] = (b_ones) ? (fdmt_type_ )1 : d_parrInp[sh_iarr[3] + numElemInRow];
+	d_parrOut[indElem] =  d_parrInp[sh_iarr[3] + numElemInRow];
 
 	if (numElemInRow >= sh_iarr[4])
 	{
 
-		d_parrOut[indElem] += (b_ones) ? (fdmt_type_)1:d_parrInp[sh_iarr[5] + numElemInRow];
+		d_parrOut[indElem] += d_parrInp[sh_iarr[5] + numElemInRow];
 	}
 
 }
@@ -385,7 +389,7 @@ __global__
 void kernel_shift_and_sum(fdmt_type_ * d_parrInp, const int IDim0, const int IDim1
 	, const int IDim2, int* d_iarr_deltaTLocal, int* d_iarr_dT_MI
 	, int* d_iarr_dT_ML, int* d_iarr_dT_RI, const int IOutPutDim0, const int IOutPutDim1
-	, fdmt_type_ * d_parrOut, const bool b_ones)
+	, fdmt_type_ * d_parrOut)
 {
 	const int i = blockIdx.x * blockDim.x + threadIdx.x;
 	if (i >= IOutPutDim0 * IOutPutDim1 * IDim2)
@@ -411,14 +415,14 @@ void kernel_shift_and_sum(fdmt_type_ * d_parrInp, const int IDim0, const int IDi
 	// calculation of:
 	// d_Output[i_F][i_dT][idx] = d_input[2 * i_F][arr_dT_MI[i_F, i_dT]][idx]
 	  // calculation num row of submatix No_2 * i_F of d_piarrInp = arr_dT_MI[ind]
-	d_parrOut[i] = (b_ones) ? (fdmt_type_ )1 : d_parrInp[2 * i_F * IDim1 * IDim2 + d_iarr_dT_MI[ind] * IDim2 + idx];
+	d_parrOut[i] =  d_parrInp[2 * i_F * IDim1 * IDim2 + d_iarr_dT_MI[ind] * IDim2 + idx];
 
 	if (idx >= d_iarr_dT_ML[ind])
 	{
 		int numRow = d_iarr_dT_RI[ind];
 		int indInpMtrx = (2 * i_F + 1) * IDim1 * IDim2 + numRow * IDim2 + idx - d_iarr_dT_ML[ind];
 		//atomicAdd(&d_piarrOut[i], d_piarrInp[ind]);
-		d_parrOut[i] += (b_ones) ? (fdmt_type_ )1 : d_parrInp[indInpMtrx];
+		d_parrOut[i] +=  d_parrInp[indInpMtrx];
 	}
 }
 //-----------------------------------------------------------------------------------------------------------------------
@@ -479,7 +483,7 @@ void kernel_2d_arrays(const int IDim0, const int IDim1
 //--------------------------------------------------------------------------------------
 __global__
 void kernel_init_fdmt0(fdmt_type_* d_parrImg, const int IImgrows, const int IImgcols
-	, const int IDeltaT, fdmt_type_ * d_parrOut, const bool b_ones)
+	, const int IDeltaT, fdmt_type_* d_parrOut, const bool b_ones)
 {
 	int i_F = blockIdx.y;
 	int numOutElemInRow = blockIdx.x * blockDim.x + threadIdx.x;
@@ -489,17 +493,17 @@ void kernel_init_fdmt0(fdmt_type_* d_parrImg, const int IImgrows, const int IImg
 	}
 	int numOutElemPos = i_F * (IDeltaT + 1) * IImgcols + numOutElemInRow;
 	int numInpElemPos = i_F * IImgcols + numOutElemInRow;
-	fdmt_type_  itemp = (b_ones) ? (fdmt_type_)1:d_parrImg[numInpElemPos];
+	fdmt_type_  itemp = (b_ones) ? (fdmt_type_)1 : d_parrImg[numInpElemPos];
 	d_parrOut[numOutElemPos] = itemp;
 
-	
+	// old variant
 	for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
 	{
 		numOutElemPos += IImgcols;
 		if (i_dT <= numOutElemInRow)
 		{
 			float  val = (b_ones) ? 1.0 : ((float)d_parrImg[i_F * IImgcols + numOutElemInRow - i_dT]);
-			itemp = itemp * i_dT + (fdmt_type_)(val / ((float)(i_dT + 1.)));
+			itemp = itemp  + (fdmt_type_)(val );
 			d_parrOut[numOutElemPos] = itemp;
 		}
 
@@ -508,9 +512,85 @@ void kernel_init_fdmt0(fdmt_type_* d_parrImg, const int IImgrows, const int IImg
 			d_parrOut[numOutElemPos] = 0;
 		}
 	}
+
+	//// new variant
+	//for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
+	//{
+	//	numOutElemPos += IImgcols;
+	//	if (i_dT <= numOutElemInRow)
+	//	{
+	//		float  val = (b_ones) ? 1.0 : ((float)d_parrImg[i_F * IImgcols + numOutElemInRow - i_dT]);
+	//		itemp = itemp * i_dT + (fdmt_type_)(val / ((float)(i_dT + 1.)));
+	//		d_parrOut[numOutElemPos] = itemp;
+	//	}
+
+	//	else
+	//	{
+	//		d_parrOut[numOutElemPos] = 0;
+	//	}
+	//}
+}
+//--------------------------------------------------------------------------------------
+__global__
+void kernel_init_fdmt0_(fdmt_type_* d_parrImg, const int IImgrows, const int IImgcols
+	, const int IDeltaT, fdmt_type_* d_parrOut, const bool b_ones)
+{
+	int i_F = blockIdx.y;
+	int numOutElemInRow = blockIdx.x * blockDim.x + threadIdx.x;
+	if (numOutElemInRow >= IImgcols)
+	{
+		return;
+	}
+	int numOutElemPos = i_F * (IDeltaT + 1) * IImgcols + numOutElemInRow;
+	if (numOutElemPos >= IImgrows * IImgcols * (IDeltaT + 1))
+	{
+		return;
+	}
+	if (b_ones)
+	{
+		//d_parrOut[numOutElemPos] = (fdmt_type_)1;
+		//fdmt_type_  itemp = (fdmt_type_)1;
+		/*for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
+		{
+			numOutElemPos += IImgcols;
+			if (i_dT <= numOutElemInRow)
+			{				
+				itemp = itemp * i_dT + (fdmt_type_)(1. / ((float)(i_dT + 1.)));
+				d_parrOut[numOutElemPos] = itemp;
+			}
+
+			else
+			{
+				d_parrOut[numOutElemPos] = 0;
+			}
+		}*/
+	}
+	else
+	{
+		/*int numInpElemPos = i_F * IImgcols + numOutElemInRow;
+
+		d_parrOut[numOutElemPos] = d_parrImg[numInpElemPos];
+		fdmt_type_  itemp =  d_parrImg[numInpElemPos];
+
+		for (int i_dT = 1; i_dT < (1 + IDeltaT); ++i_dT)
+		{
+			numOutElemPos += IImgcols;
+			if (i_dT <= numOutElemInRow)
+			{
+				float  val = (b_ones) ? 1.0 : ((float)d_parrImg[i_F * IImgcols + numOutElemInRow - i_dT]);
+				itemp = itemp * i_dT + (fdmt_type_)(val / ((float)(i_dT + 1.)));
+				d_parrOut[numOutElemPos] = itemp;
+			}
+
+			else
+			{
+				d_parrOut[numOutElemPos] = 0;
+			}
+		}*/
+	}
 }
 
-//---------------------------------------------------------------------------
+
 //-------------------------------------------------------
 size_t   calcSizeAuxBuff_fdmt(const unsigned int IImrows, const unsigned int IImgcols,  const  float VAlFmin
 	, const  float VAlFmax	, const int IMaxDT)

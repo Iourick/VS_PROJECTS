@@ -14,6 +14,8 @@
 #include <array>
 #include <vector>
 #include "npy.hpp"
+#include "yr_cart.h"
+#include <complex>
 
 
 
@@ -44,16 +46,12 @@ fftwf_plan create_wis(const unsigned int size,char*str, const bool bforward)
 	{
 		plan = fftwf_plan_dft_1d(size, in, out, FFTW_BACKWARD, FFTW_MEASURE);
 	}
-	//fftw_export_wisdom_to_filename("wisdom.wis");
-
-	strcpy(str, fftwf_export_wisdom_to_string());
-	//str = fftwf_export_wisdom_to_string();	
-	
+	strcpy(str, fftwf_export_wisdom_to_string());	
 	fftwf_free(in);
 	fftwf_free(out);
 	return plan;
 }
-
+//------------------------------------------------------------------
 
 int fncHybridScan(float* parrSucessImagesBuff, int* piarrNumSuccessfulChunks, float *parrCoherent_d, int& quantOfSuccessfulChunks, CStreamParams* pStreamPars)
 {
@@ -101,8 +99,7 @@ int fncHybridScan(float* parrSucessImagesBuff, int* piarrNumSuccessfulChunks, fl
 		++(pStreamPars->m_numCurChunk);
 		iremains -= pStreamPars->m_lenChunk;
 		
-	}
-	
+	}	
 	// !	
 	
 	fftwf_free(pRawSignalCur);
@@ -139,13 +136,13 @@ bool createOutImageForFixedNumberChunk(float* parr_fdmt_out, int* pargmaxRow, in
 	fftwf_destroy_plan(plan);
 	// !1
 
-		// 2. create fdmt ones
+	// 2. create fdmt ones
 	float* parr_fdmt_ones = (float*)malloc(lengthChunk * sizeof(float));
 	for (int i = 0; i < lengthChunk; ++i)
 	{
-		parr_fdmt_ones[i] = 1.;
+	parr_fdmt_ones[i] = 1.;
 	}
-	int IMaxDT = pStreamPars->m_n_p;   
+	int IMaxDT = pStreamPars->m_IMaxDT;
 	int N_p = pStreamPars->m_n_p;
 	const float VAlFmin = pStreamPars->m_f_min;
 	const float VAlFmax = pStreamPars->m_f_max;
@@ -154,17 +151,13 @@ bool createOutImageForFixedNumberChunk(float* parr_fdmt_out, int* pargmaxRow, in
 
 
 	fncFdmt_cpuT_v0(parr_fdmt_ones, N_p, lengthChunk / N_p
-		, VAlFmin, VAlFmax, IMaxDT, parrImNormalize);
-
-
+	, VAlFmin, VAlFmax, IMaxDT, parrImNormalize);
 	free(parr_fdmt_ones);
 	// !2
 
 	// 3.		
 	float valConversionConst = DISPERSION_CONSTANT * (1. / (VAlFmin * VAlFmin) - 1. / (VAlFmax * VAlFmax)) * (VAlFmax - VAlFmin);
 	float valN_d = VAlD_max * valConversionConst;
-	
-
 	// !3
 
 	//4.
@@ -173,20 +166,20 @@ bool createOutImageForFixedNumberChunk(float* parr_fdmt_out, int* pargmaxRow, in
 	float* parr_fdmt_inp = (float*)malloc(sizeof(float) * (lengthChunk / N_p) * N_p);
 		
 	createOutputFDMT(parr_fdmt_out, pffted_rowsignal, pcarrCD_Out, pcarrTemp, lengthChunk
-		, N_p, parr_fdmt_inp, IMaxDT, DISPERSION_CONSTANT * VAlCoherent_d, VAlD_max, VAlFmin, VAlFmax);		
+	, N_p, parr_fdmt_inp, IMaxDT, DISPERSION_CONSTANT * VAlCoherent_d, VAlD_max, VAlFmin, VAlFmax);		
 
-		float maxSig = -1.;
-		int iargmax = -1;
-		fncMaxSignalDetection(parr_fdmt_out, parrImNormalize, N_p, (lengthChunk / N_p)
-			, pvalSNR, &iargmax);
-		*pargmaxRow = iargmax / (lengthChunk / N_p);
-		*pargmaxCol = iargmax % (lengthChunk / N_p);
+	float maxSig = -1.;
+	int iargmax = -1;
+	fncMaxSignalDetection(parr_fdmt_out, parrImNormalize, N_p, (lengthChunk / N_p)
+	, pvalSNR, &iargmax);
+	*pargmaxRow = iargmax / (lengthChunk / N_p);
+	*pargmaxCol = iargmax % (lengthChunk / N_p);
 
-		cutQuadraticSubImage(pparrOutSubImage, piQuantRowsPartImage, parr_fdmt_out, N_p, (lengthChunk / N_p), *pargmaxRow, *pargmaxCol);
+	cutQuadraticSubImage(pparrOutSubImage, piQuantRowsPartImage, parr_fdmt_out, N_p, (lengthChunk / N_p), *pargmaxRow, *pargmaxCol);
 
 	
-		fftwf_free(pcarrTemp);
-		fftwf_free(pcarrCD_Out);
+	fftwf_free(pcarrTemp);
+	fftwf_free(pcarrCD_Out);
 	free(parr_fdmt_inp);
 	
 	free(parrImNormalize);
@@ -234,16 +227,87 @@ void cutQuadraticSubImage(float** pparrOutImage, int *piQuantRowsOutImage,float*
 //
 // OUTPUT:
 // parr_fdmt_out - float 2-dimensional array,with dimensions =  IMaxDT x (LEnChunk / N_p)
+//int createOutputFDMT(float* parr_fdmt_out, fftwf_complex* pffted_rowsignal, fftwf_complex* pcarrCD_Out
+//	, fftwf_complex* pcarrTemp
+//	, const unsigned int LEnChunk, const unsigned int N_p, float* parr_fdmt_inp, const unsigned int IMaxDT
+//	, const long double VAl_practicalD, const float VAlD_max, const float VAlFmin, const float VAlFmax)
+//{
+//	fncCoherentDedispersion(pcarrCD_Out, pffted_rowsignal, LEnChunk, VAl_practicalD, VAlFmin, VAlFmax);
+//
+//	/*std::vector<std::complex<float>> data(LEnChunk, 0);
+//	memcpy(data.data(), pcarrCD_Out, LEnChunk * sizeof(std::complex<float>));
+//	std::array<long unsigned, 1> leshape127{ LEnChunk };
+//	npy::SaveArrayAsNumpy("pcarrCD_Out_cpu.npy", false, leshape127.size(), leshape127.data(), data);*/
+//
+//	fncSTFT(pcarrTemp, pcarrCD_Out, LEnChunk, N_p);
+//
+//	float sum = 0.;
+//	int len = (LEnChunk / N_p) * N_p;
+//	float arrMean[128] = { 0. }, arrDisp[128] = { 0. };
+//	for (int i = 0; i < N_p; ++i)
+//	{
+//		for (int j = 0; j < (LEnChunk / N_p); ++j)
+//		{
+//			int n = i * (LEnChunk / N_p) + j;
+//			float temp = pcarrTemp[n][0] * pcarrTemp[n][0] + pcarrTemp[n][1] * pcarrTemp[n][1];
+//			arrMean[i] += temp;
+//			arrDisp[i] += temp * temp;
+//			parr_fdmt_inp[n] = temp;
+//		}
+//		arrMean[i] = arrMean[i] / (LEnChunk / N_p);
+//		
+//	}
+//
+//	float mean = 0., disp = 0.;
+//	for (int i = 0; i < N_p; ++i)
+//	{
+//		mean += arrMean[i];
+//		disp += arrDisp[i];// +arrMean[i] * arrMean[i];
+//	}
+//	mean = mean / N_p;
+//	disp = sqrt((disp/ LEnChunk - mean * mean));
+//	//---------------
+//	for (int j = 0; j < len; ++j)
+//	{		
+//		float temp = pcarrTemp[j][0] * pcarrTemp[j][0] + pcarrTemp[j][1] * pcarrTemp[j][1];
+//		sum += temp;
+//		parr_fdmt_inp[j] = temp;
+//	}
+//
+//	float val_mean = sum / ((float)len);
+//	float valStdDev = fnsStdDev(parr_fdmt_inp, val_mean, len);
+//
+//	for (int j = 0; j < len; ++j)
+//	{
+//		parr_fdmt_inp[j] = (parr_fdmt_inp[j] - val_mean) / (0.25 * valStdDev);
+//	}
+//
+//	
+//
+//	fncFdmt_cpuT_v0(parr_fdmt_inp, N_p, LEnChunk / N_p
+//		, VAlFmin, VAlFmax, IMaxDT, parr_fdmt_out);
+//
+//	return 0;
+//}
 int createOutputFDMT(float* parr_fdmt_out, fftwf_complex* pffted_rowsignal, fftwf_complex* pcarrCD_Out
 	, fftwf_complex* pcarrTemp
-	, const unsigned int LEnChunk, const unsigned int N_p, float * parr_fdmt_inp, const unsigned int IMaxDT
-	, const long double VAlLong_coherent_d	, const float VAlD_max, const float VAlFmin, const float VAlFmax )
+	, const unsigned int LEnChunk, const unsigned int N_p, float* parr_fdmt_inp, const unsigned int IMaxDT
+	, const long double VAl_practicalD, const float VAlD_max, const float VAlFmin, const float VAlFmax)
 {
-	
+	fncCoherentDedispersion(pcarrCD_Out, pffted_rowsignal, LEnChunk, VAl_practicalD, VAlFmin, VAlFmax);
 
-	fncCoherentDedispersion(pcarrCD_Out, pffted_rowsignal, LEnChunk, VAlLong_coherent_d, VAlFmin, VAlFmax);
+	std::vector<std::complex<float>> data(LEnChunk, 0);
+	memcpy(data.data(), pcarrCD_Out, LEnChunk * sizeof(std::complex<float>));
+	std::array<long unsigned, 1> leshape127{ LEnChunk };
+	npy::SaveArrayAsNumpy("pcarrCD_Out_cpu.npy", false, leshape127.size(), leshape127.data(), data);
+
+
 
 	fncSTFT(pcarrTemp, pcarrCD_Out, LEnChunk, N_p);
+
+	memcpy(data.data(), pcarrTemp, LEnChunk * sizeof(std::complex<float>));
+	//std::array<long unsigned, 1> leshape127{ LEnChunk };
+	npy::SaveArrayAsNumpy("pcarrTemp_cpu.npy", false, leshape127.size(), leshape127.data(), data);
 
 	float sum = 0.;
 	int len = (LEnChunk / N_p) * N_p;
@@ -262,7 +326,12 @@ int createOutputFDMT(float* parr_fdmt_out, fftwf_complex* pffted_rowsignal, fftw
 	for (int j = 0; j < len; ++j)
 	{
 		parr_fdmt_inp[j] = (parr_fdmt_inp[j] - val_mean) / (0.25 * valStdDev);
-	}	
+	}
+
+	std::vector<float> data1(LEnChunk, 0);
+	memcpy(data1.data(), parr_fdmt_inp, LEnChunk * sizeof(float));
+	//std::array<long unsigned, 1> leshape127{ LEnChunk };
+	npy::SaveArrayAsNumpy("parr_fdmt_inp.npy", false, leshape127.size(), leshape127.data(), data1);
 
 	fncFdmt_cpuT_v0(parr_fdmt_inp, N_p, LEnChunk / N_p
 		, VAlFmin, VAlFmax, IMaxDT, parr_fdmt_out);
@@ -272,11 +341,8 @@ int createOutputFDMT(float* parr_fdmt_out, fftwf_complex* pffted_rowsignal, fftw
 //---------------------------------------------------------------------------------------------------------
 void fncMaxSignalDetection(float* parr_fdmt_out, float* parrImNormalize, const unsigned int qRows, const unsigned int qCols
 	, float* pmaxElement, int* argmax)
-
 {
-	const unsigned int len = qRows * qCols;
-	
-	
+	const unsigned int len = qRows * qCols;		
 	float* p = parr_fdmt_out;
 	float* pn = parrImNormalize;
 	for (int i = 0; i < len; ++i)
@@ -285,8 +351,7 @@ void fncMaxSignalDetection(float* parr_fdmt_out, float* parrImNormalize, const u
 		++p;
 		++pn;
 	}
-
-	//float* pmaxElement1 = max_element(parr_fdmt_out, parr_fdmt_out + len);
+	
 	(*pmaxElement) = (*max_element(parr_fdmt_out, parr_fdmt_out + len));
 	*argmax = max_element(parr_fdmt_out, parr_fdmt_out + len) - parr_fdmt_out;
 }
@@ -302,9 +367,7 @@ void fncSTFT(fftwf_complex* pcarrOut, fftwf_complex* pRawSignalCur,  const unsig
 	
 	fftw_import_wisdom_from_string(str_wis_short);
 	fftwf_plan plan = fftwf_plan_dft_1d(block_size, pRawSignalCur, pcarrS0, FFTW_FORWARD, FFTW_ESTIMATE);
-	fftwf_execute(plan);
-
-	
+	fftwf_execute(plan);	
 	
 	for (int i = 1; i < qRows; ++i)
 	{
@@ -321,65 +384,49 @@ void fncSTFT(fftwf_complex* pcarrOut, fftwf_complex* pRawSignalCur,  const unsig
 //---------------------------------------------------------------------------------
 void fncCoherentDedispersion(fftwf_complex* pcarrCD_Out, fftwf_complex* pcarrffted_rowsignal
 	, const unsigned int LEnChunk, const long double VAl_practicalD, const float VAlFmin, const float VAlFmax)
-{
-	long double * parrf = (long double*)malloc(LEnChunk * sizeof(long double));
+{	
+	long double step = ((long double)VAlFmax - (long double)VAlFmin) / ((long double)LEnChunk);	
+
+	fftwf_complex*  pcarrTemp = (fftwf_complex*)fftw_malloc(sizeof(fftwf_complex) * LEnChunk);
+	fftwf_complex* pcarr = pcarrTemp;
+	fftwf_complex* pcarr_row = pcarrffted_rowsignal;
+	long double delfi = 0.;
+	for (int i = 0; i < LEnChunk; ++i)
+	{
+		long double val_fi = (long double)VAlFmin + delfi;
+		long double t3 = (VAl_practicalD / val_fi
+			+ VAl_practicalD / ((long double)VAlFmax * (long double)VAlFmax) * ((long double)i) * step) * 2. * M_PI;		
+		float val_x = cosl(t3);
+		float val_y = -sinl(t3);
+		(*pcarr)[0] = (float)(val_x * (*pcarr_row)[0] - val_y * (*pcarr_row)[1]); // Real part
+		(*pcarr)[1] = (float)(val_x * (*pcarr_row)[1] + val_y * (*pcarr_row)[0]); // Imaginary part
+		delfi += step;
+		++pcarr;
+		++pcarr_row;
+	}
 	
 
-	long double step = ((long double)VAlFmax - (long double)VAlFmin) / ((long double)LEnChunk);
-	for (int i = 0; i < LEnChunk; ++i)
-	{
-		parrf[i] = ((long double)i) * step;
-		
-	}
-
-	fftwl_complex* pcarrH = (fftwl_complex*)fftwl_malloc(LEnChunk * sizeof(fftwl_complex));
-	for (int i = 0; i < LEnChunk; ++i)
-	{
-		long double t0 = fmodl((VAl_practicalD / ((long double)VAlFmin + parrf[i]) 
-			+ VAl_practicalD / ((long double)VAlFmax * (long double)VAlFmax) * parrf[i]) * 2. * M_PI
-			, 2. * M_PI); 
-
-		long double t3 = (VAl_practicalD / ((long double)VAlFmin + (long double)parrf[i])
-			+ VAl_practicalD / ((long double)VAlFmax * (long double)VAlFmax) * (long double)parrf[i]) * 2. * M_PI;
-		pcarrH[i][0] = cosl(t3);
-		pcarrH[i][1] = -sinl(t3);
-
-	}	
-
-	
-	fftwf_complex* pcarrTemp = (fftwf_complex*)fftw_malloc(sizeof(fftwf_complex) * LEnChunk);
-	for (int i = 0; i < LEnChunk; ++i)
-	{
-		//pcarrTemp[i] = (complex<float>)pcarrH[i] * pcarrffted_rowsignal[i];
-		pcarrTemp[i][0] = (float)(pcarrH[i][0] * pcarrffted_rowsignal[i][0] - pcarrH[i][1] * pcarrffted_rowsignal[i][1]); // Real part
-		pcarrTemp[i][1] = (float)(pcarrH[i][0] * pcarrffted_rowsignal[i][1] + pcarrH[i][1] * pcarrffted_rowsignal[i][0]); // Imaginary part
-	}
-	fftwl_free(pcarrH);
-	free(parrf);	
-	// Create the FFT plan
 	fftwf_cleanup();
-	
+
 	fftw_import_wisdom_from_string(str_wis_backward);
 
 	fftwf_plan plan = fftwf_plan_dft_1d(LEnChunk, pcarrTemp, pcarrCD_Out, FFTW_BACKWARD, FFTW_ESTIMATE);
-	
+
 	fftwf_execute(plan);
 	fftwf_destroy_plan(plan);
-
-	complex<float> cmp_temp1((float)LEnChunk, 0.);
+	pcarr = pcarrCD_Out;
 	for (int i = 0; i < LEnChunk; ++i)
 	{
-		pcarrCD_Out[i][0] = pcarrCD_Out[i][0] / (float)LEnChunk;
-		pcarrCD_Out[i][1] = pcarrCD_Out[i][1] / (float)LEnChunk;
+		(*pcarr)[0] = (*pcarr)[0] / (float)LEnChunk;
+		(*pcarr)[1] = (*pcarr)[1] / (float)LEnChunk;
+		++pcarr;
 	}
-	
-	
 	fftwf_free(pcarrTemp);
+	pcarr = nullptr;
+	pcarr_row = nullptr;
 
 }
-
 //-----------------------------------------------------------------------------------------------------------------
-
 bool fncSearchForHybridDedispersion(float* poutImage, fftwf_complex* pRawSignalCur
 	, const unsigned int LEnChunk, const unsigned int N_p
 	, const float VAlD_max, const float VAlFmin, const float VAlFmax, float& valSigmaBound_, float& coherent_d)
@@ -397,7 +444,8 @@ bool fncSearchForHybridDedispersion(float* poutImage, fftwf_complex* pRawSignalC
 	fftwf_destroy_plan(plan);	
 	// !1
 
-		// 2. create fdmt ones
+
+	// 2. create fdmt ones
 	float* parr_fdmt_ones = (float*)malloc(LEnChunk * sizeof(float));
 	for (int i = 0; i < LEnChunk; ++i)
 	{
@@ -411,6 +459,8 @@ bool fncSearchForHybridDedispersion(float* poutImage, fftwf_complex* pRawSignalC
 
 	free(parr_fdmt_ones);
 	// !2
+
+	
 
 	// 3.		
 	float valConversionConst = DISPERSION_CONSTANT * (1. / (VAlFmin * VAlFmin) - 1. / (VAlFmax * VAlFmax)) * (VAlFmax - VAlFmin);
@@ -438,7 +488,8 @@ bool fncSearchForHybridDedispersion(float* poutImage, fftwf_complex* pRawSignalC
 
 		createOutputFDMT(parr_fdmt_out, pffted_rowsignal, pcarrCD_Out, pcarrTemp
 			, LEnChunk, N_p, parr_fdmt_inp, IMaxDT
-			, DISPERSION_CONSTANT * valcur_coherent_d, VAlD_max, VAlFmin, VAlFmax);
+			, DISPERSION_CONSTANT * valcur_coherent_d, VAlD_max, VAlFmin, VAlFmax);		
+
 		int len = (LEnChunk / N_p) * N_p;
 
 		float maxSig= -1.;

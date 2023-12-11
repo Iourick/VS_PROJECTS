@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.8.34309.116
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cdmt_mast", "cdmt_mast.vcxproj", "{0D102A36-269E-4EE5-9EEF-7DB288288920}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|x64 = Debug|x64
+		Release|x64 = Release|x64
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0D102A36-269E-4EE5-9EEF-7DB288288920}.Debug|x64.ActiveCfg = Debug|x64
+		{0D102A36-269E-4EE5-9EEF-7DB288288920}.Debug|x64.Build.0 = Debug|x64
+		{0D102A36-269E-4EE5-9EEF-7DB288288920}.Release|x64.ActiveCfg = Release|x64
+		{0D102A36-269E-4EE5-9EEF-7DB288288920}.Release|x64.Build.0 = Release|x64
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {377E1C48-B61E-4E08-A931-D0034BAB175B}
+	EndGlobalSection
+EndGlobal
