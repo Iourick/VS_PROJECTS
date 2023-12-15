@@ -1,4 +1,5 @@
 #pragma once
+#include <cstdint>
 
 // FLOP's quantity for typical tests in giga flops
 const float GFLPS_512 = 0.00320386;

@@ -448,6 +448,7 @@ void create_auxillary_1d_arrays(const int IFjumps, const int IMaxDT, const float
 		- 1. / (valf_start * valf_start)) / temp0;
 
 	d_iarr_deltaTLocal[i] = (int)(ceil((((float)(IMaxDT)) - 1.) * temp0 / VAlTemp1));
+	
 }
 //--------------------------------------------------------------------------------------
 __global__

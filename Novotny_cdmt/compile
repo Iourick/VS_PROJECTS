@@ -1,0 +1,4 @@
+nvcc -o run cdmt.cu /usr/local/cuda-12.2/targets/x86_64-linux/lib/libcufft.so /home/yuryk/hdf/HDF5-1.14.3-Linux/HDF_Group/HDF5/1.14.3/lib/libhdf5.so -I/home/yuryk/hdf/HDF5-1.14.3-Linux/HDF_Group/HDF5/1.14.3/include  
+export LD_LIBRARY_PATH="/home/yuryk/hdf/HDF5-1.14.3-Linux/HDF_Group/HDF5/1.14.3/lib/"
+# -lcurand
+CFLAGS = -I /home/yuryk/VS_PROJECTS_C++/cuda-samples/Common/ -I /usr/include/hdf5/serial/ -std=c++17

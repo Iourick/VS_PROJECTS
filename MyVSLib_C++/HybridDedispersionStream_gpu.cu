@@ -8,10 +8,10 @@
 #include <array>
 #include <vector>
 #include "npy.hpp"
-//#include "MatrixTranspose.cuh"
+
 #include <device_launch_parameters.h>
 #include <cmath>
-//#include  "yr_cart.h"
+
 #include <chrono>
 #include <math_functions.h>
 
