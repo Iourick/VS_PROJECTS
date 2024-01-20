@@ -1,0 +1,25 @@
+#!/bin/bash
+
+# Set CUDA path if needed
+# CUDA_PATH=/usr/local/cuda
+
+# Source the CUDA environment (if required)
+# source $CUDA_PATH/..../cuda_env_setup_script.sh
+
+# CUDA File Compilation
+nvcc -o cuda_objects.o -c kernel.cu fdmtU_cu.cu HybridDedispersionStream_gpu.cu
+
+# Regular C++ File Compilation
+g++ -c fileInput.cpp read_and_write_log.cpp StreamParams.cpp npy.hpp
+
+# Linking CUDA and C++ object files
+nvcc -o your_executable cuda_objects.o cpp_objects.o -lcufft
+
+# Check compilation success
+if [ $? -eq 0 ]; then
+    echo "Compilation successful"
+    # Run the executable
+    ./your_executable
+else
+    echo "Compilation failed"
+fi

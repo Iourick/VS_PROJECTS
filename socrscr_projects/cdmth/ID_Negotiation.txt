@@ -1,0 +1,33 @@
+During program's running, after reading the header, he prints following header information:
+nbin: 32768
+nfft: 100 
+nsub: 20 
+mbin: 4096 
+nchan: 8 
+nsamp: 1638400 
+nvalid: 16384
+
+I would like to establish a correspondence between these identifiers and ours.
+
+OURS:
+mlenarr
+m_n_p
+mvalD_max
+mvalf_min
+mvalf_max
+mvalSigmaBound
+
+
+raw_signal - raw antenna voltage time series
+ConversionConst
+mlenChunk -length of chunk in time domain
+m_lenarr - total length of seriesof samples in time domain (length of input signal)
+m_n_p - length of the pulse in time bins, i.e (t_p/\tau), or N_p in the paper.
+
+m_f_min, m_f_max - minimal and maximal frequency band of the signal.
+            - signal is assumed to be base-band sampled
+ 
+m_SigmaBound - The minimal statistical significane to trigger a saving of a result.
+
+m_D_max - maximal dispersion to scan, in units of pc cm^-3
+m_IMaxDT  - the maximal delay(in time bins) of the maximal dispersion.
