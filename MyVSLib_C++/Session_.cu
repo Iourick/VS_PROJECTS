@@ -196,8 +196,8 @@ int CSession::launch()
             return -1;
         } 
         fclose(m_rbFile);
-        m_rbFile = fopen("rawImit_2pow20.bin", "rb");
-        nbits = 32;
+        m_rbFile = fopen("D://weizmann//RAW_DATA//rawImit_2pow20_.bin", "rb");
+        nbits = sizeof(inp_type_)*8;
         int nchan = -1;
         float fmin = -1, fmax = -1.;
         fread(&nchan, sizeof(int), 1, m_rbFile);

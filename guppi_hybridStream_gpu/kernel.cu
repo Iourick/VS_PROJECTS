@@ -52,52 +52,9 @@ const double VAlD_max = 1.5;
 const float SIgma_Bound = 10.;
 // maximal length of summation window
 #define MAX_LENGTH_SUMMATION_WND 10
-#include <Windows.h>
+
 int main()
 {
-//#include <iostream>
-//
-//#ifdef _WIN32 // Windows
-//
-//#include <Windows.h>
-//
-//    void emitSound(int frequency, int duration) {
-//        Beep(frequency, duration);
-//    }
-//
-//#else // Linux
-//
-//#include <cmath>
-//#include <alsa/asoundlib.h>
-//
-//    void emitSound(int frequency, int duration) {
-//        int rate = 44100; // Sampling rate
-//        snd_pcm_t* handle;
-//        snd_pcm_open(&handle, "default", SND_PCM_STREAM_PLAYBACK, 0);
-//        snd_pcm_set_params(handle, SND_PCM_FORMAT_S16_LE, SND_PCM_ACCESS_RW_INTERLEAVED, 1, rate, 1, 500000);
-//
-//        short buf[rate * duration];
-//
-//        for (int i = 0; i < rate * duration; i++) {
-//            int sample = 32760 * sin(2 * M_PI * frequency * i / rate);
-//            buf[i] = sample;
-//        }
-//
-//        snd_pcm_writei(handle, buf, rate * duration);
-//        snd_pcm_close(handle);
-//    }
-//
-//#endif
-//
-//    int main() {
-//        int frequency = 1500; // Frequency in hertz
-//        int duration = 500;   // Duration in milliseconds
-//
-//        emitSound(frequency, duration);
-//
-//        return 0;
-//    }
-
     CSession* pSession = new CSession(PAthGuppiFile, PAthOutFile, LENGTH_OF_PULSE, VAlD_max, SIgma_Bound, MAX_LENGTH_SUMMATION_WND);
     unsigned long long ilength = 0;
     int iBlocks = pSession->calcQuantRemainBlocks(&ilength);

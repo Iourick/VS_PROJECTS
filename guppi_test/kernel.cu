@@ -21,7 +21,6 @@
 #include "StreamParams.h"
 
 #include "read_and_write_log.h"
-#include "Constants.h"
 
 #include <fstream>
 #include "stdio.h"
@@ -53,7 +52,11 @@ const double VAlD_max = 1.5;
 const float SIgma_Bound = 5.;
 // maximal length of summation window
 #define MAX_LENGTH_SUMMATION_WND 10
-#include <Windows.h>
+//#include <Windows.h>
+
+//---------------------------------------------
+
+
 int main()
 {
 //#include <iostream> 20.02.2024
