@@ -52,16 +52,7 @@
         snd_pcm_close(handle);
     }
 
-#endif
-
-    //int main() {
-    //    int frequency = 1500; // Frequency in hertz
-    //    int duration = 500;   // Duration in milliseconds
-
-    //    emitSound(frequency, duration);
-
-    //    return 0;
-    //}
+#endif   
 
 
 // timing variables:
@@ -95,8 +86,7 @@ CBlock::CBlock()
 	m_nblocksize = 0;
 	m_nchan = 0;	
 	m_lenChunk = 0;
-	m_len_sft = 0;
-	//m_pvctSuccessHeaders = NULL;
+	m_len_sft = 0;	
 	m_pvctSuccessHeaders = new std::vector<COutChunkHeader>();
 	m_block_id = -1;
 	m_nbits = 0;
