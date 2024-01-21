@@ -346,7 +346,7 @@ int CBlock::process(FILE * rb_file,int* pquantSuccessChunks)
 		{			
 				COutChunkHeader head(N_p
 					, m_lenChunk / N_p
-					, (*pstructOut).irow
+					, (*pstructOut).icol
 					, (*pstructOut).icol
 					, (*pstructOut).iwidth
 					, (*pstructOut).snr					
@@ -634,7 +634,7 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 			int frequency = 1500; // Frequency in hertz
 			int duration = 500;   // Duration in milliseconds
 			emitSound(frequency, duration);
-			emitSound(frequency+500, duration/2);
+			emitSound(frequency+500, duration);
 			d_pAuxArray = NULL;
 			d_pAuxNumArray = NULL;
 			d_pWidthArray = NULL;

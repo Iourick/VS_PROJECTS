@@ -26,5 +26,7 @@ public:
 	int m_numChunk;
 	int m_wnd_width;
 
+	void createOutStr(char* pstr);
+
 };
 

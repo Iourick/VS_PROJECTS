@@ -27,7 +27,7 @@ CSession::CSession()
     m_rbFile = NULL;
     memset(m_strGuppiPath, 0, MAX_PATH_LENGTH * sizeof(char));
     memset(m_strOutPutPath, 0, MAX_PATH_LENGTH * sizeof(char));
-     
+    m_numSubStream = 0;   
     m_header = CGuppHeader();
     m_t_p = 1.0E-6;
     m_d_max = 0.;
@@ -45,7 +45,7 @@ CSession::CSession(const  CSession& R)
     m_rbFile = R.m_rbFile;
     memcpy(m_strGuppiPath, R.m_strGuppiPath, MAX_PATH_LENGTH * sizeof(char));
     memcpy(m_strOutPutPath, R.m_strOutPutPath, MAX_PATH_LENGTH * sizeof(char));
-    
+    m_numSubStream = R.m_numSubStream;
     m_header = R.m_header;  
     m_t_p = R.m_t_p;
     m_d_max = R.m_d_max;
@@ -68,7 +68,7 @@ CSession& CSession::operator=(const CSession& R)
     m_rbFile = R.m_rbFile;
     memcpy(m_strGuppiPath, R.m_strGuppiPath, MAX_PATH_LENGTH * sizeof(char));
     memcpy(m_strOutPutPath, R.m_strOutPutPath, MAX_PATH_LENGTH * sizeof(char));
-    
+    m_numSubStream = R.m_numSubStream;
     m_header = R.m_header;    
     m_t_p = R.m_t_p;
     m_d_max = R.m_d_max;
@@ -85,7 +85,7 @@ CSession::CSession(const char* strGuppiPath, const char* strOutPutPath, const fl
     strcpy(m_strGuppiPath, strGuppiPath);
     m_rbFile = fopen(strGuppiPath, "rb");    
     m_wb_file = fopen(strOutPutPath, "wb");
-     
+    m_numSubStream = 0;    
     m_t_p = t_p;
     m_d_max = d_max;
     m_sigma_bound = sigma_bound;
@@ -173,7 +173,7 @@ int CSession::launch()
     // 3. Performing a loop using the variable nS, nS = 0,..,IBlock. 
     //IBlock - number of bulks
     
-    for (int nS = 0; nS <2/*IBlock*/; ++nS)
+    for (int nS = 0; nS < IBlock; ++nS)
     {       
         // 3.1. reading info from current bulk header
         // After return 
@@ -191,7 +191,8 @@ int CSession::launch()
             , &TELESCOP
         )
             )
-        {            
+        {
+            writeReport(nS);
             return -1;
         }        
       
@@ -244,7 +245,6 @@ int CSession::launch()
         if (quantSuccessChunks > 0)
         {
             std::cout << "Block number = " << nS << "; Successful Chunks Number = " << quantSuccessChunks << std::endl;
-            writeReport(pBlock->m_pvctSuccessHeaders);
         }
         delete pBlock;
         
@@ -287,20 +287,7 @@ long long CSession::calcLenChunk(const int n_p)
 }
 
 //-----------------------------------------------------------------
-void CSession::writeReport(std::vector<COutChunkHeader>*  pvctSuccessHeaders)
+void CSession::writeReport(int nS)
 {
-    char arrch[2000] = { 0 };
-    char charrTemp[200] = { 0 };
-    for (int i = 0; i < pvctSuccessHeaders->size(); ++i)
-    {
-        memset(charrTemp, 0, 200 * sizeof(char));
-        (*pvctSuccessHeaders)[i].createOutStr(charrTemp);
-        strcat(arrch, charrTemp);
-        memset(charrTemp, 0, 200 * sizeof(char));
-        sprintf(charrTemp, ", Length of pulse= %.10e", m_t_p);
-        strcat(arrch, charrTemp);
-        strcat(arrch, "\n");
-            //createOutStr(char* pstr)
-    }
-    size_t elements_written = fwrite(arrch, sizeof(char), strlen(arrch), m_wb_file);
+
 }

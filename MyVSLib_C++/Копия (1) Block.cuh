@@ -72,7 +72,8 @@ public:
 	size_t  downloadChunk(FILE* rb_file, char* d_parrInput, const long long QUantDownloadingBytes);
 
 	bool fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
-		, void* pAuxBuff_fdmt		
+		, void* pAuxBuff_fdmt
+		//, cufftComplex* pffted_rowsignal
 		, cufftComplex* pcarrTemp
 		, cufftComplex* pcarrCD_Out
 		, cufftComplex* pcarrBuff

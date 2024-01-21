@@ -4,13 +4,11 @@
 #include <cufft.h>
 #include <math.h>
 #include "Constants.h"
-#include <vector>
 
 #define MAX_PATH_LENGTH 1000
 
 extern const unsigned long long TOtal_GPU_Bytes;
 class CGuppHeader;
-class COutChunkHeader;
 
 class CSession
 {
@@ -26,7 +24,7 @@ public:
 	FILE* m_wb_file;
 	char m_strGuppiPath[MAX_PATH_LENGTH];
 	char m_strOutPutPath[MAX_PATH_LENGTH];
-	
+	int m_numSubStream;	
 	CGuppHeader m_header;
 	float m_t_p;
 	double m_d_max;
@@ -37,7 +35,7 @@ public:
 
 	int launch();
 
-	void writeReport(std::vector<COutChunkHeader>* pvctSuccessHeaders);
+	void writeReport(int nS);
 
 	inline int calc_len_sft(const float chanBW)
 	{

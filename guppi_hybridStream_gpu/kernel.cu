@@ -43,14 +43,14 @@ cudaError_t cuda_status = cudaMemGetInfo(&free_bytes, &total_bytes);
 extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 
 
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
-const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_float.bin";
-const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutFile.bn";
+const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_float.bin";
+const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutFile.txt";
 
 
 const double VAlD_max = 1.5;
-#define LENGTH_OF_PULSE 25.0E-8//25.0E-7//25.0E-8
-const float SIgma_Bound = 10.;
+#define LENGTH_OF_PULSE 25.0E-7//25.0E-8
+const float SIgma_Bound = 5.;
 // maximal length of summation window
 #define MAX_LENGTH_SUMMATION_WND 10
 
