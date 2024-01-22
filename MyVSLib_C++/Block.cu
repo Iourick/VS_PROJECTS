@@ -71,13 +71,13 @@ long int iTotal_time = 0;
 
 #define TILE_DIM 32
 
-CBlock::~CBlock()
-{
-	if (m_pvctSuccessHeaders)
-	{
-		delete m_pvctSuccessHeaders;
-	}
-}
+//CBlock::~CBlock()
+//{
+//	if (m_pvctSuccessHeaders)
+//	{
+//		delete m_pvctSuccessHeaders;
+//	}
+//}
 CBlock::CBlock()
 {
 	m_Fmin = 0;
@@ -87,7 +87,6 @@ CBlock::CBlock()
 	m_nchan = 0;	
 	m_lenChunk = 0;
 	m_len_sft = 0;	
-	m_pvctSuccessHeaders = new std::vector<COutChunkHeader>();
 	m_block_id = -1;
 	m_nbits = 0;
 	m_enchannelOrder = STRAIGHT;
@@ -105,11 +104,7 @@ CBlock::CBlock(const  CBlock& R)
 	m_nblocksize = R.m_nblocksize;
 	m_nchan = R.m_nchan;	
 	m_lenChunk = R.m_lenChunk;
-	m_len_sft = R.m_len_sft;
-	if (m_pvctSuccessHeaders)
-	{
-		m_pvctSuccessHeaders = R.m_pvctSuccessHeaders;
-	}
+	m_len_sft = R.m_len_sft;	
 	m_block_id = R.m_block_id;
 	m_nbits = R.m_nbits;
 	m_enchannelOrder = R.m_enchannelOrder;
@@ -132,11 +127,7 @@ CBlock& CBlock::operator=(const CBlock& R)
 	m_nblocksize = R.m_nblocksize;
 	m_nchan = R.m_nchan;	
 	m_lenChunk = R.m_lenChunk;
-	m_len_sft = R.m_len_sft;
-	if (m_pvctSuccessHeaders)
-	{
-		m_pvctSuccessHeaders = R.m_pvctSuccessHeaders;
-	}
+	m_len_sft = R.m_len_sft;	
 	m_block_id = R.m_block_id;
 	m_nbits = R.m_nbits;
 	m_enchannelOrder = R.m_enchannelOrder;
@@ -174,9 +165,7 @@ CBlock::CBlock(
 
 	m_lenChunk = lenChunk;
 
-	m_len_sft = len_sft;
-	
-	m_pvctSuccessHeaders = new std::vector<COutChunkHeader>();
+	m_len_sft = len_sft;	
 
 	m_block_id = bulk_id;
 
@@ -198,9 +187,9 @@ CBlock::CBlock(
 	m_length_sum_wnd = length_sum_wnd;
 }
 //-----------------------------------------
-int CBlock::process(FILE * rb_file,int* pquantSuccessChunks)
+int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHeaders)
 {
-	cout << "Block ID = " << m_block_id  << endl;	
+	//cout << "Block ID = " << m_block_id  << endl;	
 	
 	// total number of downloding bytes to each chunk:
 	const long long QUantTotalChunkBytes = m_lenChunk / 8 * m_nchan * m_npol * m_nbits;
@@ -306,7 +295,7 @@ int CBlock::process(FILE * rb_file,int* pquantSuccessChunks)
 	int argmaxRow = -1;
 	int argmaxCol = -1;
 	float coherentDedisp = -1.;
-	*pquantSuccessChunks = 0;
+	
 	structOutDetection* pstructOut = NULL;
 	checkCudaErrors(cudaMallocManaged((void**)&pstructOut, sizeof(structOutDetection)));
 	for (int i = 0; i < NumChunks; ++i)
@@ -353,8 +342,7 @@ int CBlock::process(FILE * rb_file,int* pquantSuccessChunks)
 					, coherentDedisp
 					, m_block_id
 					, i );
-				m_pvctSuccessHeaders->push_back(head);
-				++(*pquantSuccessChunks);
+				pvctSuccessHeaders->push_back(head);				
 			
 			
 		}
@@ -557,7 +545,7 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	int n_coherent = int(ceil(valN_d / (N_p * N_p)));
 	cout << " n_coherent = " << n_coherent << endl;
 	// !3
-
+	cf
 	
 	structOutDetection* pstructOutCur = NULL;
 	checkCudaErrors(cudaMallocManaged((void**)&pstructOutCur, sizeof(structOutDetection)));
@@ -627,9 +615,9 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 			
 			*pcoherentDedisp = valcur_coherent_d;			
 
-			std::cout << "SNR = " << (*pstructOut).snr << endl;
+			/*std::cout << "SNR = " << (*pstructOut).snr << endl;
 			std::cout << "ROW ARGMAX = " << (*pstructOut).irow << endl;
-			std::cout << "COLUMN ARGMAX = " << (*pstructOut).icol << endl;
+			std::cout << "COLUMN ARGMAX = " << (*pstructOut).icol << endl;*/
 
 			int frequency = 1500; // Frequency in hertz
 			int duration = 500;   // Duration in milliseconds
@@ -637,8 +625,7 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 			emitSound(frequency+500, duration/2);
 			d_pAuxArray = NULL;
 			d_pAuxNumArray = NULL;
-			d_pWidthArray = NULL;
-			
+			d_pWidthArray = NULL;		
 
 			breturn = true;
 		}

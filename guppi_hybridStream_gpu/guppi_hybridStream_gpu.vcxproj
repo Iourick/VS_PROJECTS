@@ -119,22 +119,20 @@
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
     <ClInclude Include="..\MyVSLib_C++\fdmtU_cu.cuh" />
     <ClInclude Include="..\MyVSLib_C++\GuppHeader.h" />
+    <ClInclude Include="..\MyVSLib_C++\OutChunkHeader.h" />
     <ClInclude Include="..\MyVSLib_C++\Session.cuh" />
     <ClInclude Include="..\MyVSLib_C++\npy.hpp" />
     <ClInclude Include="..\MyVSLib_C++\yr_cart.h" />
-    <ClInclude Include="OutChunkHeader.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\freeglut.h" />
     <ClInclude Include="Dependencies\freeglut\include\GL\glut.h" />
     <ClInclude Include="Dependencies\freeglut\include\IL\devil_internal_exports.h" />
     <ClInclude Include="kernel.cuh" />
-    <ClInclude Include="OutChunk.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\MyVSLib_C++\DrawImg.cpp" />
     <ClCompile Include="..\MyVSLib_C++\GuppHeader.cpp" />
-    <ClCompile Include="..\MyVSLib_C++\OutChunk.cpp" />
+    <ClCompile Include="..\MyVSLib_C++\OutChunkHeader.cpp" />
     <ClCompile Include="..\MyVSLib_C++\yr_cart.cpp" />
-    <ClCompile Include="OutChunkHeader.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

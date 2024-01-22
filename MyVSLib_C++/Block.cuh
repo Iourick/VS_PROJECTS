@@ -13,7 +13,7 @@ struct structOutDetection;
 class CBlock
 {
 public:
-	~CBlock();
+	//~CBlock();
 	CBlock();
 	CBlock(const  CBlock& R);
 	CBlock& operator=(const CBlock& R);
@@ -51,7 +51,7 @@ public:
 
 	unsigned int m_len_sft;
 
-	std::vector<COutChunkHeader>* m_pvctSuccessHeaders;
+	//std::vector<COutChunkHeader>* m_pvctSuccessHeaders;
 
 	int m_block_id;
 
@@ -67,7 +67,7 @@ public:
 	
 
 	//-------------------------------------------------------------------------
-	int process(FILE* rb_file, int* quantSuccessChunks);	
+	int process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHeaders);
 
 	size_t  downloadChunk(FILE* rb_file, char* d_parrInput, const long long QUantDownloadingBytes);
 

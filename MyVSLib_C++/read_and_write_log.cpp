@@ -162,7 +162,6 @@ int fncReadLog_(const char* filename, char* passDatafile, int* lengthOfChunk, in
     }
 
     file.close();
-
     
     return 0; // Return 0 to indicate success
 }

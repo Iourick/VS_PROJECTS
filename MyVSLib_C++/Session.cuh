@@ -32,12 +32,13 @@ public:
 	double m_d_max;
 	float m_sigma_bound;
 	int m_length_sum_wnd;
+	std::vector<COutChunkHeader>* m_pvctSuccessHeaders;
 	//----------------------------------------------------------
 	int calcQuantRemainBlocks(unsigned long long* pilength);
 
 	int launch();
 
-	void writeReport(std::vector<COutChunkHeader>* pvctSuccessHeaders);
+	void writeReport();
 
 	inline int calc_len_sft(const float chanBW)
 	{
@@ -46,5 +47,12 @@ public:
 
 	long long CSession::calcLenChunk(const int n_p);
 
+	static bool read_outputlogfile_line(char* pstrPassLog
+		, const int NUmLine
+		, int* pnumBlock
+		, int* pnumChunk
+		, long long* plenChunk);
+
 };
+
 
