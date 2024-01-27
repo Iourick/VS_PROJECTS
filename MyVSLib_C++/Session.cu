@@ -7,6 +7,7 @@
 #include <cufft.h>
 #include "fdmtU_cu.cuh"
 #include <stdlib.h>
+#include "Fragment.cuh"
  
 
 CSession::~CSession()
@@ -186,7 +187,7 @@ int CSession::launch()
     // 3. Performing a loop using the variable nS, nS = 0,..,IBlock. 
     //IBlock - number of bulks
     
-    for (int nS = 0; nS <  IBlock; ++nS)
+    for (int nS = 0; nS < IBlock; ++nS)
     {       
         // 3.1. reading info from current bulk header
         // After return 
@@ -279,7 +280,7 @@ int CSession::launch()
     //    }
     //    //--------------------------------------
     //    writeReport();
-    //}
+    //} 
     return 0;
 }
 //-------------------------------------------
@@ -299,7 +300,7 @@ long long CSession::calcLenChunk(const int n_p)
         + sizeof(fdmt_type_) + 2 * (IDeltaT + 1) * sizeof(fdmt_type_)
         + 3 * m_header.m_nchan * m_header.m_npol * sizeof(cufftComplex) / 2 + 2 * +sizeof(fdmt_type_);
     float tmax = valNominator / valDenominator;
-    float treal = (float)(m_header.m_nblocksize / m_header.m_nchan / m_header.m_npol / m_header.m_nbits * 8);
+    float treal = (float)(m_header.m_nblocksize * 8 / m_header.m_nchan / m_header.m_npol / m_header.m_nbits );
     float t = (tmax < treal) ? tmax : treal;
 
     return  pow(2, floor(log2(t)));
@@ -325,19 +326,21 @@ void CSession::writeReport()
 }
 //-------------------------------------------------
 bool CSession::read_outputlogfile_line(char *pstrPassLog
-    ,const int NUmLine
+    , const int NUmLine
     , int* pnumBlock
-    , int* pnumChunk
-    , long long* plenChunk    
+    , int* pnumChunk    
+    , int* pn_fdmtRows 
+    , int* n_fdmtCols
+    , int* psucRow
+    , int* psucCol
+    , int* pwidth
+    , float *pcohDisp
+    , float* snr
                             )
 {
     //1. download enough data
-    char line[300] = { 0 };
-    //fgets(strHeader, sizeof(strHeader), r_file);
-    char* line_buf = NULL;
-    size_t line_buf_size = 0;
-    int line_count = 0;
-    size_t line_size;
+    char line[300] = { 0 };     
+    
     FILE* fp = fopen(pstrPassLog, "r");
     if (!fp)
     {
@@ -350,150 +353,186 @@ bool CSession::read_outputlogfile_line(char *pstrPassLog
     {
         fgets(line, 300, fp);
     }
-    
-    
-   
-
-    ///* Loop through until we are done with the file. */
-    //while (line_size >= 0)
-    //{
-    //    /* Increment our line count */
-    //    line_count++;
-
-    //    /* Show the line details */
-    //    printf("line[%06d]: chars=%06zd, buf size=%06zu, contents: %s", line_count,
-    //        line_size, line_buf_size, line_buf);
-
-    //    /* Get the next line */
-    //    line_size = getline(&line_buf, &line_buf_size, fp);
-    //}
-
-    //fread(line, sizeof(char), MAX_HEADER_LENGTH, r_file);
-    //// !
-
+    fclose(fp);
     //2. check up mode. if mode != RAW return false  
     char* p = strstr(line, "Block=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }    
+    *pnumBlock = atoi(p + 8);
+
+    p = strstr(line, "Chunk=");
     if (NULL == p)
     {
         return false;
     }
     
-    *pnumBlock = atoi(p + 8);
-
-    p = strstr(line, "Chunk=");
     *pnumChunk = atoi(p + 8);
-   
 
+    p = strstr(line, "Rows=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *pn_fdmtRows = atoi(p + 7);
 
-    int ii = 0;
-    //*pnumBlock = (i_io == 0) ? false : true;
-    ////4 !  
+    p = strstr(line, "Cols=");
+    if (NULL == p)
+    {
+        return false;
+    }
+    *n_fdmtCols = atoi(p + 7);
 
-    //// 5. alignment cursors to beginning of raw data
-    //ioffset += 3;
-    //if ((*bdirectIO))
-    //{
-    //    int num = (ioffset + 511) / 512;
-    //    ioffset = num * 512;
-    //}
-    //fseek(r_file, ioffset - MAX_HEADER_LENGTH, SEEK_CUR);
+    p = strstr(line, "SucRow=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *psucRow = atoi(p + 9);
 
-    //// 5!
+    p = strstr(line, "SucCol=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *psucCol = atoi(p + 9);
 
-    //// 6.downloading NBITS
-    //pio = strstr(strHeader, "NBITS");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*nbits = atoi(pio + 9);
-    ////6 ! 
+    p = strstr(line, "SNR=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *snr = atof(p + 6); 
 
-    //// 7.downloading CHAN_BW
-    //pio = strstr(strHeader, "CHAN_BW");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*chanBW = atof(pio + 9);
-    ////7 ! 
+    p = strstr(line, "CohDisp=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *pcohDisp = atof(p + 10);
 
-    //// 8.downloading OBSFREQ
-    //pio = strstr(strHeader, "OBSFREQ");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*centfreq = atof(pio + 9);
-    ////8 !
-
-    //// 9.downloading OBSNCHAN
-    //pio = strstr(strHeader, "OBSNCHAN");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*nchan = atoi(pio + 9);
-    ////9 !
-
-    //// 10.downloading OBSNCHAN
-    //pio = strstr(strHeader, "OBSBW");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*obsBW = atof(pio + 9);
-    ////10 !
-
-    //// 11.downloading BLOCSIZE
-    //pio = strstr(strHeader, "BLOCSIZE");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*nblocksize = atoi(pio + 9);
-    ////11 !    
-
-    //// 12.downloading OBSNCHAN
-    //pio = strstr(strHeader, "TELESCOP");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //pio += 9;
-    //char* pt = strstr(pio, "GBT");
-    //char* pt1 = NULL;
-    //*TELESCOP = GBT;
-    //if (NULL == pt)
-    //{
-    //    pt = strstr(pio, "PARKES");
-    //    if (NULL == pt)
-    //    {
-    //        return false;
-    //    }
-    //    if ((pt - pio) > 20)
-    //    {
-    //        return false;
-    //    }
-    //    *TELESCOP = PARKES;
-    //}
-    //else
-    //{
-    //    if ((pt - pio) > 20)
-    //    {
-    //        return false;
-    //    }
-    //}
-
-    ////12 !
-
-    //// 13.downloading NPOL
-    //pio = strstr(strHeader, "NPOL");
-    //if (NULL == pio)
-    //{
-    //    return false;
-    //}
-    //*npol = atoi(pio + 9);
-    ////13 !
+    p = strstr(line, "windWidth=");
+    if (NULL == p)
+    {
+        delete p;
+        return false;
+    }
+    *pwidth = atoi(p + 12);    
     return true;
 }
+//---------------------------------------------------------
+bool CSession::analyzeChunk(const COutChunkHeader outChunkHeader,CFragment* pFRg)
+{
+    if (!navigateToBlock(outChunkHeader.m_numBlock +1))
+    {
+        return false;
+    }
+
+    // calculate N_p
+    const int len_sft = calc_len_sft(fabs(m_header.m_chanBW));
+
+    
+
+    // calculate lenChunk along time axe
+    const unsigned int LEnChunk = calcLenChunk(len_sft);
+    //
+    const bool bCHannel_order = (m_header.m_chanBW > 0.) ? true : false;
+    CBlock* pBlock = new CBlock(
+        m_header.m_centfreq - fabs(m_header.m_chanBW) * m_header.m_nchan / 2.
+        , m_header.m_centfreq + fabs(m_header.m_chanBW) * m_header.m_nchan / 2.
+        , m_header.m_npol
+        , m_header.m_nblocksize
+        , m_header.m_nchan
+        , LEnChunk
+        , len_sft
+        , outChunkHeader.m_numBlock
+        , m_header.m_nbits
+        , bCHannel_order
+        , m_d_max
+        , m_sigma_bound
+        , m_length_sum_wnd
+
+    );
+
+    if (!pBlock->detailedChunkProcessing(m_rbFile, outChunkHeader, pFRg))
+    {
+        delete pBlock;
+        return false;
+    }
+    delete pBlock;
+    return true;
+}
+//-----------------------------------------------------------------
+//------------------------------------
+bool CSession::navigateToBlock(const int IBlockNum)
+{
+    const long long position = ftell(m_rbFile);
+    int nbits = 0;
+    float chanBW = 0;
+    int npol = 0;
+    bool bdirectIO = 0;
+    float centfreq = 0;
+    int nchan = 0;
+    float obsBW = 0;
+    long long nblocksize = 0;
+    EN_telescope TELESCOP = GBT;
+    
+    for (int i = 0; i < IBlockNum; ++i)
+    {
+        long long pos0 = ftell(m_rbFile);
+        if (!CGuppHeader::readHeader(
+            m_rbFile
+            , &nbits
+            , &chanBW
+            , &npol
+            , &bdirectIO
+            , &centfreq
+            , &nchan
+            , &obsBW
+            , &nblocksize
+            , &TELESCOP
+        ))
+        {
+            fseek(m_rbFile, position, SEEK_SET);
+            return false;
+        }
+        if (i == (IBlockNum - 1))
+        {    
+            m_header = CGuppHeader(
+                nbits
+                , chanBW
+                , npol
+                , bdirectIO
+                , centfreq
+                , nchan
+                , obsBW
+                , nblocksize
+                , TELESCOP
+            );
+            // 2!               
+            return true;
+        }
+        
+        
+        unsigned long long ioffset = (unsigned long)nblocksize;
+        
+        if (bdirectIO)
+        {
+            unsigned long num = (ioffset + 511) / 512;
+            ioffset = num * 512;
+        }
+
+        fseek(m_rbFile, ioffset, SEEK_CUR);
+
+    }
+    
+    return true;
+}
+

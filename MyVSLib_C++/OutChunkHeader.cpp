@@ -85,8 +85,8 @@ COutChunkHeader::COutChunkHeader(
 void COutChunkHeader::createOutStr(char* pstr)
 {
 	
-	sprintf(pstr, "Block=  %d,Chunk=  %d,Rows=  %d,Cols=  %d, SucRow=  %d,SucCol=  %d, SNR = %.4f, CohDisp = %.4f, windWidth=  %d", m_numBlock
-		, m_numChunk, m_nrows, m_ncols, m_nSucessRow, m_nSucessCol, m_SNR, m_coherentDedisp, m_wnd_width);
+	sprintf(pstr, "Block=  %d,Chunk=  %d,Rows=  %d,Cols=  %d, SucRow=  %d,SucCol=  %d, SNR=  %.4f, CohDisp=  %.4f, windWidth=  %d", m_numBlock +1
+		, m_numChunk +1, m_nrows, m_ncols, m_nSucessRow , m_nSucessCol, m_SNR, m_coherentDedisp, m_wnd_width);
 }
 
 

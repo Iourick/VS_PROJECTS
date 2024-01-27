@@ -11,6 +11,7 @@
 extern const unsigned long long TOtal_GPU_Bytes;
 class CGuppHeader;
 class COutChunkHeader;
+class CFragment;
 
 class CSession
 {
@@ -51,7 +52,18 @@ public:
 		, const int NUmLine
 		, int* pnumBlock
 		, int* pnumChunk
-		, long long* plenChunk);
+		, int* pn_fdmtRows
+		, int* n_fdmtCols
+		, int* psucRow
+		, int* psucCol
+		, int* pwidth
+		, float* pcohDisp
+		, float* snr
+	);
+
+	bool analyzeChunk(const COutChunkHeader outChunkHeader, CFragment* pFRg);
+
+	bool navigateToBlock(const int IBlockNum);
 
 };
 

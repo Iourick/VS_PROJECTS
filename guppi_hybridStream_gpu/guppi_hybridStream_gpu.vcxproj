@@ -105,6 +105,7 @@
     <CudaCompile Include="..\MyVSLib_C++\Cleaning.cu" />
     <CudaCompile Include="..\MyVSLib_C++\Detection.cu" />
     <CudaCompile Include="..\MyVSLib_C++\fdmtU_cu.cu" />
+    <CudaCompile Include="..\MyVSLib_C++\Fragment.cu" />
     <CudaCompile Include="..\MyVSLib_C++\Session.cu" />
     <CudaCompile Include="kernel.cu" />
   </ItemGroup>
@@ -118,6 +119,7 @@
     <ClInclude Include="..\MyVSLib_C++\Detection.cuh" />
     <ClInclude Include="..\MyVSLib_C++\DrawImg.h" />
     <ClInclude Include="..\MyVSLib_C++\fdmtU_cu.cuh" />
+    <ClInclude Include="..\MyVSLib_C++\Fragment.cuh" />
     <ClInclude Include="..\MyVSLib_C++\GuppHeader.h" />
     <ClInclude Include="..\MyVSLib_C++\OutChunkHeader.h" />
     <ClInclude Include="..\MyVSLib_C++\Session.cuh" />

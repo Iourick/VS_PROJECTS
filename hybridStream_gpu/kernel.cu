@@ -29,7 +29,7 @@ using namespace std;
 class StreamParams;
 
 
-const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data.bin";
+const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data_fft.bin";
 //const char chStrDefaultInputPass[] = "..//HYBRID_TESTS//data3.bin";
 int numAttemptions = 0;
 

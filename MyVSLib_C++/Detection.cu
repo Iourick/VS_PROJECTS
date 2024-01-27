@@ -21,11 +21,9 @@
 //    complete_detection_kernel << < 1, block_size, sz0 >> > (Cols, gridSize.x * gridSize.y, d_pAuxArray, d_pAuxNumArray
 //        , d_pWidthArray, pstructOut);
 //    cudaDeviceSynchronize();
-//
 //    
 //}
 //----------------------------------------------------
-
 __global__
 void multi_windowing_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  Cols
     , const int WndWidth, float* d_pAuxArray, int* d_pAuxIntArray, int* d_pWidthArray)
@@ -109,8 +107,42 @@ void multi_windowing_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  Co
     }
     __syncthreads();
 }
-//----------------------------------------------
 
+//-----------------------------------------------------
+__global__
+void calcWindowedImage_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  Cols
+    , const int WndWidth, float* d_pOutArray)
+{
+    extern __shared__ char buff[];
+
+    int tid = threadIdx.x;
+    const int idx = blockIdx.x * blockDim.x + threadIdx.x; 
+    if (idx >= Cols)
+    {
+        return;
+    }
+
+    if (idx + WndWidth - 1 < Cols)
+    {
+        float sig2 = 0;
+
+        for (int j = 0; j < WndWidth; ++j)
+        {
+
+            sig2 += (float)d_arr[blockIdx.y * Cols + idx + j] / sqrtf((float)d_norm[blockIdx.y * Cols + idx + j] + 0.0000001);
+
+        }
+        d_pOutArray[blockIdx.y * Cols +tid] = sig2 / sqrtf((float)(WndWidth));
+        
+    }
+    else
+    {
+        d_pOutArray[blockIdx.y * Cols + tid] = 0.0;
+        
+    }
+}
+//----------------------------------------------
+//
 void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
     , const int  Cols, const int WndWidth, const dim3 gridSize, const dim3 blockSize
     , float* d_pAuxArray, int* d_pAuxNumArray, int* d_pWidthArray, structOutDetection* pstructOut)
@@ -154,12 +186,7 @@ void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
 
     free(arr);
     free(norm);
-    /*if (pstructOut->snr >= valTresh)
-    {
-        return true;
-    }
-
-    return false;*/
+   
 }
 
 void multi_windowing_cpu(fdmt_type_* arr, fdmt_type_* norm, const int  Cols

@@ -3,12 +3,13 @@
 #include <vector>
 #include <cufft.h>
 #include "Constants.h"
-
+#define TILE_DIM 32
 using namespace std;
 
 enum EN_channelOrder { STRAIGHT, INVERTED };
 
 class COutChunkHeader;
+class CFragment;
 struct structOutDetection;
 class CBlock
 {
@@ -95,6 +96,21 @@ public:
 	void calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 		, float* pAuxBuff);
 
+	
+
+	bool detailedChunkProcessing(FILE* rb_file, const COutChunkHeader outChunkHeader, CFragment* pFRg);
+
+	bool detailedChunkAnalysus_gpu(cufftComplex* pcmparrRawSignalCur
+		, void* pAuxBuff_fdmt
+		, cufftComplex* pcarrTemp
+		, cufftComplex* pcarrCD_Out
+		, cufftComplex* pcarrBuff
+		, float* pAuxBuff_flt, fdmt_type_* d_arrfdmt_norm
+		, const int IDeltaT, cufftHandle plan0, cufftHandle plan1
+		, const COutChunkHeader outChunkHeader
+		, CFragment* pFRgtor
+	);
+
 };
 size_t  downloadChunk_(char* d_parrInput, const long long QUantDownloadingBytes, const int nchan
 	, const long long nblocksize, const EN_channelOrder enchannelOrder, FILE* rb_file);
@@ -114,7 +130,7 @@ __device__
 float fnc_norm2(cufftComplex* pcarr);
 
 __global__
-void calcPartSum_kernel(fdmt_type_* d_parr_out, const int lenChunk, const int npol_physical, cufftComplex* d_parr_inp);
+void calcPartSum_kernel(float* d_parr_out, const int lenChunk, const int npol_physical, cufftComplex* d_parr_inp);
 
 __global__
 void calcMultiTransposition_kernel(fdmt_type_* output, const int height, const int width, fdmt_type_* input);
@@ -133,6 +149,22 @@ __global__
 void normalize_and_clean(fdmt_type_* parrOut, float* d_arr, const int NRows, const int NCols
 	, float* pmean, float* pstd, float* d_arrRowDisp, float* pmeanDisp, float* pstdDisp);
 
+void cutQuadraticFragment(float* parrFragment, float* parrInpImage, int* piRowBegin, int* piColBegin
+	, const int QInpImageRows, const int QInpImageCols, const int NUmTargetRow, const int NUmTargetCol);
+
+
+void windowization(float* d_fdmt_normalized, const int Rows, const int Cols, const int width, float* parrImage);
+
+__global__
+void fdmt_normalization(fdmt_type_* d_arr, fdmt_type_* d_norm, const int lenChunk, float* d_pOutArray);
+
+__global__
+void multiTransp_kernel(float* output, const int height, const int width, float* input);
+
+__global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
+	, const unsigned int LEnChunk, const unsigned int n_pol_phys, const  double step
+	, const  double VAl_practicalD, const double Fmin
+	, const double Fmax);
 
 //__global__
 //void fncSignalDetection_gpu(fdmt_type_* parr_fdmt_out, fdmt_type_* parrImNormalize, const unsigned int qCols

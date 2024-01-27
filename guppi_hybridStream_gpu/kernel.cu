@@ -31,6 +31,9 @@
 #include <stdint.h>
 #include "OutChunk.h"
 #include "OutChunkHeader.h"
+#include "Fragment.cuh"
+
+#include "Block.cuh"
 
 
 
@@ -43,22 +46,30 @@ cudaError_t cuda_status = cudaMemGetInfo(&free_bytes, &total_bytes);
 extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 
 
-const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_float.bin";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
+
+
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_4_float.bin";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_2_float.bin";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_4_float.bin";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_2_float.bin"; //25.0E-8
+const char PAthGuppiFile[] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_2npol_2_float.bin";
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//try.bin";
+
 const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutInfo.log";
 
 
-const double VAlD_max = 1.5;
-#define LENGTH_OF_PULSE 25.0E-7//25.0E-8
+const double VAlD_max =  1.5;
+#define LENGTH_OF_PULSE 25.0E-8//5.0E-7//25.0E-8//25.0E-7//
 const float SIgma_Bound = 5.;
 // maximal length of summation window
 #define MAX_LENGTH_SUMMATION_WND 10
 
-int main()
-{
+int main(int argc, char** argv)
+{    
     CSession* pSession = new CSession(PAthGuppiFile, PAthOutFile, LENGTH_OF_PULSE, VAlD_max, SIgma_Bound, MAX_LENGTH_SUMMATION_WND);
     unsigned long long ilength = 0;
-    int iBlocks = pSession->calcQuantRemainBlocks(&ilength);
+    //int iBlocks = pSession->calcQuantRemainBlocks(&ilength);
                            
     pSession->launch();
 
@@ -103,77 +114,57 @@ int main()
     int numBlock = -1;
     int numChunk = -1;
     long long lenChunk = -1;
+    int n_fdmtRows = -1, n_fdmtCols = -1;
+    int sucRow = -1, sucCol = -1, width = -1;
+    float cohDisp = -1., snr = -1.;
+    
     CSession::read_outputlogfile_line(strPassLog
         , numOrder
         , &numBlock
         , &numChunk
-        , &lenChunk);
+        , &n_fdmtRows
+        , &n_fdmtCols
+        , &sucRow
+        , &sucCol
+        , &width
+        , &cohDisp
+        , &snr);
+    COutChunkHeader outChunkHeader(
+        n_fdmtRows
+        , n_fdmtCols
+        , sucRow
+        , sucCol
+        , width
+        , snr
+        , cohDisp
+        , numBlock-1
+        , numChunk-1
+    );
     int lengthOfChunk = 0, quantChunks = 0;
     int arrChunks[1000] = { 0 };
     float arrCohD[1000] = { 0. };
-    char strPassDataFile[200] = { 0 };
+    pSession = new CSession(PAthGuppiFile, PAthOutFile, LENGTH_OF_PULSE, VAlD_max, SIgma_Bound, MAX_LENGTH_SUMMATION_WND);
 
-    //fncReadLog_(strPassLog, strPassDataFile, &lengthOfChunk, &quantChunks, arrChunks, arrCohD);
-    //unsigned int lenarr1 = 0, n_p1 = 0;
-    //float valD_max1 = 0., valf_min1 = 0., valf_max1 = 0., valSigmaBound1 = 0.;
+    //std::vector<CFragment> *pfragmentVector = new std::vector<CFragment>();
+    //std::vector<CFragment>fragmentVector;
+    
+    CFragment *pFRg = new CFragment();
+    pSession->analyzeChunk(outChunkHeader,  pFRg);
 
-    //if (readHeader(strPassDataFile, lenarr1, n_p1
-    //    , valD_max1, valf_min1, valf_max1, valSigmaBound1) == 1)
-    //{
-    //    std::cerr << "Error opening file." << std::endl;
-    //    return 1;
-    //}
-    //const int NUmChunk = arrChunks[numOrder];
-    //const float VAlCohD = arrCohD[numOrder];
-    //CStreamParams* pStreamPars1 = new CStreamParams(strPassDataFile, NUmChunk * lengthOfChunk, (NUmChunk + 1) * lengthOfChunk,
-    //    lengthOfChunk);
+    
+    int dim = pFRg->m_dim;
+    //delete pfragmentVector;
+    delete pSession;
 
-    //const int iremains = pStreamPars1->m_lenarr - NUmChunk * pStreamPars->m_lenChunk;
-    //if (iremains <= 0)
-    //{
-    //    fprintf(stderr, "Define chunk's number correctly.");
-    //    return false;
-    //}
-    //const unsigned int LEnChunk = (iremains < pStreamPars->m_lenChunk) ? iremains : pStreamPars->m_lenChunk;
+    std::array<long unsigned, 2> leshape101{ dim, dim };
 
-    //// create output numpy files with images
+    npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), pFRg->m_vctData);
 
-    //cudaError_t cudaStatus;
-    //fdmt_type_* poutputImage = (fdmt_type_*)malloc(sizeof(fdmt_type_));
-
-    //fdmt_type_* poutputPartImage = (fdmt_type_*)malloc(sizeof(fdmt_type_));
-
-    //fdmt_type_** ppoutputPartImage = &poutputPartImage;
-    //fdmt_type_** ppoutputImage = &poutputImage;
-
-
-    //int  iargmaxCol = -1, iargmaxRow = -1;
-    //fdmt_type_ valSNR = -1;
-    //int quantRowsPartImage = -1;
-    //createOutImageForFixedNumberChunk_gpu(ppoutputImage, &iargmaxRow, &iargmaxCol
-    //    , &valSNR, ppoutputPartImage, &quantRowsPartImage, pStreamPars1, NUmChunk, VAlCohD);
-
-    //std::cout << "OUTPUT DATA: " << endl;
-    //std::cout << "CHUNK NUMBER = " << NUmChunk << endl;
-    //std::cout << "SNR = " << valSNR << endl;
-    //std::cout << "ROW = " << iargmaxRow << endl;
-    //std::cout << "COLUMN  = " << iargmaxCol << endl;
-
-    //std::vector<float> v1(poutputPartImage, poutputPartImage + quantRowsPartImage * quantRowsPartImage);
-
-    //std::array<long unsigned, 2> leshape101{ quantRowsPartImage, quantRowsPartImage };
-
-    //npy::SaveArrayAsNumpy("out_image.npy", false, leshape101.size(), leshape101.data(), v1);
-
-    //ppoutputPartImage = nullptr;
-
-    //free(poutputImage);
-    //free(poutputPartImage);
-    //delete pStreamPars1;
-
-    //char filename_cpu[] = "image_cpu.png";
-    //createImg_(argc, argv, v1, quantRowsPartImage, quantRowsPartImage, filename_cpu);
-
+    std::vector<float>v = pFRg->m_vctData;
+    
+    char filename_gpu[] = "image_gpu.png";
+    createImg_(argc, argv, v, dim, dim, filename_gpu);
+   
     return 0;
 }
 

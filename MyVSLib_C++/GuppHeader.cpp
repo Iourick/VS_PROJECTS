@@ -128,7 +128,11 @@ bool CGuppHeader::readHeader(FILE* r_file
     //1. download enough data
     char strHeader[MAX_HEADER_LENGTH] = { 0 };
     //fgets(strHeader, sizeof(strHeader), r_file);
-    fread(strHeader,sizeof(char), MAX_HEADER_LENGTH, r_file);
+    size_t sz = fread(strHeader,sizeof(char), MAX_HEADER_LENGTH, r_file);
+    if (sz < MAX_HEADER_LENGTH)
+    {
+        return false;
+    }
     // !
 
     //2. check up mode. if mode != RAW return false    
@@ -169,8 +173,9 @@ bool CGuppHeader::readHeader(FILE* r_file
         int num = (ioffset + 511) / 512;
         ioffset = num * 512;
     }
+    unsigned long long position0 = ftell(r_file);
     fseek(r_file, ioffset - MAX_HEADER_LENGTH, SEEK_CUR);
-    
+    unsigned long long position = ftell(r_file);
     // 5!
 
     // 6.downloading NBITS

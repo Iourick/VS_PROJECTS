@@ -52,3 +52,7 @@ void complete_detection_kernel(const int Cols, const int LEnGrid, float* d_pAuxA
 
 void multi_windowing_cpu(fdmt_type_* arr, fdmt_type_* norm, const int  Cols
     , const int WndWidth, float* pAuxArray, int* pAuxIntArray, int* pWidthArray, const dim3 gridSize, const dim3 blockSize);
+
+__global__
+void calcWindowedImage_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  Cols
+    , const int WndWidth, float* d_pOutArray);
