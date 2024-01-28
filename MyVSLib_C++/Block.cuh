@@ -112,16 +112,11 @@ public:
 	);
 
 };
-size_t  downloadChunk_(char* d_parrInput, const long long QUantDownloadingBytes, const int nchan
-	, const long long nblocksize, const EN_channelOrder enchannelOrder, FILE* rb_file);
 
 __global__
 void unpackInput(cufftComplex* pcmparrRawSignalCur, inp_type_* d_parrInput, const int  lenChunk
 	, const int  nchan, const int  npol);
 
-__global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
-	, const unsigned int LEnChunk, const  double step, const  double VAl_practicalD, const double Fmin
-	, const double Fmax);
 
 __global__
 void scaling_kernel(cufftComplex* data, long long element_count, float scale);
@@ -161,8 +156,8 @@ void fdmt_normalization(fdmt_type_* d_arr, fdmt_type_* d_norm, const int lenChun
 __global__
 void multiTransp_kernel(float* output, const int height, const int width, float* input);
 
-__global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
-	, const unsigned int LEnChunk, const unsigned int n_pol_phys, const  double step
+__global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
+	, const unsigned int LEnChunk, const unsigned int n_pol_phys
 	, const  double VAl_practicalD, const double Fmin
 	, const double Fmax);
 

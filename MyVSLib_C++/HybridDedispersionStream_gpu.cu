@@ -809,7 +809,7 @@ void fncCoherentDedispersion_gpu(cufftComplex* pcarrCD_Out, cufftComplex* pcarrf
 	, const unsigned int LEnChunk, const /*long*/ double VAl_practicalD, const float VAlFmin, const float VAlFmax
     , cufftHandle  plan, cufftComplex* pAuxBuff)
 {
-	/*long*/ double step = ((/*long*/ double)VAlFmax - (/*long*/ double)VAlFmin) / ((/*long*/ double)LEnChunk);
+	double step = (( double)VAlFmax - ( double)VAlFmin) / (( double)LEnChunk);
 	
 	int treadsPerBlock = 1024;
 	int blocksPerGrid = (LEnChunk + treadsPerBlock -1)/ treadsPerBlock;

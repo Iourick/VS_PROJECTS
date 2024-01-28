@@ -265,22 +265,7 @@ int CSession::launch()
 
         fseek(m_rbFile, ioffset, SEEK_CUR);  
     }
-    //if (m_pvctSuccessHeaders->size() > 0)
-    //{
-    //    std::cout << "               Successful Chunk Numbers = " << m_pvctSuccessHeaders->size() << std::endl;
-    //    //--------------------------------------
-    //    
-    //    char charrTemp[200] = { 0 };
-    //    for (int i = 0; i < m_pvctSuccessHeaders->size(); ++i)
-    //    {
-
-    //        memset(charrTemp, 0, 200 * sizeof(char));
-    //        (*m_pvctSuccessHeaders)[i].createOutStr(charrTemp);
-    //        std::cout << charrTemp << std::endl;            
-    //    }
-    //    //--------------------------------------
-    //    writeReport();
-    //} 
+    
     return 0;
 }
 //-------------------------------------------

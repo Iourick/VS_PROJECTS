@@ -323,10 +323,10 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 		unpackInput << < gridSize, blockSize >> > (pcmparrRawSignalCur,(inp_type_ *)d_parrInput, m_lenChunk, m_nchan, m_npol);
 		cudaDeviceSynchronize();
 
-		 std::vector<std::complex<float>> data(m_lenChunk* m_nchan* m_npol/2, 0);
+		 /*std::vector<std::complex<float>> data(m_lenChunk* m_nchan* m_npol/2, 0);
 		cudaMemcpy(data.data(), pcmparrRawSignalCur, m_lenChunk * m_nchan * m_npol / 2 * sizeof(cufftComplex),
 			cudaMemcpyDeviceToHost);
-		cudaDeviceSynchronize();
+		cudaDeviceSynchronize();*/
 		//std::array<long unsigned, 1> leshape127{ LEnChunk };
 		//npy::SaveArrayAsNumpy("ffted.npy", false, leshape127.size(), leshape127.data(), data);
 		
@@ -441,35 +441,7 @@ size_t  CBlock::downloadChunk(FILE* rb_file,char* d_parrInput, const long long Q
 	
 	return sz_rez;
 }
-//------------------------------------------
-size_t  downloadChunk_(char* d_parrInput, const long long QUantDownloadingBytes , const int nchan
-	,const long long nblocksize, const EN_channelOrder enchannelOrder, FILE* rb_file)
-{
-	long long quantDownloadingBytesPerChannel = QUantDownloadingBytes / nchan;
-	long long quantTotalBytesPerChannel = nblocksize / nchan;
-	long long end_position = ftell(rb_file) + quantDownloadingBytesPerChannel;
-	char* p = (enchannelOrder == STRAIGHT) ? d_parrInput : d_parrInput + (nchan - 1) * quantDownloadingBytesPerChannel;
-	size_t sz_rez = 0;
-	
-	for (int i = 0; i < nchan; ++i)
-	{
-		sz_rez += fread(p, sizeof(char), quantDownloadingBytesPerChannel, rb_file);
-		
-		if (enchannelOrder == STRAIGHT)
-		{
-			p += quantDownloadingBytesPerChannel;
-		}
-		else
-		{
-			p -= quantDownloadingBytesPerChannel;
-		}
 
-		fseek(rb_file, quantTotalBytesPerChannel - quantDownloadingBytesPerChannel, SEEK_CUR);		
-
-	}
-	
-	return sz_rez;
-}
 //-----------------------------------------------------------------
 //INPUT:
 // d_mtrxSig - input matrix, dimentions nchan x (lenChunk * npol) 
@@ -521,10 +493,10 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	
 	//// !1
 
-	 std::vector<std::complex<float>> data2(m_lenChunk, 0);
+	 /*std::vector<std::complex<float>> data2(m_lenChunk, 0);
 	cudaMemcpy(data2.data(), pcmparrRawSignalCur, m_lenChunk * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 	//std::array<long unsigned, 1> leshape127{ LEnChunk };
 	//npy::SaveArrayAsNumpy("ffted.npy", false, leshape127.size(), leshape127.data(), data);
 	auto start = std::chrono::high_resolution_clock::now();
@@ -542,10 +514,10 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	iFFT_time += duration.count();
 
-	std::vector<std::complex<float>> data(m_lenChunk, 0);
+	/*std::vector<std::complex<float>> data(m_lenChunk, 0);
 	cudaMemcpy(data.data(), pcmparrRawSignalCur, m_lenChunk * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 	
 
 	// 3.		
@@ -682,18 +654,18 @@ int CBlock::calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_row
 		, VAl_practicalD, plan0, pcarrTemp);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	std::vector<std::complex<float>> data0(m_lenChunk * m_nchan * m_npol / 2, 0);
+	/*std::vector<std::complex<float>> data0(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data0.data(), pcarrCD_Out, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 
 	cufftResult result = cufftExecC2C(plan1, pcarrCD_Out, pcarrTemp, CUFFT_FORWARD);
 	cudaDeviceSynchronize();
 
-	std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
+	/*std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data.data(), pcarrTemp, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 
 	auto end = std::chrono::high_resolution_clock::now();
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
@@ -702,10 +674,10 @@ int CBlock::calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_row
 	//??????????????????????????????????????????????????????????????
 	calc_fdmt_inp(d_parr_fdmt_inp, pcarrTemp, (float*)pcarrCD_Out);	
 	//
-	std::vector<float> data3(m_lenChunk, 0);
+	/*std::vector<float> data3(m_lenChunk, 0);
 	cudaMemcpy(data3.data(), d_parr_fdmt_inp, m_lenChunk  * sizeof(float),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 	start = std::chrono::high_resolution_clock::now();
 	fncFdmtU_cu(d_parr_fdmt_inp      // on-device input image
 		, pAuxBuff_fdmt
@@ -761,9 +733,9 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	calcPartSum_kernel<<< blocksPerGrid, threadsPerBlock>>>(d_parr_fdmt_temp, m_lenChunk, m_npol/2, pcarrTemp);
 	cudaDeviceSynchronize();
 
-	std::vector<float> data0(m_lenChunk, 0);
+	/*std::vector<float> data0(m_lenChunk, 0);
 	cudaMemcpy(data0.data(), d_parr_fdmt_temp, m_lenChunk * sizeof(float),
-		cudaMemcpyDeviceToHost);
+		cudaMemcpyDeviceToHost);*/
 
 	float* d_parr_fdmt_inp_flt = d_parr_fdmt_temp + m_lenChunk * m_nchan;
 	dim3 threadsPerBlock1(TILE_DIM, TILE_DIM, 1);
@@ -772,9 +744,9 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	multiTransp_kernel << < blocksPerGrid1, threadsPerBlock1, sz >> > (d_parr_fdmt_inp_flt, m_lenChunk / m_len_sft, m_len_sft, d_parr_fdmt_temp);
 	cudaDeviceSynchronize();
 
-	std::vector<float> data6(m_lenChunk, 0);
+	/*std::vector<float> data6(m_lenChunk, 0);
 	cudaMemcpy(data6.data(), d_parr_fdmt_inp_flt, m_lenChunk * sizeof(float),
-		cudaMemcpyDeviceToHost);
+		cudaMemcpyDeviceToHost);*/
 
 	float* d_arrRowMean = (float*)pcarrTemp;
 	float* d_arrRowDisp = d_arrRowMean + nRows;
@@ -799,7 +771,7 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	calcRowMeanAndDisp << < blocksPerGrid, treadsPerBlock, sz1 >> > (d_parr_fdmt_inp_flt, nRows, nCols, d_arrRowMean, d_arrRowDisp);
 	cudaDeviceSynchronize();
 
-	std::vector<float> data4(nRows, 0);
+	/*std::vector<float> data4(nRows, 0);
 	cudaMemcpy(data4.data(), d_arrRowDisp, nRows * sizeof(float),
 		cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();
@@ -807,7 +779,7 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	std::vector<float> data5(nRows, 0);
 	cudaMemcpy(data5.data(), d_arrRowMean, nRows * sizeof(float),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 
 	//float* parr_fdmt_inp_flt = (float*)malloc(nRows* nCols *sizeof(float));
 	//cudaMemcpy(parr_fdmt_inp_flt, d_parr_fdmt_inp_flt, nRows * nCols * sizeof(float), cudaMemcpyDeviceToHost);
@@ -931,27 +903,19 @@ float fnc_norm2(cufftComplex* pc)
 //-------------------------------------------------------------------
 void CBlock::fncCD_Multiband_gpu(cufftComplex* pcarrCD_Out, cufftComplex* pcarrffted_rowsignal
 	, const  double VAl_practicalD, cufftHandle  plan, cufftComplex* pAuxBuff)
-{
-	 double step = (( double)m_Fmax - ( double)m_Fmin) / (( double)m_lenChunk)/((double)m_nchan);
-	
-	//const dim3 blockSize = dim3(1024, 1, 1);
-	//const dim3 gridSize = dim3((m_lenChunk + blockSize.x - 1) / blockSize.x, m_npol/2, m_nchan);	
-	//kernel_ElementWiseMult << < gridSize, blockSize/*, sz*/ >> >
-	//	(pAuxBuff,pcarrffted_rowsignal, m_lenChunk, step, VAl_practicalD, m_Fmin
-	//		, m_Fmax);	
-	//cudaDeviceSynchronize();
+{	
 	 const dim3 blockSize = dim3(1024, 1, 1);
 	 const dim3 gridSize = dim3((m_lenChunk + blockSize.x - 1) / blockSize.x,  m_nchan,1);	
-	 kernel_ElementWiseMult_ << < gridSize, blockSize >> >
-		 (pAuxBuff,pcarrffted_rowsignal, m_lenChunk, m_npol/2,step, VAl_practicalD, m_Fmin
+	 kernel_ElementWiseMult << < gridSize, blockSize >> >
+		 (pAuxBuff,pcarrffted_rowsignal, m_lenChunk, m_npol/2, VAl_practicalD, m_Fmin
 		 	, m_Fmax);
 	 
 	 cudaDeviceSynchronize();
 
-	std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
+	/*std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data.data(), pAuxBuff, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 
 	auto start = std::chrono::high_resolution_clock::now();
 	checkCudaErrors(cufftExecC2C(plan, pAuxBuff, pcarrCD_Out, CUFFT_INVERSE));
@@ -960,14 +924,15 @@ void CBlock::fncCD_Multiband_gpu(cufftComplex* pcarrCD_Out, cufftComplex* pcarrf
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	iFFT_time += duration.count();
 
-	std::vector<std::complex<float>> data1(m_lenChunk * m_nchan * m_npol / 2, 0);
+	/*std::vector<std::complex<float>> data1(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data1.data(), pcarrCD_Out, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();
+	cudaDeviceSynchronize();*/
 	
 	scaling_kernel << <1, 1024, 0 >> > (pcarrCD_Out, m_lenChunk * m_npol* m_nchan/2, 1.f / ((float)m_lenChunk));
 	cudaDeviceSynchronize();
 }
+
 //-------------------------------------------------------------
  // calculation:
  // H = np.e**(-(2*np.pi*complex(0,1) * practicalD /(f_min + f) + 2*np.pi*complex(0,1) * practicalD*f /(f_max**2)))
@@ -975,45 +940,7 @@ void CBlock::fncCD_Multiband_gpu(cufftComplex* pcarrCD_Out, cufftComplex* pcarrf
 // gridDim.z - num channels
 // gridDim.y - num polarizations in physical sense
 __global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
-	, const unsigned int LEnChunk, const  double step, const  double VAl_practicalD, const double Fmin
-	, const double Fmax)
-{
-	__shared__ double arrf[2];
-	__shared__ int iarr[1];
-
-
-	double chanBW = (Fmax - Fmin) / gridDim.z;
-	arrf[0] = Fmin + chanBW * blockIdx.z;
-	arrf[1] = arrf[0] + chanBW;
-	iarr[0] = (blockIdx.z * gridDim.y + blockIdx.y) * LEnChunk;
-
-
-	const int j = blockIdx.x * blockDim.x + threadIdx.x;
-	if (j >= LEnChunk)
-	{
-		return;
-	}
-	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));
-
-	double val_prD_int = 0, val_prD_frac = 0;
-	double t4 = -modf(t, &val_prD_int) * 2.0;
-
-	double val_x = 0.;
-	double val_y = 0.;
-	sincospi(t4, &val_y, &val_x);
-	unsigned int nelem = iarr[0] + j;
-	pAuxBuff[nelem].x = (float)(val_x * pcarrffted_rowsignal[nelem].x - val_y * pcarrffted_rowsignal[nelem].y); // Real part
-	pAuxBuff[nelem].y = (float)(val_x * pcarrffted_rowsignal[nelem].y + val_y * pcarrffted_rowsignal[nelem].x); // Imaginary part
-
-}
-//-------------------------------------------------------------
- // calculation:
- // H = np.e**(-(2*np.pi*complex(0,1) * practicalD /(f_min + f) + 2*np.pi*complex(0,1) * practicalD*f /(f_max**2)))
- // np.fft.fft(raw_signal) * H 
-// gridDim.z - num channels
-// gridDim.y - num polarizations in physical sense
-__global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pcarrffted_rowsignal
-	, const unsigned int LEnChunk, const unsigned int n_pol_phys, const  double step
+	, const unsigned int LEnChunk, const unsigned int n_pol_phys
 	, const  double VAl_practicalD, const double Fmin
 	, const double Fmax)
 {
@@ -1022,8 +949,8 @@ __global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pc
 	double chanBW = (Fmax - Fmin) / gridDim.y;
 	arrf[0] = Fmin + chanBW * blockIdx.y;
 	arrf[1] = arrf[0] + chanBW;
-	//iarr[0] = (blockIdx.z * gridDim.y + blockIdx.y) * LEnChunk;
-
+	
+	double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
 
 	const int j = blockIdx.x * blockDim.x + threadIdx.x;
 	if (j >= LEnChunk)
@@ -1031,6 +958,7 @@ __global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pc
 		return;
 	}
 	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));
+	
 
 	double val_prD_int = 0, val_prD_frac = 0;
 	double t4 = -modf(t, &val_prD_int) * 2.0;
@@ -1047,7 +975,6 @@ __global__ void kernel_ElementWiseMult_(cufftComplex* pAuxBuff, cufftComplex* pc
 		pAuxBuff[nelem0].x = (float)(val_x * pcarrffted_rowsignal[nelem0].x - val_y * pcarrffted_rowsignal[nelem0].y); // Real part
 		pAuxBuff[nelem0].y = (float)(val_x * pcarrffted_rowsignal[nelem0].y + val_y * pcarrffted_rowsignal[nelem0].x); // Imaginary par
 	}
-
 }
 
 //---------------------------------------------------------------

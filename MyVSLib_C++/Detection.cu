@@ -7,22 +7,22 @@
 #include <stdlib.h>
 #include "yr_cart.h"
 #include <stdio.h>
-//void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
-//    , const int  Cols, const int WndWidth, const dim3 gridSize, const dim3 blockSize
-//    , float* d_pAuxArray, int* d_pAuxNumArray, int* d_pWidthArray, structOutDetection* pstructOut)
-//{ 
-//    size_t sz = (sizeof(float) + sizeof(int)) * blockSize.x + 2 * sizeof(int) + sizeof(float);
-//    multi_windowing_kernel << < gridSize, blockSize, sz >> > (d_arr, d_norm
-//        , Cols, WndWidth, d_pAuxArray, d_pAuxNumArray, d_pWidthArray);
-//    cudaDeviceSynchronize();
-//
-//    int block_size = 1024;
-//    size_t sz0 = block_size * (sizeof(int) + sizeof(float));
-//    complete_detection_kernel << < 1, block_size, sz0 >> > (Cols, gridSize.x * gridSize.y, d_pAuxArray, d_pAuxNumArray
-//        , d_pWidthArray, pstructOut);
-//    cudaDeviceSynchronize();
-//    
-//}
+void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
+    , const int  Cols, const int WndWidth, const dim3 gridSize, const dim3 blockSize
+    , float* d_pAuxArray, int* d_pAuxNumArray, int* d_pWidthArray, structOutDetection* pstructOut)
+{ 
+    size_t sz = (sizeof(float) + sizeof(int)) * blockSize.x + 2 * sizeof(int) + sizeof(float);
+    multi_windowing_kernel << < gridSize, blockSize, sz >> > (d_arr, d_norm
+        , Cols, WndWidth, d_pAuxArray, d_pAuxNumArray, d_pWidthArray);
+    cudaDeviceSynchronize();
+
+    int block_size = 1024;
+    size_t sz0 = block_size * (sizeof(int) + sizeof(float));
+    complete_detection_kernel << < 1, block_size, sz0 >> > (Cols, gridSize.x * gridSize.y, d_pAuxArray, d_pAuxNumArray
+        , d_pWidthArray, pstructOut);
+    cudaDeviceSynchronize();
+    
+}
 //----------------------------------------------------
 __global__
 void multi_windowing_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  Cols
@@ -142,52 +142,51 @@ void calcWindowedImage_kernel(fdmt_type_* d_arr, fdmt_type_* d_norm, const int  
     }
 }
 //----------------------------------------------
+//void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
+//    , const int  Cols, const int WndWidth, const dim3 gridSize, const dim3 blockSize
+//    , float* d_pAuxArray, int* d_pAuxNumArray, int* d_pWidthArray, structOutDetection* pstructOut)
+//{
+//    size_t sz = (sizeof(float) + sizeof(int)) * blockSize.x + 2 * sizeof(int) + sizeof(float);
+//    multi_windowing_kernel << < gridSize, blockSize, sz >> > (d_arr, d_norm
+//        , Cols, WndWidth, d_pAuxArray, d_pAuxNumArray, d_pWidthArray);
+//    cudaDeviceSynchronize();
+//    float* pAuxArray = (float*)malloc(gridSize.x * gridSize.y * sizeof(float));
+//    int* pAuxIntArray = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
+//    int* pWidthArray = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
+//    cudaMemcpy(pAuxArray, d_pAuxArray, gridSize.x * gridSize.y * sizeof(float), cudaMemcpyDeviceToHost);
+//    cudaDeviceSynchronize();
+//    cudaMemcpy(pWidthArray, d_pWidthArray, gridSize.x * gridSize.y * sizeof(int), cudaMemcpyDeviceToHost);
+//    cudaDeviceSynchronize();
+//    cudaMemcpy(pAuxIntArray, d_pAuxNumArray, gridSize.x * gridSize.y * sizeof(int), cudaMemcpyDeviceToHost);
+//    cudaDeviceSynchronize();
 //
-void detect_signal_gpu(fdmt_type_* d_arr, fdmt_type_* d_norm, const int Rows
-    , const int  Cols, const int WndWidth, const dim3 gridSize, const dim3 blockSize
-    , float* d_pAuxArray, int* d_pAuxNumArray, int* d_pWidthArray, structOutDetection* pstructOut)
-{
-    size_t sz = (sizeof(float) + sizeof(int)) * blockSize.x + 2 * sizeof(int) + sizeof(float);
-    multi_windowing_kernel << < gridSize, blockSize, sz >> > (d_arr, d_norm
-        , Cols, WndWidth, d_pAuxArray, d_pAuxNumArray, d_pWidthArray);
-    cudaDeviceSynchronize();
-    float* pAuxArray = (float*)malloc(gridSize.x * gridSize.y * sizeof(float));
-    int* pAuxIntArray = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
-    int* pWidthArray = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
-    cudaMemcpy(pAuxArray, d_pAuxArray, gridSize.x * gridSize.y * sizeof(float), cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
-    cudaMemcpy(pWidthArray, d_pWidthArray, gridSize.x * gridSize.y * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
-    cudaMemcpy(pAuxIntArray, d_pAuxNumArray, gridSize.x * gridSize.y * sizeof(int), cudaMemcpyDeviceToHost);
-    cudaDeviceSynchronize();
-
-
-    fdmt_type_* arr = (fdmt_type_*)malloc(Rows * Cols * sizeof(fdmt_type_));
-    fdmt_type_* norm = (fdmt_type_*)malloc(Rows * Cols * sizeof(fdmt_type_));
-    float* pAuxArray0 = (float*)malloc(gridSize.x * gridSize.y * sizeof(float));
-    int* pAuxIntArray0 = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
-    int* pWidthArray0 = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
-    cudaMemcpy(arr, d_arr, Rows * Cols * sizeof(fdmt_type_), cudaMemcpyDeviceToHost);
-    cudaMemcpy(norm, d_norm, Rows * Cols * sizeof(fdmt_type_), cudaMemcpyDeviceToHost);
-
-    multi_windowing_cpu(arr, norm, Cols, WndWidth, pAuxArray0, pAuxIntArray0, pWidthArray0, gridSize, blockSize);
-
-    float valmax1 = -0., valmin1 = 0.;
-    unsigned int iargmax1 = -1, iargmin1 = -1;
-    findMaxMinOfArray(pAuxArray0, gridSize.x * gridSize.y, &valmax1, &valmin1
-        , &iargmax1, &iargmin1);
-
-    int block_size = min(128, gridSize.x * gridSize.y);
-    size_t sz0 = block_size * (sizeof(int) + sizeof(float));
-    complete_detection_kernel << < 1, block_size, sz0 >> > (Cols, gridSize.x * gridSize.y, d_pAuxArray, d_pAuxNumArray
-        , d_pWidthArray, pstructOut);
-    cudaDeviceSynchronize();
-
-
-    free(arr);
-    free(norm);
-   
-}
+//
+//    fdmt_type_* arr = (fdmt_type_*)malloc(Rows * Cols * sizeof(fdmt_type_));
+//    fdmt_type_* norm = (fdmt_type_*)malloc(Rows * Cols * sizeof(fdmt_type_));
+//    float* pAuxArray0 = (float*)malloc(gridSize.x * gridSize.y * sizeof(float));
+//    int* pAuxIntArray0 = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
+//    int* pWidthArray0 = (int*)malloc(gridSize.x * gridSize.y * sizeof(int));
+//    cudaMemcpy(arr, d_arr, Rows * Cols * sizeof(fdmt_type_), cudaMemcpyDeviceToHost);
+//    cudaMemcpy(norm, d_norm, Rows * Cols * sizeof(fdmt_type_), cudaMemcpyDeviceToHost);
+//
+//    multi_windowing_cpu(arr, norm, Cols, WndWidth, pAuxArray0, pAuxIntArray0, pWidthArray0, gridSize, blockSize);
+//
+//    float valmax1 = -0., valmin1 = 0.;
+//    unsigned int iargmax1 = -1, iargmin1 = -1;
+//    findMaxMinOfArray(pAuxArray0, gridSize.x * gridSize.y, &valmax1, &valmin1
+//        , &iargmax1, &iargmin1);
+//
+//    int block_size = min(128, gridSize.x * gridSize.y);
+//    size_t sz0 = block_size * (sizeof(int) + sizeof(float));
+//    complete_detection_kernel << < 1, block_size, sz0 >> > (Cols, gridSize.x * gridSize.y, d_pAuxArray, d_pAuxNumArray
+//        , d_pWidthArray, pstructOut);
+//    cudaDeviceSynchronize();
+//
+//
+//    free(arr);
+//    free(norm);
+//   
+//}
 
 void multi_windowing_cpu(fdmt_type_* arr, fdmt_type_* norm, const int  Cols
     , const int WndWidth, float* pAuxArray, int* pAuxIntArray, int* pWidthArray, const dim3 gridSize, const dim3 blockSize)
