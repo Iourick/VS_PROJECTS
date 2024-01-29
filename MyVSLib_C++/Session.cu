@@ -231,6 +231,8 @@ int CSession::launch()
         // calculate lenChunk along time axe
         const unsigned int LenChunk = calcLenChunk(len_sft);
         //
+
+
         const bool bCHannel_order = (m_header.m_chanBW > 0.) ? true : false;
         CBlock* pBlock = new CBlock(
               m_header.m_centfreq - fabs(m_header.m_chanBW) * m_header.m_nchan / 2.
@@ -281,9 +283,10 @@ long long CSession::calcLenChunk(const int n_p)
         / 2 + 3 * (IDeltaT + 1) * sizeof(int));
 
     float valDenominator = m_header.m_nchan * m_header.m_npol * m_header.m_nbits / 8
-        + m_header.m_nchan * m_header.m_npol / 2 * sizeof(cufftComplex)
-        + sizeof(fdmt_type_) + 2 * (IDeltaT + 1) * sizeof(fdmt_type_)
-        + 3 * m_header.m_nchan * m_header.m_npol * sizeof(cufftComplex) / 2 + 2 * +sizeof(fdmt_type_);
+        + m_header.m_nchan * m_header.m_npol / 2 * sizeof(cufftComplex)        
+        + 2 * (IDeltaT + 1) * m_header.m_nchan * sizeof(fdmt_type_)
+        + 3 * m_header.m_nchan * m_header.m_npol * sizeof(cufftComplex) / 2 
+        + 2 * m_header.m_nchan * sizeof(float);
     float tmax = valNominator / valDenominator;
     float treal = (float)(m_header.m_nblocksize * 8 / m_header.m_nchan / m_header.m_npol / m_header.m_nbits );
     float t = (tmax < treal) ? tmax : treal;

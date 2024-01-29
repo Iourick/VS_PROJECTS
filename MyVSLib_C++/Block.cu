@@ -217,14 +217,14 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 
 	// 3. memory allocation for fdmt_ones on GPU  ????
 	fdmt_type_* d_arrfdmt_norm = 0;
-	checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk  * sizeof(fdmt_type_)));
+	checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk  * m_nchan* sizeof(fdmt_type_)));
 	// 3!
 
 	// 4.memory allocation for auxillary buffer for fdmt
 	const int N_p = m_len_sft * m_nchan;
 	unsigned int IMaxDT = m_len_sft * m_nchan;
 	const int  IDeltaT = calc_IDeltaT(N_p, m_Fmin, m_Fmax, IMaxDT);
-	size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / N_p
+	size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / m_len_sft
 		, m_Fmin, m_Fmax, IMaxDT);
 	void* pAuxBuff_fdmt = 0;
 	checkCudaErrors(cudaMalloc(&pAuxBuff_fdmt, szBuff_fdmt));	
@@ -246,7 +246,7 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 
 	// 5. memory allocation for the 2 auxillary float  arrays on GPU	
 	float* pAuxBuff_flt = NULL;
-	checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * m_nchan * sizeof(float)));
 	
 	// 5!
 
@@ -255,7 +255,7 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 		nullptr      // on-device input image
 		, pAuxBuff_fdmt
 		, N_p
-		, m_lenChunk/ N_p // dimensions of input image 	
+		, m_lenChunk/ m_len_sft // dimensions of input image 	
 		, IDeltaT
 		, m_Fmin
 		, m_Fmax
@@ -306,8 +306,7 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 
 		unsigned long long position0 = ftell(rb_file);
 		
-		unsigned long long position = ftell(rb_file);
-		float val = -1001.;
+		unsigned long long position = ftell(rb_file);		
 		
 		size_t sz = downloadChunk(rb_file, (char*)d_parrInput, quantDownloadingBytes);	
 
@@ -487,7 +486,7 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	// 1. installation of pointers	for pAuxBuff_the_rest	
 
 	fdmt_type_* d_parr_fdmt_inp = (fdmt_type_ * )pAuxBuff_flt; //4	
-	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk; //5
+	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk * m_nchan; //5
 
 	
 	
@@ -514,8 +513,8 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	auto duration = std::chrono::duration_cast<std::chrono::microseconds>(end - start);
 	iFFT_time += duration.count();
 
-	/*std::vector<std::complex<float>> data(m_lenChunk, 0);
-	cudaMemcpy(data.data(), pcmparrRawSignalCur, m_lenChunk * sizeof(std::complex<float>),
+	/*std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol/2, 0);
+	cudaMemcpy(data.data(), pcmparrRawSignalCur, m_lenChunk * m_nchan * m_npol/2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
 	cudaDeviceSynchronize();*/
 	
@@ -559,19 +558,19 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 			, IMaxDT, DISPERSION_CONSTANT * valcur_coherent_d
 			, pAuxBuff_fdmt, IDeltaT, plan0, plan1, pcarrBuff);		
 		// !
-		float* parr_fdmt_out = (float*)malloc(m_lenChunk * sizeof(float));
-		cudaMemcpy(parr_fdmt_out, d_parr_fdmt_out, m_lenChunk * sizeof(float), cudaMemcpyDeviceToHost);
+		float* parr_fdmt_out = (float*)malloc(m_lenChunk * m_nchan* sizeof(float));
+		cudaMemcpy(parr_fdmt_out, d_parr_fdmt_out, m_lenChunk * m_nchan * sizeof(float), cudaMemcpyDeviceToHost);
 		float valmax = -0., valmin = 0.;
 		unsigned int iargmax = -1, iargmin = -1;
-		findMaxMinOfArray(parr_fdmt_out, m_lenChunk, &valmax, &valmin
+		findMaxMinOfArray(parr_fdmt_out, m_lenChunk * m_nchan, &valmax, &valmin
 			, &iargmax, &iargmin);
 
 
-		float* arrfdmt_norm = (float*)malloc(m_lenChunk * sizeof(float));
-		cudaMemcpy(arrfdmt_norm, d_arrfdmt_norm, m_lenChunk * sizeof(float), cudaMemcpyDeviceToHost);
+		float* arrfdmt_norm = (float*)malloc(m_lenChunk * m_nchan * sizeof(float));
+		cudaMemcpy(arrfdmt_norm, d_arrfdmt_norm, m_lenChunk * m_nchan * sizeof(float), cudaMemcpyDeviceToHost);
 		float valmax1 = -0., valmin1 = 0.;
 		unsigned int iargmax1 = -1, iargmin1 = -1;
-		findMaxMinOfArray(arrfdmt_norm, m_lenChunk, &valmax1, &valmin1
+		findMaxMinOfArray(arrfdmt_norm, m_lenChunk * m_nchan, &valmax1, &valmin1
 			, &iargmax1, &iargmin1);
 
 
@@ -580,7 +579,7 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 
 		
 		const int Rows = m_len_sft * m_nchan;
-		const int Cols = m_lenChunk / Rows;
+		const int Cols = m_lenChunk / m_len_sft;
 		const dim3 blockSize(1024, 1, 1);
 		const dim3 gridSize((Cols + blockSize.x - 1) / blockSize.x, Rows, 1);
 		float* d_pAuxArray = (float*)d_parr_fdmt_inp;
@@ -654,10 +653,10 @@ int CBlock::calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_row
 		, VAl_practicalD, plan0, pcarrTemp);
 
 	auto start = std::chrono::high_resolution_clock::now();
-	/*std::vector<std::complex<float>> data0(m_lenChunk * m_nchan * m_npol / 2, 0);
+	std::vector<std::complex<float>> data0(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data0.data(), pcarrCD_Out, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();*/
+	cudaDeviceSynchronize();
 
 	cufftResult result = cufftExecC2C(plan1, pcarrCD_Out, pcarrTemp, CUFFT_FORWARD);
 	cudaDeviceSynchronize();
@@ -682,7 +681,7 @@ int CBlock::calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_row
 	fncFdmtU_cu(d_parr_fdmt_inp      // on-device input image
 		, pAuxBuff_fdmt
 		, m_len_sft * m_nchan
-		, m_lenChunk / (m_len_sft * m_nchan) // dimensions of input image 	
+		, m_lenChunk / m_len_sft  // dimensions of input image 	
 		, IDeltaT
 		, m_Fmin
 		, m_Fmax
@@ -709,8 +708,7 @@ int CBlock::calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_row
 void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	, float*pAuxBuff)
 {	
-	int nRows = m_len_sft * m_nchan;
-	int nCols = m_lenChunk / nRows;
+	
 	/*dim3 threadsPerBlock(TILE_DIM, TILE_DIM, 1);
 	dim3 blocksPerGrid((m_len_sft + TILE_DIM - 1) / TILE_DIM, (m_lenChunk / m_len_sft + TILE_DIM - 1) / TILE_DIM, m_nchan);
 	size_t sz = TILE_DIM * (TILE_DIM + 1) * sizeof(float);
@@ -747,28 +745,29 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	/*std::vector<float> data6(m_lenChunk, 0);
 	cudaMemcpy(data6.data(), d_parr_fdmt_inp_flt, m_lenChunk * sizeof(float),
 		cudaMemcpyDeviceToHost);*/
-
+	int nFdmtRows = m_nchan * m_len_sft;
+	int nFdmtCols = m_lenChunk / m_len_sft;
 	float* d_arrRowMean = (float*)pcarrTemp;
-	float* d_arrRowDisp = d_arrRowMean + nRows;
+	float* d_arrRowDisp = d_arrRowMean + nFdmtRows;
 	
 	
 	auto start = std::chrono::high_resolution_clock::now();
 
 	// Calculate mean and variance
-	float* pval_mean = d_arrRowDisp + nRows;
+	float* pval_mean = d_arrRowDisp + nFdmtRows;
 	float* pval_stdDev = pval_mean + 1;
 	float* pval_dispMean = pval_stdDev + 1;
 	float* pval_dispStd = pval_dispMean + 1;
 	
 
-	blocksPerGrid = nRows;
-	int treadsPerBlock = calcThreadsForMean_and_Disp(nCols);
+	blocksPerGrid = nFdmtRows;
+	int treadsPerBlock = calcThreadsForMean_and_Disp(nFdmtCols);
 	size_t sz1 = (2 * sizeof(float) + sizeof(int)) * treadsPerBlock;
 	// 1. calculations mean values and dispersions for each row of matrix d_parr_fdmt_inp_flt
 	// d_arrRowMean - array contents  mean values of each row of input matrix pcarrTemp
 	// d_arrRowDisp - array contents  dispersions of each row of input matrix pcarrTemp
 	
-	calcRowMeanAndDisp << < blocksPerGrid, treadsPerBlock, sz1 >> > (d_parr_fdmt_inp_flt, nRows, nCols, d_arrRowMean, d_arrRowDisp);
+	calcRowMeanAndDisp << < blocksPerGrid, treadsPerBlock, sz1 >> > (d_parr_fdmt_inp_flt, nFdmtRows, nFdmtCols, d_arrRowMean, d_arrRowDisp);
 	cudaDeviceSynchronize();
 
 	/*std::vector<float> data4(nRows, 0);
@@ -806,9 +805,9 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	// 2. calculations mean value and standart deviation for full matrix pcarrTemp
 	// it is demanded to normalize matrix pcarrTemp
 	blocksPerGrid = 1;
-	treadsPerBlock = calcThreadsForMean_and_Disp(nRows);
+	treadsPerBlock = calcThreadsForMean_and_Disp(nFdmtRows);
 	sz = treadsPerBlock * (2 * sizeof(float) + sizeof(int));
-	kernel_OneSM_Mean_and_Std << <blocksPerGrid, treadsPerBlock, sz >> > (d_arrRowMean, d_arrRowDisp, nRows
+	kernel_OneSM_Mean_and_Std << <blocksPerGrid, treadsPerBlock, sz >> > (d_arrRowMean, d_arrRowDisp, nFdmtRows
 		, pval_mean, pval_stdDev);
 	cudaDeviceSynchronize();
 
@@ -850,7 +849,7 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	
 	
 	int threads = 128;
-	calculateMeanAndSTD_for_oneDimArray_kernel << <1, threads, threads * 2 * sizeof(float) >> > (d_arrRowDisp, nRows, pval_dispMean, pval_dispStd);
+	calculateMeanAndSTD_for_oneDimArray_kernel << <1, threads, threads * 2 * sizeof(float) >> > (d_arrRowDisp, nFdmtRows, pval_dispMean, pval_dispStd);
 	cudaDeviceSynchronize();
 
 	float hval_dispMean = -1;
@@ -860,17 +859,17 @@ void CBlock::calc_fdmt_inp(fdmt_type_* d_parr_fdmt_inp, cufftComplex* pcarrTemp
 	cudaDeviceSynchronize();
 	// 4.Clean and normalize array
 	const dim3 blockSize(256, 1, 1);
-	const dim3 gridSize(1, nRows, 1);
+	const dim3 gridSize(1, nFdmtRows, 1);
 	
 	
 
 	normalize_and_clean << < gridSize, blockSize >> >
-		(d_parr_fdmt_inp, d_parr_fdmt_inp_flt, nRows, nCols
+		(d_parr_fdmt_inp, d_parr_fdmt_inp_flt, nFdmtRows, nFdmtCols
 		, pval_mean, pval_stdDev, d_arrRowDisp, pval_dispMean, pval_dispStd  );	
 	cudaDeviceSynchronize();
 
-	float* parr_fdmt_inp = (float*)malloc(nRows * nCols * sizeof(float));
-	cudaMemcpy(parr_fdmt_inp, d_parr_fdmt_inp, nRows * nCols * sizeof(float), cudaMemcpyDeviceToHost);
+	float* parr_fdmt_inp = (float*)malloc(nFdmtRows * nFdmtCols * sizeof(float));
+	cudaMemcpy(parr_fdmt_inp, d_parr_fdmt_inp, nFdmtRows* nFdmtCols * sizeof(float), cudaMemcpyDeviceToHost);
 
 	//float valmax = -0., valmin = 0.;
 	//unsigned int iargmax = -1, iargmin = -1;
@@ -912,10 +911,10 @@ void CBlock::fncCD_Multiband_gpu(cufftComplex* pcarrCD_Out, cufftComplex* pcarrf
 	 
 	 cudaDeviceSynchronize();
 
-	/*std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
+	std::vector<std::complex<float>> data(m_lenChunk * m_nchan * m_npol / 2, 0);
 	cudaMemcpy(data.data(), pAuxBuff, m_lenChunk * m_nchan * m_npol / 2 * sizeof(std::complex<float>),
 		cudaMemcpyDeviceToHost);
-	cudaDeviceSynchronize();*/
+	cudaDeviceSynchronize();
 
 	auto start = std::chrono::high_resolution_clock::now();
 	checkCudaErrors(cufftExecC2C(plan, pAuxBuff, pcarrCD_Out, CUFFT_INVERSE));
@@ -950,14 +949,20 @@ __global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pca
 	arrf[0] = Fmin + chanBW * blockIdx.y;
 	arrf[1] = arrf[0] + chanBW;
 	
-	double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
+	
 
 	const int j = blockIdx.x * blockDim.x + threadIdx.x;
 	if (j >= LEnChunk)
 	{
 		return;
 	}
+
+	double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
 	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));
+	
+
+	/*double step = (Fmax - Fmin) / ((double)LEnChunk);
+	double t = VAl_practicalD * (1. / (Fmin + step * (double)j) + 1. / (Fmax) * (step * (double)j / Fmax));*/
 	
 
 	double val_prD_int = 0, val_prD_frac = 0;
@@ -1173,14 +1178,14 @@ bool CBlock::detailedChunkProcessing(FILE* rb_file, const COutChunkHeader outChu
 
 	// 3. memory allocation for fdmt_ones on GPU  ????
 	fdmt_type_* d_arrfdmt_norm = 0;
-	checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk * sizeof(fdmt_type_)));
+	checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk * m_nchan * sizeof(fdmt_type_)));
 	// 3!
 
 	// 4.memory allocation for auxillary buffer for fdmt
 	const int N_p = m_len_sft * m_nchan;
 	unsigned int IMaxDT = m_len_sft * m_nchan;
 	const int  IDeltaT = calc_IDeltaT(N_p, m_Fmin, m_Fmax, IMaxDT);
-	size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / N_p
+	size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / m_len_sft
 		, m_Fmin, m_Fmax, IMaxDT);
 	void* pAuxBuff_fdmt = 0;
 	checkCudaErrors(cudaMalloc(&pAuxBuff_fdmt, szBuff_fdmt));
@@ -1202,7 +1207,7 @@ bool CBlock::detailedChunkProcessing(FILE* rb_file, const COutChunkHeader outChu
 
 	// 5. memory allocation for the 2 auxillary float  arrays on GPU	
 	float* pAuxBuff_flt = NULL;
-	checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * sizeof(float)));
+	checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * m_nchan * sizeof(float)));
 
 	// 5!
 
@@ -1211,7 +1216,7 @@ bool CBlock::detailedChunkProcessing(FILE* rb_file, const COutChunkHeader outChu
 		nullptr      // on-device input image
 		, pAuxBuff_fdmt
 		, N_p
-		, m_lenChunk / N_p // dimensions of input image 	
+		, m_lenChunk / m_len_sft // dimensions of input image 	
 		, IDeltaT
 		, m_Fmin
 		, m_Fmax
@@ -1370,7 +1375,7 @@ bool CBlock::detailedChunkAnalysus_gpu(cufftComplex* pcmparrRawSignalCur
 	// 1. installation of pointers	for pAuxBuff_the_rest	
 
 	fdmt_type_* d_parr_fdmt_inp = (fdmt_type_*)pAuxBuff_flt; //4	
-	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk; //5
+	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk * m_nchan; //5
 
 
 
@@ -1435,13 +1440,13 @@ bool CBlock::detailedChunkAnalysus_gpu(cufftComplex* pcmparrRawSignalCur
 			, IMaxDT, DISPERSION_CONSTANT * outChunkHeader.m_coherentDedisp
 			, pAuxBuff_fdmt, IDeltaT, plan0, plan1, pcarrBuff);
 
-		float* d_fdmt_normalized = (float*)malloc(m_lenChunk * sizeof(float));
-		cudaMallocManaged((void**)&d_fdmt_normalized, m_lenChunk * sizeof(float));
+		float* d_fdmt_normalized = (float*)malloc(m_lenChunk * m_nchan * sizeof(float));
+		cudaMallocManaged((void**)&d_fdmt_normalized, m_lenChunk * m_nchan * sizeof(float));
 		const int Rows = m_len_sft * m_nchan;
-		const int Cols = m_lenChunk / Rows;
+		const int Cols = m_lenChunk / m_len_sft;
 		int theads = 1024;
 		int blocks = (m_lenChunk + theads - 1) / theads;		
-		fdmt_normalization << < blocks, theads >> > (d_parr_fdmt_out, d_arrfdmt_norm, m_lenChunk, d_fdmt_normalized);
+		fdmt_normalization << < blocks, theads >> > (d_parr_fdmt_out, d_arrfdmt_norm, m_lenChunk * m_nchan, d_fdmt_normalized);
 		cudaDeviceSynchronize();
 
 		float* h_parrImage = (float*)malloc(Rows * Cols * sizeof(float));
@@ -1538,11 +1543,11 @@ void windowization(float* d_fdmt_normalized, const int Rows, const int Cols, con
 }
 //----------------------------------------------------
 __global__
-void fdmt_normalization(fdmt_type_* d_arr, fdmt_type_* d_norm, const int lenChunk, float* d_pOutArray)
+void fdmt_normalization(fdmt_type_* d_arr, fdmt_type_* d_norm, const int len, float* d_pOutArray)
 {
 
 	const int idx = blockIdx.x * blockDim.x + threadIdx.x;
-	if (idx >= lenChunk)
+	if (idx >= len)
 	{
 		return;
 	}
