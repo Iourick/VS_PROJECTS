@@ -56,19 +56,19 @@
 #endif   
 
 
-// timing variables:
-  // fdmt time
-long int iFdmt_time = 0;
-// read && transform data time
-long int iReadTransform_time = 0;
-// fft time
-long int iFFT_time = 0;
-// detection time
-long int iMeanDisp_time = 0;
-// detection time
-long int iNormalize_time = 0;
-// total time
-long int iTotal_time = 0;
+	// timing variables:
+	  // fdmt time
+	long long iFdmt_time = 0;
+	// read && transform data time
+	long long  iReadTransform_time = 0;
+	// fft time
+	long long  iFFT_time = 0;
+	// detection time
+	long long  iMeanDisp_time = 0;
+	// detection time
+	long long  iNormalize_time = 0;
+	// total time
+	long long  iTotal_time = 0;
 
 
 
@@ -237,7 +237,7 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 	cufftComplex* pcarrBuff = NULL;//3
 	
 
-	checkCudaErrors(cudaMalloc((void**)&pcarrTemp, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+	checkCudaErrors(cudaMallocManaged((void**)&pcarrTemp, QUantChunkComplexNumbers * sizeof(cufftComplex)));
 
 	checkCudaErrors(cudaMalloc((void**)&pcarrCD_Out, QUantChunkComplexNumbers * sizeof(cufftComplex)));
 
@@ -308,7 +308,10 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 		
 		unsigned long long position = ftell(rb_file);		
 		
-		size_t sz = downloadChunk(rb_file, (char*)d_parrInput, quantDownloadingBytes);	
+
+	    char*d_parrInput0 = (char*)pcarrTemp;
+		
+		size_t sz = downloadChunk(rb_file, (char*)d_parrInput0, quantDownloadingBytes);	
 
 		iremainedBytes = iremainedBytes - quantDownloadingBytes;
 
@@ -319,7 +322,7 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 
 		const dim3 blockSize = dim3(1024, 1, 1);
 		const dim3 gridSize = dim3((m_lenChunk + blockSize.x - 1) / blockSize.x, m_nchan, 1);
-		unpackInput << < gridSize, blockSize >> > (pcmparrRawSignalCur,(inp_type_ *)d_parrInput, m_lenChunk, m_nchan, m_npol);
+		unpackInput << < gridSize, blockSize >> > (pcmparrRawSignalCur,(inp_type_ *)d_parrInput0, m_lenChunk, m_nchan, m_npol);
 		cudaDeviceSynchronize();
 
 		 /*std::vector<std::complex<float>> data(m_lenChunk* m_nchan* m_npol/2, 0);
@@ -946,11 +949,11 @@ __global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pca
 	{
 		return;
 	}
-	double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
-	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));	
+	/*double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
+	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));	*/
 
-	/*double step = (Fmax - Fmin) / ((double)LEnChunk);
-	double t = VAl_practicalD * (1. / (Fmin + step * (double)j) + 1. / (Fmax) * (step * (double)j / Fmax));*/	
+	double step = (Fmax - Fmin) / ((double)LEnChunk);
+	double t = VAl_practicalD * (1. / (Fmin + step * (double)j) + 1. / (Fmax) * (step * (double)j / Fmax));	
 
 	double val_prD_int = 0, val_prD_frac = 0;
 	double t4 = -modf(t, &val_prD_int) * 2.0;
