@@ -46,9 +46,9 @@ cudaError_t cuda_status = cudaMemGetInfo(&free_bytes, &total_bytes);
 extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 
 
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
-//const double VAlD_max = 10;
-//#define LENGTH_OF_PULSE  70.0E-8
+const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
+const double VAlD_max = 3.0;
+#define LENGTH_OF_PULSE  1.0E-8
 
 
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_4_float.bin";
@@ -56,16 +56,16 @@ extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_4_float.bin";
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_2_float.bin"; //25.0E-8
 //const char PAthGuppiFile[] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_2npol_2_float.bin";
-const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch2.bin";
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch1.bin";
-const double VAlD_max = 1.5;
-#define LENGTH_OF_PULSE  15.0E-8//25.0E-7//
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch2.bin";//40.0E-8
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch1.bin";//  40.0E-8
+//const double VAlD_max = 1.5;
+//#define LENGTH_OF_PULSE  40.0E-8//25.0E-7//
 
 const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutInfo.log";
 
-const float SIgma_Bound = 5.;
+const float SIgma_Bound = 8.;
 // maximal length of summation window
-#define MAX_LENGTH_SUMMATION_WND 1
+#define MAX_LENGTH_SUMMATION_WND 10
 
 int main(int argc, char** argv)
 {    
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     CFragment *pFRg = new CFragment();
     pSession->analyzeChunk(outChunkHeader,  pFRg);
 
-    
+     
     int dim = pFRg->m_dim;
     //delete pfragmentVector;
     delete pSession;
