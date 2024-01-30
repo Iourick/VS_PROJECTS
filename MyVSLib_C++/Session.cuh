@@ -48,7 +48,7 @@ public:
 
 	long long CSession::calcLenChunk(const int n_p);
 
-	static bool read_outputlogfile_line(char* pstrPassLog
+	static bool read_outputlogfile_line(const char* pstrPassLog
 		, const int NUmLine
 		, int* pnumBlock
 		, int* pnumChunk

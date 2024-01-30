@@ -313,7 +313,7 @@ void CSession::writeReport()
     size_t elements_written = fwrite(arrch, sizeof(char), strlen(arrch), m_wb_file);
 }
 //-------------------------------------------------
-bool CSession::read_outputlogfile_line(char *pstrPassLog
+bool CSession::read_outputlogfile_line(const char *pstrPassLog
     , const int NUmLine
     , int* pnumBlock
     , int* pnumChunk    

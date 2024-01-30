@@ -9,10 +9,10 @@
 #include <string>
 
 #include <vector>
-#include <cstdlib> // For random value generation
-#include <ctime>   // For seeding the random number generator
+//#include <cstdlib> // For random value generation
+//#include <ctime>   // For seeding the random number generator
 #include "npy.hpp"
-#include <algorithm> 
+//#include <algorithm> 
 #include "kernel.cuh"
 #include <chrono>
 #include "fileInput.h"
@@ -33,7 +33,7 @@
 #include "OutChunkHeader.h"
 #include "Fragment.cuh"
 
-#include "Block.cuh"
+//#include "Block.cuh"
 
 
 
@@ -111,8 +111,7 @@ int main(int argc, char** argv)
     int numOrder = -1;
     std::cin >> numOrder;
     --numOrder;
-    char strPassLog[200] = { 0 };
-    strcpy(strPassLog, PAthOutFile);
+   
     int numBlock = -1;
     int numChunk = -1;
     long long lenChunk = -1;
@@ -120,7 +119,7 @@ int main(int argc, char** argv)
     int sucRow = -1, sucCol = -1, width = -1;
     float cohDisp = -1., snr = -1.;
     
-    CSession::read_outputlogfile_line(strPassLog
+    CSession::read_outputlogfile_line(PAthOutFile
         , numOrder
         , &numBlock
         , &numChunk
@@ -131,6 +130,7 @@ int main(int argc, char** argv)
         , &width
         , &cohDisp
         , &snr);
+    //---------
     COutChunkHeader outChunkHeader(
         n_fdmtRows
         , n_fdmtCols
@@ -142,20 +142,14 @@ int main(int argc, char** argv)
         , numBlock-1
         , numChunk-1
     );
-    int lengthOfChunk = 0, quantChunks = 0;
-    int arrChunks[1000] = { 0 };
-    float arrCohD[1000] = { 0. };
+   
     pSession = new CSession(PAthGuppiFile, PAthOutFile, LENGTH_OF_PULSE, VAlD_max, SIgma_Bound, MAX_LENGTH_SUMMATION_WND);
 
-    //std::vector<CFragment> *pfragmentVector = new std::vector<CFragment>();
-    //std::vector<CFragment>fragmentVector;
-    
     CFragment *pFRg = new CFragment();
     pSession->analyzeChunk(outChunkHeader,  pFRg);
 
      
-    int dim = pFRg->m_dim;
-    //delete pfragmentVector;
+    int dim = pFRg->m_dim;   
     delete pSession;
 
     std::array<long unsigned, 2> leshape101{ dim, dim };

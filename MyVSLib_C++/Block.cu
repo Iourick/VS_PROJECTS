@@ -483,13 +483,9 @@ bool CBlock::fncChunkProcessing_gpu(cufftComplex* pcmparrRawSignalCur
 	, structOutDetection* pstructOut
     , float *pcoherentDedisp)
 {
-	// 1. installation of pointers	for pAuxBuff_the_rest	
-
+	// 1. installation of pointers	for pAuxBuff_the_rest
 	fdmt_type_* d_parr_fdmt_inp = (fdmt_type_ * )pAuxBuff_flt; //4	
-	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk * m_nchan; //5
-
-	
-	
+	fdmt_type_* d_parr_fdmt_out = (fdmt_type_*)pAuxBuff_flt + m_lenChunk * m_nchan; 	
 	//// !1
 
 	 /*std::vector<std::complex<float>> data2(m_lenChunk, 0);

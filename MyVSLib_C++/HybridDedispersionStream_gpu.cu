@@ -30,17 +30,17 @@ using namespace std;
 
 // timing variables:
   // fdmt time
-long int iFdmt_time = 0;
+long long iFdmt_time = 0;
 // read && transform data time
-long int iReadTransform_time = 0;
+long long  iReadTransform_time = 0;
 // fft time
-long int iFFT_time = 0;
+long long  iFFT_time = 0;
 // detection time
-long int iMeanDisp_time = 0;
+long long  iMeanDisp_time = 0;
 // detection time
-long int iNormalize_time = 0;
+long long  iNormalize_time = 0;
 // total time
-long int iTotal_time = 0;
+long long  iTotal_time = 0;
 
 
 
