@@ -68,7 +68,17 @@ public:
 	
 
 	//-------------------------------------------------------------------------
-	int process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1, std::vector<COutChunkHeader>* pvctSuccessHeaders);
+	int process(FILE* rb_file
+		, cufftHandle* pcuPlan0
+		, cufftHandle* pcuPlan1
+		, cufftComplex* pcmparrRawSignalCur
+		, fdmt_type_* d_arrfdmt_norm
+		, void* pAuxBuff_fdmt
+		, cufftComplex* pcarrTemp
+		, cufftComplex* pcarrCD_Out
+		, cufftComplex* pcarrBuff
+		, float* pAuxBuff_flt
+		, std::vector<COutChunkHeader>* pvctSuccessHeaders);
 
 	size_t  downloadChunk(FILE* rb_file, char* d_parrInput, const long long QUantDownloadingBytes);
 

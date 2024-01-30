@@ -237,6 +237,70 @@ int CSession::launch()
     cufftHandle* pcuPlan1 = &plan1;
     // !3
 
+    // 4. memory allocation in GPU
+    // total number of downloding bytes to each chunk:
+    const long long QUantTotalChunkBytes = LenChunk * nchan / 8 * npol * nbits;
+    // total number of downloding bytes to each channel:
+    const long long QUantTotalChannelBytes = nblocksize * nbits / 8 / nchan;
+    const long long QUantChunkComplexNumbers = LenChunk * nchan * npol / 2;
+
+    
+    cufftComplex* pcmparrRawSignalCur = NULL;
+    checkCudaErrors(cudaMallocManaged((void**)&pcmparrRawSignalCur, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+    // 2!
+
+    // 4.memory allocation for auxillary buffer for fdmt
+    const int N_p = len_sft * nchan;
+    unsigned int IMaxDT = len_sft * nchan;
+    const int  IDeltaT = calc_IDeltaT(N_p, centfreq - fabs(obsBW) / 2.0, centfreq + fabs(obsBW) / 2.0, IMaxDT);
+    size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, LenChunk / len_sft
+        , centfreq - fabs(obsBW) / 2.0, centfreq + fabs(obsBW) / 2.0, IMaxDT);
+    void* pAuxBuff_fdmt = 0;
+    checkCudaErrors(cudaMalloc(&pAuxBuff_fdmt, szBuff_fdmt));
+    // 4!
+
+    // 3. memory allocation for fdmt_ones on GPU  ????
+    fdmt_type_* d_arrfdmt_norm = 0;
+    checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, LenChunk * nchan * sizeof(fdmt_type_)));
+    // 6. calculation fdmt ones
+    fncFdmtU_cu(
+        nullptr      // on-device input image
+        , pAuxBuff_fdmt
+        , N_p
+        , LenChunk / len_sft // dimensions of input image 	
+        , IDeltaT
+        , centfreq - fabs(obsBW) / 2.0
+        , centfreq + fabs(obsBW) / 2.0
+        , IMaxDT
+        , d_arrfdmt_norm	// OUTPUT image, dim = IDeltaT x IImgcols
+        , true
+    );
+    // 3!
+
+    
+
+    // 5. memory allocation for the 3 auxillary cufftComplex  arrays on GPU	
+    //cufftComplex* pffted_rowsignal = NULL; //1	
+    cufftComplex* pcarrTemp = NULL; //2	
+    cufftComplex* pcarrCD_Out = NULL;//3
+    cufftComplex* pcarrBuff = NULL;//3
+
+
+    checkCudaErrors(cudaMallocManaged((void**)&pcarrTemp, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+
+    checkCudaErrors(cudaMalloc((void**)&pcarrCD_Out, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+
+    checkCudaErrors(cudaMalloc((void**)&pcarrBuff, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+    // !5
+
+    // 5. memory allocation for the 2 auxillary float  arrays on GPU	
+    float* pAuxBuff_flt = NULL;
+    checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * LenChunk * nchan * sizeof(float)));
+
+    // 5!
+
+    // !4
+
     // 3. Performing a loop using the variable nS, nS = 0,..,IBlock. 
     //IBlock - number of bulks
     
@@ -306,7 +370,17 @@ int CSession::launch()
 
         //int quantSuccessChunks = 0;
 
-        pBlock->process(m_rbFile, pcuPlan0 , pcuPlan1,  m_pvctSuccessHeaders);
+        pBlock->process(m_rbFile
+            , pcuPlan0
+            , pcuPlan1
+            , pcmparrRawSignalCur
+            , d_arrfdmt_norm
+            , pAuxBuff_fdmt
+            , pcarrTemp	
+            , pcarrCD_Out 
+            , pcarrBuff
+            , pAuxBuff_flt
+            , m_pvctSuccessHeaders);
                 
         delete pBlock;
         
@@ -320,7 +394,16 @@ int CSession::launch()
 
         fseek(m_rbFile, ioffset, SEEK_CUR);  
     }
-    
+    cudaFree(pcmparrRawSignalCur);
+    cudaFree(d_arrfdmt_norm);
+    cudaFree(pAuxBuff_fdmt);
+    cudaFree(pcarrTemp); //2	
+    cudaFree(pcarrCD_Out);//3
+    cudaFree(pcarrBuff);//3
+    cudaFree(pAuxBuff_flt);
+
+    cufftDestroy(plan0);
+    cufftDestroy(plan1);
     return 0;
 }
 //-------------------------------------------

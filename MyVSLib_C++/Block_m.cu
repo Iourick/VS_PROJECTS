@@ -188,79 +188,83 @@ CBlock::CBlock(
 	m_length_sum_wnd = length_sum_wnd;
 }
 //-----------------------------------------
-int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1, std::vector<COutChunkHeader>* pvctSuccessHeaders)
+int CBlock::process(FILE* rb_file
+	, cufftHandle* pcuPlan0
+	, cufftHandle* pcuPlan1
+	, cufftComplex* pcmparrRawSignalCur
+	, fdmt_type_* d_arrfdmt_norm
+	, void* pAuxBuff_fdmt
+	, cufftComplex* pcarrTemp
+	, cufftComplex* pcarrCD_Out
+	, cufftComplex* pcarrBuff
+	, float* pAuxBuff_flt
+	, std::vector<COutChunkHeader>* pvctSuccessHeaders)
 {
 	//cout << "Block ID = " << m_block_id  << endl;	
 	
 	// total number of downloding bytes to each chunk:
 	const long long QUantTotalChunkBytes = m_lenChunk * m_nchan / 8 * m_npol * m_nbits;
 	// total number of downloding bytes to each channel:
-	const long long QUantTotalChannelBytes =  m_nblocksize * m_nbits / 8/ m_nchan;
-	// total number of downloding words of each chunk:
-	const long long QUantChunkWords = m_lenChunk * m_nchan * m_npol;
-	// total number of downloding words of each channel:
-	const long long QUantChannelWords = m_lenChunk *  m_npol;
-	// total number of downloading complex numbers of chunk:
-	const long long QUantChunkComplexNumbers = QUantChunkWords / 2;
+	const long long QUantTotalChannelBytes =  m_nblocksize * m_nbits / 8/ m_nchan;	
 	// total number of downloading complex numbers of channel:
-	const long long QUantChannelComplexNumbers = QUantChannelWords / 2;
+	const long long QUantChannelComplexNumbers = m_lenChunk * m_npol / 2;
 
 	const int NumChunks = (m_nblocksize + QUantTotalChunkBytes - 1) / QUantTotalChunkBytes;
 
 	
-	// 2. memory allocation for current chunk	
-	cufftComplex* pcmparrRawSignalCur = NULL;
-	checkCudaErrors(cudaMallocManaged((void**)&pcmparrRawSignalCur, QUantChunkComplexNumbers * sizeof(cufftComplex)));
-	// 2!
+	//// 2. memory allocation for current chunk	
+	//cufftComplex* pcmparrRawSignalCur = NULL;
+	//checkCudaErrors(cudaMallocManaged((void**)&pcmparrRawSignalCur, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+	//// 2!
 
-	// 3. memory allocation for fdmt_ones on GPU  ????
-	fdmt_type_* d_arrfdmt_norm = 0;
-	checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk  * m_nchan* sizeof(fdmt_type_)));
-	// 3!
+	//// 3. memory allocation for fdmt_ones on GPU  ????
+	//fdmt_type_* d_arrfdmt_norm = 0;
+	//checkCudaErrors(cudaMalloc((void**)&d_arrfdmt_norm, m_lenChunk  * m_nchan* sizeof(fdmt_type_)));
+	//// 3!
 
-	// 4.memory allocation for auxillary buffer for fdmt
+	//// 4.memory allocation for auxillary buffer for fdmt
 	const int N_p = m_len_sft * m_nchan;
 	unsigned int IMaxDT = m_len_sft * m_nchan;
 	const int  IDeltaT = calc_IDeltaT(N_p, m_Fmin, m_Fmax, IMaxDT);
-	size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / m_len_sft
-		, m_Fmin, m_Fmax, IMaxDT);
-	void* pAuxBuff_fdmt = 0;
-	checkCudaErrors(cudaMalloc(&pAuxBuff_fdmt, szBuff_fdmt));	
-	// 4!
+	//size_t szBuff_fdmt = calcSizeAuxBuff_fdmt(N_p, m_lenChunk / m_len_sft
+	//	, m_Fmin, m_Fmax, IMaxDT);
+	//void* pAuxBuff_fdmt = 0;
+	//checkCudaErrors(cudaMalloc(&pAuxBuff_fdmt, szBuff_fdmt));	
+	//// 4!
 
-	// 5. memory allocation for the 4 auxillary cufftComplex  arrays on GPU	
-	//cufftComplex* pffted_rowsignal = NULL; //1	
-	cufftComplex* pcarrTemp = NULL; //2	
-	cufftComplex* pcarrCD_Out = NULL;//3
-	cufftComplex* pcarrBuff = NULL;//3
-	
+	//// 5. memory allocation for the 3 auxillary cufftComplex  arrays on GPU	
+	////cufftComplex* pffted_rowsignal = NULL; //1	
+	//cufftComplex* pcarrTemp = NULL; //2	
+	//cufftComplex* pcarrCD_Out = NULL;//3
+	//cufftComplex* pcarrBuff = NULL;//3
+	//
 
-	checkCudaErrors(cudaMallocManaged((void**)&pcarrTemp, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+	//checkCudaErrors(cudaMallocManaged((void**)&pcarrTemp, QUantChunkComplexNumbers * sizeof(cufftComplex)));
 
-	checkCudaErrors(cudaMalloc((void**)&pcarrCD_Out, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+	//checkCudaErrors(cudaMalloc((void**)&pcarrCD_Out, QUantChunkComplexNumbers * sizeof(cufftComplex)));
 
-	checkCudaErrors(cudaMalloc((void**)&pcarrBuff, QUantChunkComplexNumbers * sizeof(cufftComplex)));
-	// !5
+	//checkCudaErrors(cudaMalloc((void**)&pcarrBuff, QUantChunkComplexNumbers * sizeof(cufftComplex)));
+	//// !5
 
-	// 5. memory allocation for the 2 auxillary float  arrays on GPU	
-	float* pAuxBuff_flt = NULL;
-	checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * m_nchan * sizeof(float)));
-	
-	// 5!
+	//// 5. memory allocation for the 2 auxillary float  arrays on GPU	
+	//float* pAuxBuff_flt = NULL;
+	//checkCudaErrors(cudaMalloc((void**)&pAuxBuff_flt, 2 * m_lenChunk * m_nchan * sizeof(float)));
+	//
+	//// 5!
 
 	// 6. calculation fdmt ones
-	fncFdmtU_cu(
-		nullptr      // on-device input image
-		, pAuxBuff_fdmt
-		, N_p
-		, m_lenChunk/ m_len_sft // dimensions of input image 	
-		, IDeltaT
-		, m_Fmin
-		, m_Fmax
-		, IMaxDT
-		, d_arrfdmt_norm	// OUTPUT image, dim = IDeltaT x IImgcols
-		, true
-	);
+	//fncFdmtU_cu(
+	//	nullptr      // on-device input image
+	//	, pAuxBuff_fdmt
+	//	, N_p
+	//	, m_lenChunk/ m_len_sft // dimensions of input image 	
+	//	, IDeltaT
+	//	, m_Fmin
+	//	, m_Fmax
+	//	, IMaxDT
+	//	, d_arrfdmt_norm	// OUTPUT image, dim = IDeltaT x IImgcols
+	//	, true
+	//);
 	/*float* arrfdmt_norm = (float*)malloc(m_lenChunk * sizeof(float));
 	cudaMemcpy(arrfdmt_norm, d_arrfdmt_norm, m_lenChunk * sizeof(float), cudaMemcpyDeviceToHost);
 	float valmax1 = -0., valmin1 = 0.;
@@ -278,9 +282,9 @@ int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1,
 
 	//// 8.  Array to store cuFFT plans for different array sizes
 
-	cufftHandle plan0 = *pcuPlan0;
+	cufftHandle *pplan0 = pcuPlan0;
 
-	cufftHandle plan1 = *pcuPlan1;
+	cufftHandle *pplan1 = pcuPlan1;
 	
 	
 
@@ -294,16 +298,42 @@ int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1,
 	
 	structOutDetection* pstructOut = NULL;
 	checkCudaErrors(cudaMallocManaged((void**)&pstructOut, sizeof(structOutDetection)));
+
+	cufftHandle plan0 = NULL;
+	cufftHandle plan1 = NULL;
 	for (int i = 0; i < NumChunks; ++i)	
 	{
-		long long quantDownloadingBytes = (iremainedBytes < QUantTotalChunkBytes) ? iremainedBytes : QUantTotalChunkBytes;
-		auto start = std::chrono::high_resolution_clock::now();
+		long long quantDownloadingBytes = QUantTotalChunkBytes; (iremainedBytes < QUantTotalChunkBytes) ? iremainedBytes : QUantTotalChunkBytes;
+		if (iremainedBytes < QUantTotalChunkBytes)
+		{
+			quantDownloadingBytes = iremainedBytes;
+			m_lenChunk = quantDownloadingBytes / (m_nchan * m_npol * m_nbits) * 8;
+			
+			cufftCreate(&plan0);
+			checkCudaErrors(cufftPlan1d(&plan0, m_lenChunk, CUFFT_C2C, m_nchan * m_npol / 2));
+			
+			cufftCreate(&plan1);
+			checkCudaErrors(cufftPlan1d(&plan1, m_len_sft, CUFFT_C2C, m_lenChunk * m_nchan * m_npol / 2 / m_len_sft));
+			pplan0 = &plan0;
+			pplan1 = &plan1;
 
-		unsigned long long position0 = ftell(rb_file);
-		
-		unsigned long long position = ftell(rb_file);		
-		
+			cufftHandle* pplan1 = pcuPlan1;
+			fncFdmtU_cu(
+			nullptr      // on-device input image
+			, pAuxBuff_fdmt
+			, N_p
+			, m_lenChunk/ m_len_sft // dimensions of input image 	
+			, IDeltaT
+			, m_Fmin
+			, m_Fmax
+			, IMaxDT
+			, d_arrfdmt_norm	// OUTPUT image, dim = IDeltaT x IImgcols
+			, true
+		     );
 
+		}
+		auto start = std::chrono::high_resolution_clock::now();	
+		
 	    char*d_parrInput0 = (char*)pcarrTemp;
 		
 		size_t sz = downloadChunk(rb_file, (char*)d_parrInput0, quantDownloadingBytes);	
@@ -333,7 +363,7 @@ int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1,
 			, pcarrCD_Out
 			, pcarrBuff
 			, pAuxBuff_flt, d_arrfdmt_norm
-			, IDeltaT, plan0, plan1
+			, IDeltaT, *pplan0, *pplan1
 			, pstructOut
 			, &coherentDedisp))
 
@@ -376,21 +406,17 @@ int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1,
 
 
 
-	cudaFree(pcmparrRawSignalCur);
-	cudaFree(d_arrfdmt_norm);
-	cudaFree(pAuxBuff_fdmt);	
-	cudaFree(pcarrTemp); //2	
-	cudaFree(pcarrCD_Out);//3
-	cudaFree(pcarrBuff);//3
-	cudaFree(pAuxBuff_flt);
 	
-	cufftDestroy(plan0);
-	cufftDestroy(plan1);
-	//
 	
 	cudaFree(pstructOut);
-	
-	
+	if (plan0 != NULL)
+	{
+		cufftDestroy(plan0);
+	}
+	if (plan1 != NULL)
+	{
+		cufftDestroy(plan1);
+	}	
 	return 0;
 }
 

@@ -195,15 +195,9 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 	// total number of downloding bytes to each chunk:
 	const long long QUantTotalChunkBytes = m_lenChunk * m_nchan / 8 * m_npol * m_nbits;
 	// total number of downloding bytes to each channel:
-	const long long QUantTotalChannelBytes =  m_nblocksize * m_nbits / 8/ m_nchan;
-	// total number of downloding words of each chunk:
-	const long long QUantChunkWords = m_lenChunk * m_nchan * m_npol;
-	// total number of downloding words of each channel:
-	const long long QUantChannelWords = m_lenChunk *  m_npol;
-	// total number of downloading complex numbers of chunk:
-	const long long QUantChunkComplexNumbers = QUantChunkWords / 2;
-	// total number of downloading complex numbers of channel:
-	const long long QUantChannelComplexNumbers = QUantChannelWords / 2;
+	const long long QUantTotalChannelBytes =  m_nblocksize * m_nbits / 8/ m_nchan;	
+	const long long QUantChunkComplexNumbers = m_lenChunk * m_nchan * m_npol / 2;
+	
 
 	const int NumChunks = (m_nblocksize + QUantTotalChunkBytes - 1) / QUantTotalChunkBytes;
 
