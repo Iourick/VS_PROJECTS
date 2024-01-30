@@ -1,6 +1,6 @@
 #include "cuda_runtime.h"
 #include "device_launch_parameters.h"
-#include "Block.cuh"
+#include "Block_m.cuh"
 #include "OutChunk.h"
 #include <vector>
 #include "OutChunkHeader.h"
@@ -188,7 +188,7 @@ CBlock::CBlock(
 	m_length_sum_wnd = length_sum_wnd;
 }
 //-----------------------------------------
-int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHeaders)
+int CBlock::process(FILE* rb_file, cufftHandle* pcuPlan0, cufftHandle* pcuPlan1, std::vector<COutChunkHeader>* pvctSuccessHeaders)
 {
 	//cout << "Block ID = " << m_block_id  << endl;	
 	
@@ -278,13 +278,10 @@ int CBlock::process(FILE* rb_file, std::vector<COutChunkHeader>* pvctSuccessHead
 
 	//// 8.  Array to store cuFFT plans for different array sizes
 
-	cufftHandle plan0 = NULL;
-	cufftCreate(&plan0);	
-	checkCudaErrors(cufftPlan1d(&plan0, m_lenChunk, CUFFT_C2C, m_nchan * m_npol/2));
+	cufftHandle plan0 = *pcuPlan0;
 
-	cufftHandle plan1 = NULL;
-	cufftCreate(&plan1);	
-	checkCudaErrors(cufftPlan1d(&plan1, m_len_sft, CUFFT_C2C, m_lenChunk *m_nchan * m_npol / 2/ m_len_sft));	
+	cufftHandle plan1 = *pcuPlan1;
+	
 	
 
 	// 9. main loop

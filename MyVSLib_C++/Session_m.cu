@@ -1,13 +1,15 @@
-#include "Session.cuh"
+#include "Session_m.cuh"
 #include <string>
 #include "stdio.h"
 #include <iostream>
-#include "Block.cuh"
+#include "Block_m.cuh"
 #include "OutChunk.h"
 #include <cufft.h>
 #include "fdmtU_cu.cuh"
 #include <stdlib.h>
 #include "Fragment.cuh"
+#include "helper_functions.h"
+#include "helper_cuda.h"
  
 
 CSession::~CSession()
@@ -184,6 +186,57 @@ int CSession::launch()
     int ireturn = 0;
     // !2
 
+    // 3. cuFFT plans preparations
+       // 3.1 reading first header
+    if (!CGuppHeader::readHeader(
+        m_rbFile
+        , &nbits
+        , &chanBW
+        , &npol
+        , &bdirectIO
+        , &centfreq
+        , &nchan
+        , &obsBW
+        , &nblocksize
+        , &TELESCOP
+    )
+        )
+    {
+        return -1;
+    }
+
+    m_header = CGuppHeader(
+        nbits
+        , chanBW
+        , npol
+        , bdirectIO
+        , centfreq
+        , nchan
+        , obsBW
+        , nblocksize
+        , TELESCOP
+    );
+    fseek(m_rbFile, 0, SEEK_SET);
+    // 3.2 calculate standard len_sft and LenChunk
+    
+    const int len_sft = calc_len_sft(fabs(chanBW), m_t_p);    
+    const unsigned int LenChunk = calcLenChunk(len_sft);
+    //
+
+    // 3.3 cuFFT plans preparations
+
+    cufftHandle plan0 = NULL;
+    cufftCreate(&plan0);
+    checkCudaErrors(cufftPlan1d(&plan0, LenChunk, CUFFT_C2C, nchan * npol / 2));
+
+    cufftHandle plan1 = NULL;
+    cufftCreate(&plan1);
+    checkCudaErrors(cufftPlan1d(&plan1, len_sft, CUFFT_C2C, LenChunk * nchan * npol / 2 / len_sft));
+
+    cufftHandle* pcuPlan0 = &plan0;
+    cufftHandle* pcuPlan1 = &plan1;
+    // !3
+
     // 3. Performing a loop using the variable nS, nS = 0,..,IBlock. 
     //IBlock - number of bulks
     
@@ -226,7 +279,7 @@ int CSession::launch()
         // 2!
 
         // calculate N_p
-        const int len_sft = calc_len_sft(fabs(m_header.m_chanBW));
+        const int len_sft = calc_len_sft(fabs(m_header.m_chanBW), m_t_p);
 
         // calculate lenChunk along time axe
         const unsigned int LenChunk = calcLenChunk(len_sft);
@@ -253,7 +306,7 @@ int CSession::launch()
 
         //int quantSuccessChunks = 0;
 
-        pBlock->process(m_rbFile , m_pvctSuccessHeaders);      
+        pBlock->process(m_rbFile, pcuPlan0 , pcuPlan1,  m_pvctSuccessHeaders);
                 
         delete pBlock;
         
@@ -282,7 +335,8 @@ long long CSession::calcLenChunk(const int n_p)
     float valNominator = TOtal_GPU_Bytes - N_p * (sizeof(float) + sizeof(int)
         / 2 + 3 * (IDeltaT + 1) * sizeof(int));
 
-    float valDenominator = m_header.m_nchan * m_header.m_npol / 2 * sizeof(cufftComplex)        
+    float valDenominator = m_header.m_nchan * m_header.m_npol * m_header.m_nbits / 8
+        + m_header.m_nchan * m_header.m_npol / 2 * sizeof(cufftComplex)        
         + 2 * (IDeltaT + 1) * m_header.m_nchan * sizeof(fdmt_type_)
         + 3 * m_header.m_nchan * m_header.m_npol * sizeof(cufftComplex) / 2 
         + 2 * m_header.m_nchan * sizeof(float);
@@ -423,7 +477,7 @@ bool CSession::analyzeChunk(const COutChunkHeader outChunkHeader,CFragment* pFRg
     }
 
     // calculate N_p
-    const int len_sft = calc_len_sft(fabs(m_header.m_chanBW));
+    const int len_sft = calc_len_sft(fabs(m_header.m_chanBW), m_t_p);
 
     
 
