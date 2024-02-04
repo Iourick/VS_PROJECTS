@@ -14,4 +14,4 @@ const long double  DISPERSION_CONSTANT = 4148808000.0;// Mhz* pc ^ -1 * cm ^ 3
 
 
 #define fdmt_type_ float
-#define inp_type_ float//char //
+#define inp_type_ char //float//

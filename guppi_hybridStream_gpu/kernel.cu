@@ -47,8 +47,8 @@ extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 
 
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
-//const double VAlD_max = 3.0;
-//#define LENGTH_OF_PULSE  1.0E-8
+//const double VAlD_max = 100.0;
+//#define LENGTH_OF_PULSE  1.0E-7
 
 
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_4_float.bin";
@@ -56,10 +56,10 @@ extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_4_float.bin";
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_2_float.bin"; //25.0E-8
 //const char PAthGuppiFile[] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_2npol_2_float.bin";
-const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch2.bin";//40.0E-8
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch2.bin";//40.0E-8
 //const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch1.bin";//  
-const double VAlD_max = 1.5;
-#define LENGTH_OF_PULSE  50.0E-8
+//const double VAlD_max = 1.5;
+//#define LENGTH_OF_PULSE  50.0E-8
 
 const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutInfo.log";
 

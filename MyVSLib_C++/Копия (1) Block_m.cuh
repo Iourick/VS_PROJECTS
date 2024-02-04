@@ -90,8 +90,8 @@ public:
 		, cufftComplex* pcarrBuff
 		, float* pAuxBuff_flt, fdmt_type_* d_arrfdmt_norm
 		, const int IDeltaT, cufftHandle plan0, cufftHandle plan1
-		, const int chunk_id
-		, std::vector<COutChunkHeader>* pvctSuccessHeaders);
+		, structOutDetection* pstructOut
+		, float* pcoherentDedisp);
 
 	int calcFDMT_Out_gpu(fdmt_type_* parr_fdmt_out, cufftComplex* pffted_rowsignal, cufftComplex* pcarrCD_Out
 		, cufftComplex* pcarrTemp, fdmt_type_* d_parr_fdmt_inp

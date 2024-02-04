@@ -312,7 +312,6 @@ int CSession::launch()
     
     for (int nS = 0; nS < IBlock; ++nS)
     {   
-        
         cout << "                               BLOCK=  " << nS <<endl;
         // 3.1. reading info from current bulk header
         // After return 
@@ -594,28 +593,20 @@ long long CSession::calcLenChunk(const int n_p)
 //-----------------------------------------------------------------
 void CSession::writeReport()
 {
-    
-    
+    char arrch[2000] = { 0 };
+    char charrTemp[200] = { 0 };
     for (int i = 0; i < m_pvctSuccessHeaders->size(); ++i)
     {
-        if (24 == i)
-        {
-            int hghg = 0;
-        }
-        char arrch[2000] = { 0 };
-        char charrTemp[200] = { 0 };
-        
+        memset(charrTemp, 0, 200 * sizeof(char));
         (*m_pvctSuccessHeaders)[i].createOutStr(charrTemp);
         strcat(arrch, charrTemp);
         memset(charrTemp, 0, 200 * sizeof(char));
         sprintf(charrTemp, ", Length of pulse= %.10e", m_t_p);
         strcat(arrch, charrTemp);
-        //strcat(arrch, "\n");
         strcat(arrch, "\n");
-        size_t elements_written = fwrite(arrch, sizeof(char), strlen(arrch), m_wb_file);
-            
+            //createOutStr(char* pstr)
     }
-    //size_t elements_written = fwrite(arrch, sizeof(char), strlen(arrch), m_wb_file);
+    size_t elements_written = fwrite(arrch, sizeof(char), strlen(arrch), m_wb_file);
 }
 //-------------------------------------------------
 bool CSession::read_outputlogfile_line(const char *pstrPassLog

@@ -45,25 +45,18 @@ cudaError_t cuda_status = cudaMemGetInfo(&free_bytes, &total_bytes);
 
 extern const unsigned long long TOtal_GPU_Bytes = (long long)free_bytes;
 
+const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
+const double VAlD_max = 100.0;
+#define LENGTH_OF_PULSE  1.0E-8
 
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//blc20_guppi_57991_49905_DIAG_FRB121102_0011.0007.raw";
-//const double VAlD_max = 5.0;
-//#define LENGTH_OF_PULSE  1.0E-8
-
-
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_4_float.bin";
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_2_float.bin";
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_8npol_4_float.bin"; //20.0E-8
-const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_1npol_2_float.bin"; //25.0E-8
-//const char PAthGuppiFile[] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_2npol_2_float.bin";
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch2.bin";//40.0E-8
-//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch1.bin";//  
-const double VAlD_max = 1.5;
-#define LENGTH_OF_PULSE  20.0E-8
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//rawImit_2pow20_nchan_2npol_2_float.bin";//40.0E-8
+//const char PAthGuppiFile[MAX_PATH_LENGTH] = "D://weizmann//RAW_DATA//ch1.bin";//  25.0E-8//
+//const double VAlD_max =  1.5;
+//#define LENGTH_OF_PULSE  25.0E-8//40.0E-8//25.0E-8//
 
 const char PAthOutFile[MAX_PATH_LENGTH] = "OutPutInfo.log";
 
-const float SIgma_Bound = 8.;
+const float SIgma_Bound = 180.;
 // maximal length of summation window
 #define MAX_LENGTH_SUMMATION_WND 10
 
@@ -73,7 +66,10 @@ int main(int argc, char** argv)
     unsigned long long ilength = 0;
     //int iBlocks = pSession->calcQuantRemainBlocks(&ilength);
                            
-    pSession->launch();
+    if (-1 == pSession->launch())
+    {
+        return -1;
+    }
 
     if (pSession->m_pvctSuccessHeaders->size() > 0)
     {
@@ -89,9 +85,16 @@ int main(int argc, char** argv)
             std::cout << i+1<<". "<< charrTemp << std::endl;
         }
         //--------------------------------------
-        pSession->writeReport();
+        
     }
+    else
+    {
+        std::cout << "               Successful Chunk Were Not Detected= " << std::endl;
+        pSession->writeReport();
+        return 0;
 
+    }
+    pSession->writeReport();
     delete pSession;
 
     char chInp[200] = { 0 };
