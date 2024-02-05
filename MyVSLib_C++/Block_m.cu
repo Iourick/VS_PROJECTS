@@ -1217,8 +1217,9 @@ __global__ void kernel_ElementWiseMult(cufftComplex* pAuxBuff, cufftComplex* pca
 		return;
 	}
 	double step = (arrf[1] - arrf[0]) / ((double)LEnChunk);
-	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));	
-	
+	//double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]));
+	double t = VAl_practicalD * (1. / (arrf[0] + step * (double)j) + 1. / (arrf[1]) * (step * (double)j / arrf[1]))
+		+ (VAl_practicalD / arrf[0] + VAl_practicalD * (arrf[0] - Fmin) / (Fmax * Fmax));
 	/*double step = (Fmax - Fmin) / ((double)LEnChunk);
 	double t = VAl_practicalD * (1. / (Fmin + step * (double)j) + 1. / (Fmax) * (step * (double)j / Fmax));	*/
 
